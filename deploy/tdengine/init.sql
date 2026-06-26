@@ -19,7 +19,7 @@ USE iot_data;
 -- INT 类型属性
 CREATE STABLE IF NOT EXISTS iot_prop_int (
     ts           TIMESTAMP,
-    value        INT
+    val          INT
 ) TAGS (
     tenant_id    BIGINT,
     product_key  BINARY(32),
@@ -31,7 +31,7 @@ CREATE STABLE IF NOT EXISTS iot_prop_int (
 -- BIGINT
 CREATE STABLE IF NOT EXISTS iot_prop_bigint (
     ts           TIMESTAMP,
-    value        BIGINT
+    val          BIGINT
 ) TAGS (
     tenant_id    BIGINT,
     product_key  BINARY(32),
@@ -43,7 +43,7 @@ CREATE STABLE IF NOT EXISTS iot_prop_bigint (
 -- DOUBLE
 CREATE STABLE IF NOT EXISTS iot_prop_double (
     ts           TIMESTAMP,
-    value        DOUBLE
+    val          DOUBLE
 ) TAGS (
     tenant_id    BIGINT,
     product_key  BINARY(32),
@@ -55,7 +55,7 @@ CREATE STABLE IF NOT EXISTS iot_prop_double (
 -- BOOL
 CREATE STABLE IF NOT EXISTS iot_prop_bool (
     ts           TIMESTAMP,
-    value        BOOL
+    val          BOOL
 ) TAGS (
     tenant_id    BIGINT,
     product_key  BINARY(32),
@@ -67,7 +67,7 @@ CREATE STABLE IF NOT EXISTS iot_prop_bool (
 -- STRING
 CREATE STABLE IF NOT EXISTS iot_prop_string (
     ts           TIMESTAMP,
-    value        NCHAR(255)
+    val          NCHAR(255)
 ) TAGS (
     tenant_id    BIGINT,
     product_key  BINARY(32),
