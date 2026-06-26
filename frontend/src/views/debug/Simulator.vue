@@ -133,7 +133,6 @@ async function refreshLive() {
 const chartEl = ref<HTMLDivElement>()
 let chart: any = null
 const histData = ref<{ ts: string; value: string }[]>([])
-const chartTimer = ref<any>()
 
 async function refreshHistory() {
   if (!config.deviceId) return
@@ -259,7 +258,7 @@ async function sendOne() {
     }
   }
   // 刷新实时 + 时序
-  setTimeout(() => { refreshLive(); refreshHistory() }, 500)
+  setTimeout(() => manualRefresh(), 300)
 }
 
 // ========== 连续发送 ==========
@@ -334,17 +333,22 @@ watch(() => config.protocol, (p) => {
   else disconnectMqtt()
 })
 
+// ========== 手动刷新(不轮询) ==========
+const lastRefresh = ref<number | null>(null)
+async function manualRefresh() {
+  await Promise.all([refreshLive(), refreshHistory()])
+  lastRefresh.value = Date.now()
+}
+
 onMounted(async () => {
   await loadOptions()
   if (config.protocol === 'MQTT') connectMqtt()
-  refreshLive()
-  refreshHistory()
-  chartTimer.value = setInterval(() => { refreshLive(); refreshHistory() }, 3000)
+  // 首次进入拉一次快照
+  manualRefresh()
 })
 onBeforeUnmount(() => {
   stopLoop()
   disconnectMqtt()
-  if (chartTimer.value) clearInterval(chartTimer.value)
   chart?.dispose?.()
 })
 </script>
@@ -487,7 +491,10 @@ onBeforeUnmount(() => {
               </div>
             </div>
           </div>
-          <el-button :icon="Refresh" size="small" @click="refreshLive" style="margin-top: 8px">手动刷新</el-button>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px">
+            <el-button :icon="Refresh" size="small" @click="manualRefresh">手动刷新</el-button>
+            <span class="text-muted" v-if="lastRefresh">上次刷新: {{ new Date(lastRefresh).toLocaleTimeString('zh-CN') }}</span>
+          </div>
         </div>
 
         <div class="page-card">
@@ -553,4 +560,5 @@ onBeforeUnmount(() => {
   .log-text pre { margin: 0; white-space: pre-wrap; word-break: break-all; }
 }
 .empty-mini { text-align: center; color: #c0c4cc; padding: 24px 0; font-size: 13px; }
+.text-muted { color: #909399; font-size: 12px; }
 </style>
