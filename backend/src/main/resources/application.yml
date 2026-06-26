@@ -1,0 +1,137 @@
+server:
+  port: 9000
+  servlet:
+    context-path: /api
+  # 注: 容器内 9000 端口映射到主机 ${BACKEND_PORT:-33401}
+  # 本地开发时启动在 9000,运行时可通过 BACKEND_PORT 环境变量调整容器映射
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 10
+
+spring:
+  application:
+    name: iot-platform
+  profiles:
+    active: dev
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 100MB
+
+  # 业务库: MySQL
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 注: 自定义 DataSourceConfig 用 HikariDataSource + @ConfigurationProperties,
+    #     Hikari 绑定的字段名是 jdbc-url,这里必须用 jdbc-url 而不是 url
+    jdbc-url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:iot_platform}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    # 注: 容器内 MySQL 仍用默认 3306(同一 Docker 网络),主机端口已映射为 ${MYSQL_PORT:-33402}
+    # 本地开发: MYSQL_PORT=33402
+    username: ${MYSQL_USER:iot}
+    password: ${MYSQL_PASSWORD:iot123456}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 30000
+      connection-timeout: 30000
+
+  # 时序库: TDengine
+  taos:
+    # 注: 同上,Hikari 绑定的是 jdbc-url
+    jdbc-url: jdbc:TAOS-RS://${TDENGINE_HOST:localhost}:${TDENGINE_PORT:6041}/iot_data
+    # 注: 容器内 TDengine RESTful 仍用 6041(同一 Docker 网络),主机端口已映射为 ${TDENGINE_PORT:-33403}
+    # 本地开发: TDENGINE_PORT=33403
+    username: ${TDENGINE_USER:root}
+    password: ${TDENGINE_PASSWORD:taosdata}
+    driver-class-name: com.taosdata.jdbc.rs.RestfulDriver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+
+# MyBatis-Plus
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*Mapper.xml
+  type-aliases-package: com.iot.platform.**.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# 多租户(关闭内置,用我们自己的拦截器)
+mybatis-plus-tenant:
+  enabled: false
+
+# Knife4j / Swagger
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  default-flat-param-object: true
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+# JWT 配置
+iot:
+  jwt:
+    secret: ${JWT_SECRET:iot-platform-super-secret-key-must-be-at-least-32-bytes-long-for-hs256}
+    expire: 86400          # 24 小时(秒)
+    refresh: 604800        # 7 天
+    header: Authorization
+    prefix: "Bearer "
+  tenant:
+    enable: true
+    super-tenant-id: 1     # 超级租户
+  protocol:
+    mqtt:
+      enabled: true
+      broker-url: ${MQTT_BROKER:tcp://emqx:1883}
+      # 注: 容器内 MQTT 仍用 1883(同一 Docker 网络),主机端口已映射为 ${EMQX_MQTT_PORT:-33405}
+      # 本地开发: tcp://localhost:33405
+      client-id: iot-platform-server
+      username: ${MQTT_USERNAME:emqx_user}
+      password: ${MQTT_PASSWORD:emqx_pass}
+      subscribe-qos: 1
+    tcp:
+      enabled: true
+      port: ${TCP_PORT:33410}
+      boss-threads: 1
+      worker-threads: 4
+  rule:
+    enabled: true
+    thread-pool-size: 4
+    queue-capacity: 1000
+
+# 日志
+logging:
+  level:
+    root: INFO
+    com.iot.platform: DEBUG
+    org.springframework.security: WARN
+    org.eclipse.paho: WARN
+    io.netty: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+logging:
+  level:
+    root: WARN
+    com.iot.platform: INFO
