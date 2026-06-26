@@ -14,6 +14,7 @@ import com.iot.platform.product.entity.IotProduct;
 import com.iot.platform.product.mapper.IotProductMapper;
 import com.iot.platform.protocol.core.*;
 import com.iot.platform.rule.event.PropertyReportEvent;
+import com.iot.platform.websocket.WebSocketEventPublisher;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
@@ -58,6 +59,7 @@ public class TcpProtocolAdapter implements ProtocolAdapter {
     private final ObjectMapper objectMapper;
     private final ApplicationEventPublisher eventPublisher;
     private final TdengineWriter tdengineWriter;
+    private final WebSocketEventPublisher wsPublisher;
 
     private ServerBootstrap bootstrap;
     private EventLoopGroup bossGroup;
@@ -394,6 +396,12 @@ public class TcpProtocolAdapter implements ProtocolAdapter {
                     this, tenantId, deviceId,
                     Long.parseLong(String.valueOf(deviceId)),
                     deviceKey, productKey, identifier, parsed, shadows));
+        } catch (Exception ignored) {}
+        // WebSocket 实时推送
+        try {
+            wsPublisher.publishShadowUpdate(tenantId, deviceId, deviceKey,
+                    identifier, parsed,
+                    LocalDateTime.now().format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         } catch (Exception ignored) {}
     }
 

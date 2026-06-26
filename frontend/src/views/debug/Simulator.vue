@@ -8,6 +8,7 @@ import { allProducts, type IotProductVO } from '@/api/iot/product'
 import { pageDevices, getDevice, type IotDeviceVO } from '@/api/iot/device'
 import { getRealtime, getHistory, type RealtimeDevice } from '@/api/data/realtime'
 import { simulateTcp, generateMockData, type SimulateRequest, type SimulateResponse } from '@/api/debug/simulator'
+import { WSClient } from '@/utils/ws'
 
 // ========== 基础数据 ==========
 const products = ref<IotProductVO[]>([])
@@ -340,15 +341,66 @@ async function manualRefresh() {
   lastRefresh.value = Date.now()
 }
 
+// ========== WebSocket 实时推送 ==========
+const wsStatus = ref<'disconnected' | 'connected'>('disconnected')
+let ws: WSClient | null = null
+
+function handleShadowUpdate(evt: any) {
+  // 只处理当前选中设备的事件
+  if (!config.deviceId || evt.deviceId !== config.deviceId) return
+  // 更新本地影子
+  const idx = liveSelectedProps.value.findIndex(p => p.identifier === evt.identifier)
+  if (idx >= 0) {
+    liveSelectedProps.value[idx] = {
+      ...liveSelectedProps.value[idx],
+      value: evt.value == null ? null : String(evt.value),
+      updatedAt: evt.updatedAt
+    }
+  } else {
+    // 新出现的属性(物模型里有但之前没上报过)
+    liveSelectedProps.value.push({
+      identifier: evt.identifier,
+      value: evt.value == null ? null : String(evt.value),
+      updatedAt: evt.updatedAt
+    } as any)
+  }
+  // 触发响应(属性闪一下)
+  flashProp(evt.identifier)
+  // 重新拉一次时序(便宜,200ms 后)
+  if (evt.identifier === 'temperature') {
+    setTimeout(() => refreshHistory(), 200)
+  }
+  // 记日志
+  pushLog('recv', `[WS] shadow.update ${evt.deviceKey}.${evt.identifier} = ${evt.value}`)
+}
+
+const flashingProps = ref<Set<string>>(new Set())
+function flashProp(id: string) {
+  flashingProps.value.add(id)
+  setTimeout(() => flashingProps.value.delete(id), 600)
+}
+
+function setupWS() {
+  if (ws) ws.close()
+  ws = new WSClient('/ws/shadow')
+  ws.on('connected', () => { wsStatus.value = 'connected'; pushLog('info', '[WS] 已连接') })
+  ws.on('disconnected', () => { wsStatus.value = 'disconnected' })
+  ws.on('shadow.update', handleShadowUpdate)
+  ws.connect()
+}
+
 onMounted(async () => {
   await loadOptions()
   if (config.protocol === 'MQTT') connectMqtt()
   // 首次进入拉一次快照
   manualRefresh()
+  // 启动 WebSocket(替代轮询)
+  setupWS()
 })
 onBeforeUnmount(() => {
   stopLoop()
   disconnectMqtt()
+  if (ws) { ws.close(); ws = null }
   chart?.dispose?.()
 })
 </script>
@@ -476,10 +528,12 @@ onBeforeUnmount(() => {
       <!-- 右侧:实时影子 + 日志 -->
       <el-col :xs="24" :md="10">
         <div class="page-card">
-          <h3 class="card-title">当前设备影子</h3>
+          <div class="card-title-row">
+            <h3 class="card-title">当前设备影子 <el-tag size="small" :type="wsStatus === 'connected' ? 'success' : 'info'" style="margin-left: 8px">WS: {{ wsStatus }}</el-tag></h3>
+          </div>
           <div v-if="!config.deviceId" class="empty-mini">先选设备</div>
           <div v-else>
-            <div v-for="p in liveSelectedProps" :key="p.identifier" class="prop-row">
+            <div v-for="p in liveSelectedProps" :key="p.identifier" class="prop-row" :class="{ flash: flashingProps.has(p.identifier) }">
               <div class="prop-id">
                 <span class="name">{{ p.name || p.identifier }}</span>
                 <code>{{ p.identifier }}</code>
@@ -529,9 +583,13 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 0;
+  padding: 6px 8px;
+  margin: 0 -8px;
   border-bottom: 1px dashed #ebeef5;
+  border-radius: 4px;
+  transition: background 0.6s;
   &:last-child { border-bottom: none; }
+  &.flash { background: #ecf5ff; }
   .prop-id { display: flex; align-items: center; gap: 8px; .name { font-weight: 500; } code { color: #909399; font-size: 11px; } }
   .prop-val { font-family: 'Menlo', monospace; font-weight: 600; .unit { color: #909399; font-weight: 400; margin-left: 4px; font-size: 12px; } }
   .muted { color: #c0c4cc; font-weight: 400; }

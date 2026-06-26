@@ -15,6 +15,7 @@ import com.iot.platform.product.entity.IotProduct;
 import com.iot.platform.product.mapper.IotProductMapper;
 import com.iot.platform.protocol.core.*;
 import com.iot.platform.rule.event.PropertyReportEvent;
+import com.iot.platform.websocket.WebSocketEventPublisher;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -60,6 +61,7 @@ public class MqttProtocolAdapter implements ProtocolAdapter {
     private final ObjectMapper objectMapper;
     private final ApplicationEventPublisher eventPublisher;
     private final TdengineWriter tdengineWriter;
+    private final WebSocketEventPublisher wsPublisher;
 
     private MqttClient client;
     private volatile boolean running = false;
@@ -286,6 +288,12 @@ public class MqttProtocolAdapter implements ProtocolAdapter {
         } catch (Exception e) {
             log.error("[MQTT] 发布事件失败", e);
         }
+        // WebSocket 实时推送
+        try {
+            wsPublisher.publishShadowUpdate(tenantId, deviceId, deviceKey,
+                    identifier, parsed,
+                    LocalDateTime.now().format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        } catch (Exception ignored) {}
     }
 
     private Map<String, Object> loadAllShadows(Long deviceId) {
