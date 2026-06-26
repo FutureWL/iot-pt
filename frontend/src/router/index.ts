@@ -86,6 +86,12 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '可视化大屏', icon: 'pie-chart', permission: 'screen:view' }
       },
       {
+        path: 'debug/simulator',
+        name: 'DeviceSimulator',
+        component: () => import('@/views/debug/Simulator.vue'),
+        meta: { title: '设备调试', icon: 'video-play', permission: 'device:list' }
+      },
+      {
         path: 'system/user',
         name: 'SystemUser',
         component: () => import('@/views/system/User.vue'),
