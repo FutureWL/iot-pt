@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, onBeforeUnmount, computed } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Position, Connection, VideoPlay, VideoPause, Delete, View, DataLine, EditPen } from '@element-plus/icons-vue'
 // @ts-ignore
