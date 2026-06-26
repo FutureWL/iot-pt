@@ -2,6 +2,7 @@
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { UserFilled } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()

@@ -50,6 +50,12 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '产品管理', icon: 'box', permission: 'product:list' }
       },
       {
+        path: 'product/thing-model/:id',
+        name: 'ProductThingModel',
+        component: () => import('@/views/product/ThingModel.vue'),
+        meta: { title: '物模型编辑', activeMenu: '/product', permission: 'product:list' }
+      },
+      {
         path: 'data/realtime',
         name: 'DataRealtime',
         component: () => import('@/views/data/Realtime.vue'),

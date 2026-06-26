@@ -51,7 +51,9 @@ CREATE TABLE sys_user (
     created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted      TINYINT      NOT NULL DEFAULT 0,
-    UNIQUE KEY uk_tenant_username (tenant_id, username)
+    -- 逻辑删除友好的唯一约束: deleted=1 时 uk_username 为 NULL,MySQL 不视为重复
+    uk_username  VARCHAR(64)  GENERATED ALWAYS AS (CASE WHEN deleted = 0 THEN username ELSE NULL END) STORED,
+    UNIQUE KEY uk_tenant_username (tenant_id, uk_username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
 -- ----------------------------
@@ -132,6 +134,8 @@ CREATE TABLE iot_product (
     created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted         TINYINT      NOT NULL DEFAULT 0,
+    -- 逻辑删除友好的唯一约束
+    uk_product_key  VARCHAR(32)  GENERATED ALWAYS AS (CASE WHEN deleted = 0 THEN product_key ELSE NULL END) STORED,
     UNIQUE KEY uk_product_key (product_key),
     KEY idx_tenant (tenant_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='产品/物模型';
@@ -178,7 +182,11 @@ CREATE TABLE iot_device (
     created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted         TINYINT      NOT NULL DEFAULT 0,
-    UNIQUE KEY uk_tenant_device_key (tenant_id, device_key),
+    -- 逻辑删除友好的唯一约束
+    uk_tenant_device_key VARCHAR(132) GENERATED ALWAYS AS (
+        CASE WHEN deleted = 0 THEN CONCAT(tenant_id, ':', device_key) ELSE NULL END
+    ) STORED,
+    UNIQUE KEY uk_tenant_device_key (uk_tenant_device_key),
     KEY idx_product (product_id),
     KEY idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='设备表';

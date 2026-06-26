@@ -26,6 +26,8 @@ export default defineConfig(({ mode }) => {
       // 端口规则: 33400 被 pi-node 占用,跳过;Frontend dev 用 33411
       port: 33411,
       strictPort: false,
+      // 允许通过这些域名访问 dev server（Vite 5+ 默认有 host 检查）
+      allowedHosts: ['huntercat.cn', '.huntercat.cn'],
       proxy: {
         '/api': {
           target: backendBase,
