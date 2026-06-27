@@ -118,3 +118,6 @@ customer-requirements/
 #   - frontend/tests/        前端测试套件
 #   - frontend/playwright.config.ts
 # ============================================================
+# IoT 多模块临时文件
+/tmp/iot-api*.log
+/tmp/iot-broker*.log

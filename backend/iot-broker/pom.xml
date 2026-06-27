@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.iot</groupId>
+        <artifactId>iot-platform-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>iot-broker</artifactId>
+    <name>IoT Broker</name>
+    <description>IoT 协议网关: MQTT/TCP 接入 + 消息分发</description>
+
+    <dependencies>
+        <!-- 共享核心 -->
+        <dependency>
+            <groupId>com.iot</groupId>
+            <artifactId>iot-common</artifactId>
+        </dependency>
+        <!-- IoT 控制台(可拆,这里依赖) -->
+        <dependency>
+            <groupId>com.iot</groupId>
+            <artifactId>iot-console</artifactId>
+        </dependency>
+        <!-- Web(给控制台 REST/SSE 用) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <!-- 测试 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>iot-broker</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.iot.platform.IotPlatformIotApplication</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -80,6 +80,7 @@ public class RedisIotMessageConsumer {
                 @SuppressWarnings("unchecked")
                 List<MapRecord<String, Object, Object>> records = (List<MapRecord<String, Object, Object>>) (List<?>)
                         redis.opsForStream().read(
+                                org.springframework.data.redis.connection.stream.Consumer.from(GROUP, consumerName),
                                 options,
                                 StreamOffset.create(RedisIotMessagePublisher.STREAM_KEY, ReadOffset.lastConsumed()));
                 if (records == null || records.isEmpty()) {
@@ -94,7 +95,7 @@ public class RedisIotMessageConsumer {
                     }
                 }
             } catch (org.springframework.dao.DataAccessException e) {
-                log.error("[redis-consumer] 拉取失败,5s 后重试: {}", e.getMessage());
+                log.error("[redis-consumer] 拉取失败,5s 后重试: {}", e.getMessage(), e);
                 try { Thread.sleep(5000); } catch (InterruptedException ignored) { break; }
             } catch (Exception e) {
                 log.error("[redis-consumer] 未知异常", e);

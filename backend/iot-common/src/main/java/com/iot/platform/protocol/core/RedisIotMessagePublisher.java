@@ -3,7 +3,8 @@ package com.iot.platform.protocol.core;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import jakarta.annotation.PostConstruct;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.data.redis.connection.stream.StreamRecords;
@@ -28,7 +29,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "iot.role", havingValue = "iot")
+@ConditionalOnExpression("'${iot.role:api}' == 'iot' || '${iot.role:api}' == 'all'")
 public class RedisIotMessagePublisher implements IotMessagePublisher {
 
     public static final String STREAM_KEY = "iot:device:events";
@@ -36,7 +37,12 @@ public class RedisIotMessagePublisher implements IotMessagePublisher {
     private final StringRedisTemplate redis;
     private final ObjectMapper objectMapper;
 
-    @Override
+    @PostConstruct
+    public void init() {
+        log.info("[redis-pub] Bean 已创建,STREAM_KEY={}", STREAM_KEY);
+    }
+
+@Override
     public void publish(IotMessageEnvelope envelope) {
         try {
             String json = envelope.toJson(objectMapper);

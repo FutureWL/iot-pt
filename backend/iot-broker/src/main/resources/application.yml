@@ -1,0 +1,51 @@
+server:
+  port: 9100
+  servlet:
+    context-path: /api
+  tomcat:
+    threads:
+      max: 50
+      min-spare: 5
+
+spring:
+  application:
+    name: iot-broker
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+
+  # 缓存: Redis (Lettuce)
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+
+# JWT (跟 API 进程共享密钥)
+iot:
+  jwt:
+    secret: ${JWT_SECRET:iot-platform-super-secret-key-must-be-at-least-32-bytes-long-for-hs256}
+  # IoT 角色: broker(独立进程,无数据库)
+  role: iot
+  # 协议层: 启用
+  protocol-layer-enabled: true
+  # IoT 控制台: 启用
+  console:
+    enabled: true
+    spy-enabled: true
+  # 协议配置
+  protocol:
+    mqtt:
+      enabled: true
+      broker-url: ${MQTT_BROKER:tcp://emqx:1883}
+      client-id: iot-platform-broker
+      username: ${MQTT_USERNAME:}
+      password: ${MQTT_PASSWORD:}
+      subscribe-qos: 1
+    tcp:
+      enabled: true
+      port: ${TCP_PORT:33410}
+      boss-threads: 1
+      worker-threads: 4

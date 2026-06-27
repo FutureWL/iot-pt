@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -23,7 +23,7 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "iot.protocol.mqtt", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnExpression("'${iot.role:all}' != 'api' && '${iot.protocol.mqtt.enabled:true}' == 'true'")
 public class MqttProtocolAdapter implements ProtocolAdapter {
 
     private final IotProperties properties;

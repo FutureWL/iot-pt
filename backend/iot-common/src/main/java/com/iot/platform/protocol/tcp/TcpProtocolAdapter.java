@@ -21,7 +21,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
@@ -37,7 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "iot.protocol.tcp", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnExpression("'${iot.role:all}' != 'api' && '${iot.protocol.tcp.enabled:true}' == 'true'")
 public class TcpProtocolAdapter implements ProtocolAdapter {
 
     private final IotProperties properties;

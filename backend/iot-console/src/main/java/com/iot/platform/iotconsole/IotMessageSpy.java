@@ -1,6 +1,7 @@
 package com.iot.platform.iotconsole;
 
 import com.iot.platform.protocol.core.IotMessageEnvelope;
+import com.iot.platform.protocol.core.MessageObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -18,7 +19,7 @@ import jakarta.annotation.PostConstruct;
 @Component
 @RequiredArgsConstructor
 @ConditionalOnProperty(prefix = "iot.console", name = "spy-enabled", havingValue = "true", matchIfMissing = true)
-public class IotMessageSpy {
+public class IotMessageSpy implements MessageObserver {
 
     private final SpyBuffer buffer;
 

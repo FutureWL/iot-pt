@@ -24,17 +24,28 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class ProtocolDispatcher {
 
-    @org.springframework.beans.factory.annotation.Autowired
-    @org.springframework.beans.factory.annotation.Qualifier("localIotMessagePublisher")
-    private IotMessagePublisher publisher;
+    /**
+     * 消息发布器(可选):
+     *   - iot.role=all 时由 LocalIotMessagePublisher(同进程)实现
+     *   - iot.role=iot 时由 RedisIotMessagePublisher(发到 Redis Stream)实现
+     *   - iot.role=api 时无 publisher(只消费,不发布)
+     */
+    private final ObjectProvider<IotMessagePublisher> publisherProvider;
 
     /**
-     * 兼容直接 new ProtocolDispatcher() 的场景(无 Spring 上下文)
+     * 消息观察者(由 iot-console 提供,iot-common 不直接依赖)
+     * 用于 IoT 控制台抓包、SSE 推送等横切关注点。
+     * iot-broker 没引 iot-console 时为空,不影响主流程。
      */
-    public ProtocolDispatcher(IotMessagePublisher publisher) { this.publisher = publisher; }
+    private final ObjectProvider<MessageObserver> observerProvider;
+
+    public ProtocolDispatcher(ObjectProvider<IotMessagePublisher> publisherProvider,
+                              ObjectProvider<MessageObserver> observerProvider) {
+        this.publisherProvider = publisherProvider;
+        this.observerProvider = observerProvider;
+    }
 
     private final Map<String, ProtocolAdapter> adapters = new ConcurrentHashMap<>();
     private final Map<String, DeviceSession> onlineSessions = new ConcurrentHashMap<>();
@@ -60,6 +71,11 @@ public class ProtocolDispatcher {
     /** 适配器调这里 → 发到下游 */
     public void dispatch(DeviceMessage message) {
         log.info("[dispatcher] 收到 deviceKey={} type={}", message.getDeviceKey(), message.getType());
+        IotMessagePublisher publisher = publisherProvider.getIfAvailable();
+        if (publisher == null) {
+            log.debug("[dispatcher] 无 publisher(iot.role=api 模式,不发布)");
+            return;
+        }
         try {
             IotMessageEnvelope env = IotMessageEnvelope.builder()
                     .id(java.util.UUID.randomUUID().toString())
@@ -72,9 +88,20 @@ public class ProtocolDispatcher {
                     .receivedAt(java.time.Instant.now().toEpochMilli())
                     .build();
             publisher.publish(env);
+            // 通知观察者(抓包/SSE),失败不影响主流程
+            notifyObservers(env);
         } catch (Exception e) {
             log.error("dispatch 失败: deviceKey={}", message.getDeviceKey(), e);
         }
+    }
+
+    private void notifyObservers(IotMessageEnvelope env) {
+        if (observerProvider == null) return;
+        observerProvider.ifAvailable(obs -> {
+            try { obs.onEnvelope(env); } catch (Exception e) {
+                log.warn("observer 处理失败: {}", e.getMessage());
+            }
+        });
     }
 
     private String serializePayload(DeviceMessage msg) {
@@ -92,6 +119,8 @@ public class ProtocolDispatcher {
     public void onSessionConnect(DeviceSession session) {
         onlineSessions.put(session.getDeviceKey(), session);
         log.info("设备上线: protocol={}, deviceKey={}", session.getProtocol(), session.getDeviceKey());
+        IotMessagePublisher publisher = publisherProvider.getIfAvailable();
+        if (publisher == null) return;
         // 通知业务层
         publisher.publish(IotMessageEnvelope.builder()
                 .id(java.util.UUID.randomUUID().toString())
@@ -108,6 +137,8 @@ public class ProtocolDispatcher {
         DeviceSession removed = onlineSessions.remove(session.getDeviceKey());
         if (removed != null) {
             log.info("设备离线: protocol={}, deviceKey={}", session.getProtocol(), session.getDeviceKey());
+            IotMessagePublisher publisher = publisherProvider.getIfAvailable();
+            if (publisher == null) return;
             publisher.publish(IotMessageEnvelope.builder()
                     .id(java.util.UUID.randomUUID().toString())
                     .type("OFFLINE")
