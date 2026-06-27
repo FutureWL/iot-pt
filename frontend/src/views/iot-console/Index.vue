@@ -16,7 +16,7 @@ import {
   DataLine, Warning, CircleClose
 } from '@element-plus/icons-vue'
 import {
-  getStatus, getDevices, getMessages,
+  getStatus, getDevices,
   kickDevice, restartProtocol,
   subscribeStream,
   type ConsoleStatusVO, ConsoleDeviceVO, ConsoleEnvelopeVO
@@ -27,7 +27,6 @@ const activeTab = ref('overview')
 const status = ref<ConsoleStatusVO>({})
 const devices = ref<ConsoleDeviceVO[]>([])
 const messages = ref<ConsoleEnvelopeVO[]>([])
-const loading = ref(false)
 const sseConnected = ref(false)
 const ssePaused = ref(false)
 
@@ -60,14 +59,7 @@ async function refreshDevices() {
   }
 }
 
-async function refreshMessages() {
-  loading.value = true
-  try {
-    messages.value = await getMessages(100)
-  } finally {
-    loading.value = false
-  }
-}
+
 
 // ============ SSE 流 ============
 function startStream() {
@@ -189,7 +181,6 @@ function tryParsePayload(s?: string): any {
 onMounted(() => {
   refreshStatus()
   refreshDevices()
-  refreshMessages()
   startStream()
   // 1 秒刷新概览/设备
   pollTimer = window.setInterval(() => {
@@ -221,7 +212,6 @@ onBeforeUnmount(() => {
           {{ ssePaused ? '恢复' : '暂停' }}
         </el-button>
         <el-button :icon="Delete" size="small" @click="onClearMessages">清空</el-button>
-        <el-button :icon="Refresh" size="small" @click="refreshMessages">加载历史</el-button>
       </div>
     </div>
 
@@ -284,7 +274,7 @@ onBeforeUnmount(() => {
         <template #label>
           <span><el-icon><Monitor /></el-icon> 设备 ({{ devices.length }})</span>
         </template>
-        <el-table :data="devices" stripe v-loading="loading" empty-text="暂无在线设备">
+        <el-table :data="devices" stripe empty-text="暂无在线设备">
           <el-table-column prop="deviceKey" label="设备 Key" min-width="200" />
           <el-table-column prop="productKey" label="产品 Key" min-width="180" />
           <el-table-column prop="protocol" label="协议" width="100">
@@ -335,7 +325,7 @@ onBeforeUnmount(() => {
               <pre>{{ JSON.stringify(tryParsePayload(m.payload), null, 2) }}</pre>
             </details>
           </div>
-          <el-empty v-if="!loading && messages.length === 0" description="暂无消息" />
+          <el-empty v-if="messages.length === 0" description="暂无消息" />
         </div>
       </el-tab-pane>
 
