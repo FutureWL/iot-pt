@@ -10,6 +10,19 @@ NProgress.configure({ showSpinner: false })
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || '/api'
 
+/**
+ * 识别 Spring Boot 的 NoResourceFoundException(后端未注册的 API 路径 fallback)。
+ * 状态码 404 + 响应体 message 以 "No static resource" 开头。
+ * 业务层通常已 .catch() 降级处理,这里用于拦截器静默该异常,避免重复提示用户。
+ */
+export function isSpringNoStaticResourceError(error: unknown, derivedMsg?: string): boolean {
+  const msg = derivedMsg
+    ?? (error as any)?.response?.data?.message
+    ?? (error as any)?.message
+    ?? ''
+  return msg.startsWith('No static resource')
+}
+
 const service: AxiosInstance = axios.create({
   baseURL,
   timeout: 30_000,
@@ -70,7 +83,14 @@ service.interceptors.response.use(
   },
   (error) => {
     NProgress.done()
-    const msg = error?.response?.data?.message || error.message || '网络异常'
+    const msg: string = error?.response?.data?.message || error.message || '网络异常'
+
+    if (isSpringNoStaticResourceError(error, msg)) {
+      // Spring "No static resource" 兜底异常(后端未注册的 API 路径):
+      //   业务层通常已有 .catch() 降级,这里静默不再弹红字,但仍 reject 让 catch 接管
+      return Promise.reject(error)
+    }
+
     ElMessage.error(msg)
     return Promise.reject(error)
   }

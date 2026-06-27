@@ -176,3 +176,59 @@ async function load() {
 1. 25 个 view 的 `load()` 函数改 `try/finally` → `try/catch/finally`,显式处理每个 API 异常(降级数据 / 错误提示 / 重试按钮)
 2. 给每个 view 写组件测试,验证 API 失败时的渲染兜底
 3. 抽取公共 `useApiList()` / `useApiDetail()` composable,统一错误处理模式
+
+---
+
+## 追加 — Bug #3: 后端未注册 API 触发"系统异常"红字
+
+**报告时间**: 2026-06-28 第二次巡检
+
+**症状**: 用户反馈系统弹出两条"系统异常"提示:
+
+```
+系统异常: No static resource workorder/stats.
+系统异常: No static resource monitor/topology/graph.
+```
+
+**根因分析**:
+
+1. **后端契约差距** — 列出后端全部 15 个 `@RequestMapping` 根路径(`alert`/`auth`/`dashboard`/`data`/`iot-console`/`iot/device`/`iot/device-group`/`iot/device-shadow`/`iot/product`/`rule`/`system/menu|role|user|user-role`/`actuator`/`iot-console` + Spring 默认兜底),**没有 workorder 模块,没有 monitor 模块**。
+2. **前端调用** — dashboard `loadAll` 调 `getWorkOrderStats()` 和 `getTopologyGraph()`,两个 API 后端不存在。
+3. **Spring Boot 兜底** — 路径未匹配任何 Controller,Spring 转发到 static resource handler;静态资源也没有,抛 `NoResourceFoundException`,响应 404 + `message = "No static resource workorder/stats."`
+4. **前端拦截器** — `request.ts` 的 error interceptor **总是** `ElMessage.error(msg)`,即便业务层 `.catch(() => ({ data: ... }))` 已兜底数据,拦截器仍把这条错误消息弹出成"系统异常"红字。
+
+### 修复 #3 — request.ts 拦截器识别 No static resource 静默
+
+**修改**: `frontend/src/api/request.ts`
+
+- 提取 `isSpringNoStaticResourceError(error, derivedMsg?)` 纯函数(导出便于单测)
+- error interceptor 调用该函数,匹配时**不弹 ElMessage.error**,仅 `Promise.reject(error)` 让业务 catch 接管
+- 其它 4xx/5xx 行为不变(仍弹 ElMessage)
+
+**新增测试**: `tests/unit/api/request.spec.ts` — 10 个用例覆盖:
+
+- `error.response.data.message` 以 "No static resource" 开头 → true
+- `error.message` 含 "No static resource"(无 response)→ true
+- derivedMsg 参数优先于 error.message
+- 普通 Error / 其它 404 / null / undefined → false
+- 空对象 / 空 derivedMsg → false
+
+### 验证
+
+- `isSpringNoStaticResourceError` 单测: **10/10 通过**
+- 全部测试: **63/63 通过**(新增 10 + 原有 53)
+- `vue-tsc --noEmit`: **0 错误**
+- 真实端到端验证未做(后端用户凭证未公开;通过单元测试 + 代码 review 覆盖)
+
+### 后端契约差距(留给后续 sprint)
+
+后端缺失 13+ 个前端已实现的 view 对应模块:
+
+- `workorder` — 工单管理(7 个 API:`/stats`、`/page`、`/:id`、`/:id/logs`、`/:id/assign`、`/:id/complete` 等)
+- `monitor` — 监测中心(pd / prpd / temperature / environment / gis / topology 共 ~25 个 API)
+- `knowledge` — 知识库
+- `ops/statistics` — 运维统计
+- `report/center` — 报表中心
+- `system/{tenant, organization, dict, log, notify}` — 系统子模块
+
+每个模块的补全是独立的 backend sprint。当前前端通过 `.catch` + 全局兜底机制保证可用性,但页面展示的是空数据 / mock 拓扑,不是真实数据。
