@@ -30,7 +30,6 @@ const menus = [
   { path: '/rule/list',    title: '规则引擎',   icon: 'SetUp' },
   { path: '/rule/alert',   title: '告警记录',   icon: 'Warning' },
   { path: '/screen',       title: '可视化大屏', icon: 'PieChart' },
-  { path: '/debug/simulator', title: '设备调试', icon: 'VideoPlay' },
   { path: '/system/user',  title: '用户管理',   icon: 'User' },
   { path: '/system/role',  title: '角色管理',   icon: 'UserFilled' },
   { path: '/system/tenant',title: '租户管理',   icon: 'OfficeBuilding' },

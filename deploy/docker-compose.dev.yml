@@ -19,7 +19,6 @@ services:
     build:
       context: ../backend
       dockerfile: Dockerfile
-      target: builder  # dev 可选:跳过最终镜像,用 builder 阶段跑
     environment:
       SPRING_PROFILES_ACTIVE: dev
       # 开启 JDWP,IDE 用 "Remote JVM Debug" 连接 localhost:5005

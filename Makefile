@@ -8,6 +8,7 @@ PROJECT_ROOT := $(shell pwd)
 DEPLOY_DIR   := $(PROJECT_ROOT)/deploy
 BACKEND_DIR  := $(PROJECT_ROOT)/backend
 FRONTEND_DIR := $(PROJECT_ROOT)/frontend
+SIM_DIR      := $(PROJECT_ROOT)/tools/iot-device-simulator
 
 # 兼容 docker compose v1 / v2
 COMPOSE := $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
@@ -154,3 +155,40 @@ clean: ## 清理构建产物
 	rm -rf $(FRONTEND_DIR)/dist
 	rm -rf $(FRONTEND_DIR)/node_modules/.vite
 	@echo "$(GREEN)✓ 已清理$(RESET)"
+
+# ============================================================
+# Python 设备模拟器 (tools/iot-device-simulator)
+# ============================================================
+
+.PHONY: sim
+sim: ## 启动 Python 设备模拟器 GUI (需先 sim-install)
+	@if [ -z "$$DISPLAY" ] && [ "$$(uname)" = "Linux" ] && [ -z "$$WAYLAND_DISPLAY" ]; then \
+	  echo "$(YELLOW)⚠ 未检测到图形界面 (DISPLAY/WAYLAND_DISPLAY 都为空)$(RESET)"; \
+	  echo "  如在远程/无 GUI 环境,请用 X11 转发 或改在本地运行"; \
+	fi
+	cd $(SIM_DIR) && ./run.sh
+
+.PHONY: sim-install
+sim-install: ## 安装 Python 模拟器依赖 (开发模式)
+	@echo "$(YELLOW)▶ 安装 Python 设备模拟器...$(RESET)"
+	cd $(SIM_DIR) && python3 -m venv .venv 2>/dev/null || true
+	cd $(SIM_DIR) && . .venv/bin/activate && pip install -e ".[dev]"
+	@echo "$(GREEN)✓ 安装完成,运行 'make sim' 启动$(RESET)"
+
+.PHONY: sim-build
+sim-build: ## 打包 Python 模拟器为单可执行文件
+	cd $(SIM_DIR) && . .venv/bin/activate 2>/dev/null; \
+	  pip install -e ".[packaging]" && ./scripts/build.sh
+	@echo "$(GREEN)✓ 产物: $(SIM_DIR)/dist/iot-device-simulator$(RESET)"
+
+.PHONY: sim-test
+sim-test: ## 运行 Python 模拟器测试
+	cd $(SIM_DIR) && . .venv/bin/activate && pytest
+
+.PHONY: sim-clean
+sim-clean: ## 清理模拟器构建/虚拟环境
+	rm -rf $(SIM_DIR)/.venv
+	rm -rf $(SIM_DIR)/dist
+	rm -rf $(SIM_DIR)/build
+	rm -rf $(SIM_DIR)/src/*.egg-info
+	@echo "$(GREEN)✓ 模拟器产物已清理$(RESET)"
