@@ -1,12 +1,26 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { Refresh, Connection, Position } from '@element-plus/icons-vue'
-import { getRealtime, type RealtimeDevice } from '@/api/data/realtime'
+import { getRealtime, getRealtimeTimestamps, type RealtimeDevice } from '@/api/data/realtime'
+import { WSClient } from '@/utils/ws'
 
 const loading = ref(false)
 const data = ref<RealtimeDevice[]>([])
 const expanded = ref<Record<number, boolean>>({})
-let timer: any
+
+/** WS 状态: 'connecting' | 'connected' | 'disconnected' */
+const wsStatus = ref<'connecting' | 'connected' | 'disconnected'>('connecting')
+/** WS 最后一次失败的原因(断开/握手错误时填,排查用) */
+const wsLastError = ref<string>('')
+
+// ============ HTTP 轮询 ============
+// 旧逻辑:WS 健康 30s / WS 断开 5s,会产生 5s 一刷全量的视觉干扰。
+// 新逻辑:WS 健康时**不轮询**(WS 实时推,不需要再拉);
+//        WS 断开时**不静默轮询**,直接告诉用户"通道断了,请手动刷新"。
+//        这样出问题能马上被看到,不会偷偷用 stale 数据刷新页面。
+let pollTimer: any
+
+const POLL_INTERVAL_WS_OK = 30_000   // 保留,但默认不启用(见 restartPolling)
 
 async function load() {
   loading.value = true
@@ -16,6 +30,50 @@ async function load() {
   } finally {
     loading.value = false
   }
+}
+
+/** 增量更新:WebSocket 推过来的属性值直接 patch 到本地 */
+function patchProperty(deviceId: number, identifier: string, value: any, updatedAt?: string) {
+  const dev = data.value.find(d => d.deviceId === deviceId)
+  if (!dev) return
+  const prop = dev.properties.find(p => p.identifier === identifier)
+  if (prop) {
+    prop.value = value == null ? null : String(value)
+    if (updatedAt) prop.updatedAt = updatedAt
+    prop.recentTs = Date.now()   // WS 推送的就是最新的,标为 now
+  } else {
+    // 新出现的属性,动态加入
+    dev.properties.push({
+      identifier, value: value == null ? null : String(value),
+      updatedAt, recentTs: Date.now()
+    } as any)
+  }
+}
+
+/** 增量更新:WebSocket 推过来的设备状态变化 */
+function patchDeviceStatus(deviceId: number, status: number) {
+  const dev = data.value.find(d => d.deviceId === deviceId)
+  if (dev) {
+    dev.status = status
+    if (status === 0) dev.lastOnlineTime = undefined as any
+  }
+}
+
+async function refreshTimestamps() {
+  try {
+    const res: any = await getRealtimeTimestamps()
+    const map = res.data || {}
+    let updated = 0
+    for (const dev of data.value) {
+      const idMap = map[String(dev.deviceId)] || map[dev.deviceId]
+      if (!idMap) continue
+      for (const p of dev.properties) {
+        const ts = idMap[p.identifier]
+        if (ts) { p.recentTs = ts; updated++ }
+      }
+    }
+    return updated
+  } catch { return 0 }
 }
 
 const totalCount = computed(() => data.value.length)
@@ -33,16 +91,79 @@ function formatTime(t?: string) {
   return t
 }
 
+/** 把毫秒时间戳格式化为"X 秒前 / X 分钟前 / X 小时前" */
+function timeAgo(ts?: number): string {
+  if (!ts) return '—'
+  const diff = Math.max(0, Date.now() - ts)
+  if (diff < 5_000) return '刚刚'
+  if (diff < 60_000) return `${Math.floor(diff / 1000)} 秒前`
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)} 分钟前`
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)} 小时前`
+  return `${Math.floor(diff / 86_400_000)} 天前`
+}
+
 function valColor(v: any) {
   if (v == null) return '#c0c4cc'
   return '#67c23a'
 }
 
-onMounted(() => {
-  load()
-  timer = setInterval(load, 5000)  // 每 5 秒自动刷新
+// ============ WebSocket 客户端 ============
+let ws: WSClient | null = null
+
+function setupWS() {
+  if (ws) ws.close()
+  // 路径走 WSClient 默认值(读 VITE_WS_BASE_URL,默认 /api/ws),
+  // 与后端 server.servlet.context-path=/api 对齐。
+  ws = new WSClient()
+  ws.on('connected', () => {
+    wsStatus.value = 'connected'
+    wsLastError.value = ''
+    restartPolling(true)
+  })
+  ws.on('disconnected', (evt: any) => {
+    wsStatus.value = 'disconnected'
+    // 记录 onclose 的 code/reason,排查用
+    wsLastError.value = (ws as any)?.lastError?.value
+      || `code=${evt?.code ?? '?'}${evt?.reason ? ' ' + evt.reason : ''}`
+    // WS 断开:**不**静默 5s 一刷全量。
+    // 之前是 poll 全量,用户感受是"页面每隔几秒闪一下"。
+    // 现在改成不轮询,只把状态暴露给用户,让用户决定是否手动刷新。
+    restartPolling(false)
+  })
+  ws.on('shadow.update', (evt: any) => {
+    patchProperty(evt.deviceId, evt.identifier, evt.value, evt.updatedAt)
+  })
+  ws.on('device.status', (evt: any) => {
+    patchDeviceStatus(evt.deviceId, evt.status)
+  })
+  ws.connect()
+}
+
+/**
+ * 根据 WS 状态调整轮询频率。
+ * 注意:WS 健康时**不实际跑**轮询,只保留定时器句柄以便 cleanup。
+ *       WS 断开时不静默轮询,只把状态呈现给 UI。
+ */
+function restartPolling(wsOk: boolean) {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null }
+  if (!wsOk) {
+    // 不开定时器。WS 断开 = 数据可能过期,让用户看到 alert 并自己点刷新。
+    return
+  }
+  // WS 健康时也先不轮询:WS 推过来的属性已经包含 updatedAt,
+  // "X 分钟前" 那个时间戳我们用 updatedAt 来计算就够了,
+  // 不需要再发请求到后端查 TDengine。
+  // 如果将来确实需要,可以恢复 setInterval(refreshTimestamps, POLL_INTERVAL_WS_OK)。
+}
+
+onMounted(async () => {
+  await load()
+  setupWS()
 })
-onBeforeUnmount(() => clearInterval(timer))
+onBeforeUnmount(() => {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null }
+  if (ws) { ws.close(); ws = null }
+})
 </script>
 
 <template>
@@ -53,12 +174,31 @@ onBeforeUnmount(() => clearInterval(timer))
         <el-tag>设备 {{ totalCount }} 台</el-tag>
         <el-tag type="success">在线 {{ onlineCount }} 台</el-tag>
         <el-tag type="info">属性 {{ reportedCount }} / {{ propCount }} 已上报</el-tag>
+        <el-tag :type="wsStatus === 'connected' ? 'success' : wsStatus === 'connecting' ? 'warning' : 'danger'" size="default">
+          WS: {{ wsStatus }}
+        </el-tag>
         <el-button :icon="Refresh" @click="load">刷新</el-button>
       </div>
     </div>
 
-    <el-alert type="info" :closable="false" style="margin-bottom: 12px">
-      自动每 5 秒刷新一次。点击设备行展开查看各属性当前值。值实时来自设备影子(MySQL)。
+    <el-alert
+      :type="wsStatus === 'connected' ? 'success' : wsStatus === 'connecting' ? 'warning' : 'danger'"
+      :closable="false"
+      show-icon
+      style="margin-bottom: 12px">
+      <template v-if="wsStatus === 'connected'">
+        实时推送已连接:属性变化通过 WebSocket 增量更新。
+      </template>
+      <template v-else-if="wsStatus === 'connecting'">
+        正在连接实时通道……
+      </template>
+      <template v-else>
+        <strong>实时通道断开,数据不会自动刷新。</strong>
+        当前显示的可能是过期数据,请点击右上角「刷新」按钮手动拉取。
+        <div v-if="wsLastError" style="margin-top: 4px; font-size: 12px; opacity: 0.85">
+          原因: {{ wsLastError }}
+        </div>
+      </template>
     </el-alert>
 
     <div v-for="d in data" :key="d.deviceId" class="device-card page-card">
@@ -96,13 +236,16 @@ onBeforeUnmount(() => clearInterval(timer))
               {{ p.accessMode }}
             </el-tag>
             <span class="prop-type">{{ p.type }}</span>
-            <span v-if="p.updatedAt" class="prop-time">{{ p.updatedAt }}</span>
+            <span v-if="p.recentTs" class="prop-time" :title="new Date(p.recentTs).toLocaleString('zh-CN')">
+              {{ timeAgo(p.recentTs) }}
+            </span>
+            <span v-else-if="p.updatedAt" class="prop-time">{{ p.updatedAt }}</span>
           </div>
         </div>
       </div>
     </div>
 
-    <el-empty v-if="!loading && data.length === 0" description="暂无在线设备" />
+    <el-empty v-if="!loading && data.length === 0" description="暂无设备" />
   </div>
 </template>
 
