@@ -1,0 +1,65 @@
+# ============================================================
+# IoT Platform - 生产环境覆盖
+#
+# 与基础 docker-compose.yml 合并,用于:
+#   - prod Spring Profile(精简日志、关闭 SQL)
+#   - 强制 restart: always
+#   - 资源限制
+#   - 日志滚动
+#
+# 启动:
+#   cp .env.example .env.prod  # 然后修改密码
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d
+# ============================================================
+
+services:
+  mysql:
+    restart: always
+    deploy:
+      resources:
+        limits: { cpus: '2.0', memory: 2G }
+        reservations: { cpus: '0.5', memory: 512M }
+    logging:
+      driver: json-file
+      options: { max-size: "50m", max-file: "5" }
+
+  tdengine:
+    restart: always
+    deploy:
+      resources:
+        limits: { cpus: '2.0', memory: 2G }
+        reservations: { cpus: '0.5', memory: 512M }
+    logging:
+      driver: json-file
+      options: { max-size: "50m", max-file: "5" }
+
+  emqx:
+    restart: always
+    deploy:
+      resources:
+        limits: { cpus: '2.0', memory: 1G }
+    logging:
+      driver: json-file
+      options: { max-size: "50m", max-file: "5" }
+
+  backend:
+    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JAVA_OPTS: "-Xms1g -Xmx2g -XX:+UseG1GC -XX:MaxMetaspaceSize=512m -Djava.security.egd=file:/dev/./urandom"
+    deploy:
+      resources:
+        limits: { cpus: '2.0', memory: 2.5G }
+        reservations: { cpus: '0.5', memory: 1G }
+    logging:
+      driver: json-file
+      options: { max-size: "100m", max-file: "10" }
+
+  frontend:
+    restart: always
+    deploy:
+      resources:
+        limits: { cpus: '0.5', memory: 256M }
+    logging:
+      driver: json-file
+      options: { max-size: "20m", max-file: "3" }

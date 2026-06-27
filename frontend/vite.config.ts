@@ -6,9 +6,15 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import path from 'node:path'
 
 export default defineConfig(({ mode }) => {
+  // mode 由 CLI 决定:
+  //   npm run dev  -> 'development' -> 加载 .env.development
+  //   npm run build -> 'production' -> 加载 .env.production
   const env = loadEnv(mode, process.cwd(), '')
-  // 端口规则: 33400/33401 被 pi-node 占用,跳过;Backend API 用 33412
-  const backendBase = (env.VITE_API_BASE_URL || 'http://localhost:33412/api').replace(/\/api$/, '')
+  const apiBase = env.VITE_API_BASE_URL || '/api'
+  // dev 下 /api 是相对路径,需要 proxy 转发到真实后端
+  const proxyTarget = apiBase.startsWith('http')
+    ? apiBase.replace(/\/api$/, '')
+    : `http://localhost:${process.env.BACKEND_PORT || 33412}`
 
   return {
     plugins: [
@@ -23,18 +29,18 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: '0.0.0.0',
-      // 端口规则: 33400 被 pi-node 占用,跳过;Frontend dev 用 33411
+      // 端口规则: 33400/33401 被 pi-node 占用,跳过;Frontend dev 用 33411
       port: 33411,
       strictPort: false,
-      // 允许通过这些域名访问 dev server（Vite 5+ 默认有 host 检查）
+      // 允许通过这些域名访问 dev server(Vite 5+ 默认有 host 检查)
       allowedHosts: ['huntercat.cn', '.huntercat.cn'],
       proxy: {
         '/api': {
-          target: backendBase,
+          target: proxyTarget,
           changeOrigin: true
         },
         '/ws': {
-          target: backendBase,
+          target: proxyTarget,
           ws: true,
           changeOrigin: true
         }

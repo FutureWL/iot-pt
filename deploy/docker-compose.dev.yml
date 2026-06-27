@@ -1,0 +1,41 @@
+# ============================================================
+# IoT Platform - 开发环境覆盖
+#
+# 与基础 docker-compose.yml 合并,用于:
+#   1. 中间件 + 后端/前端全部跑在容器里(支持 Remote Debug)
+#   2. dev Spring Profile(详细日志、SQL 输出)
+#
+# 单独使用中间件(更常见):
+#   docker compose up -d mysql tdengine emqx
+# 然后用 IDE / make dev-backend / make dev-frontend
+#
+# 全栈容器化 + 调试:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml --env-file .env.dev up -d --build
+# ============================================================
+
+services:
+  backend:
+    # 强制重新构建,确保 SPRING_PROFILES_ACTIVE=dev 生效
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+      target: builder  # dev 可选:跳过最终镜像,用 builder 阶段跑
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      # 开启 JDWP,IDE 用 "Remote JVM Debug" 连接 localhost:5005
+      JAVA_OPTS: "-Xms256m -Xmx512m -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    ports:
+      - "5005:5005"          # 暴露调试端口(只在 dev)
+      - "${BACKEND_PORT:-33412}:9000"
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+      args:
+        # dev: 用相对路径,走 Nginx → backend 反代
+        VITE_API_BASE_URL: ""
+        VITE_WS_BASE_URL: ""
+        VITE_APP_TITLE: "物联网平台 (Dev)"
+    ports:
+      - "${FRONTEND_PORT:-33411}:80"

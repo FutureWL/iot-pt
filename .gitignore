@@ -36,6 +36,23 @@ logs/
 .env.local
 .env.*.local
 
+# 部署环境变量(只保留示例)
+deploy/.env
+deploy/.env.prod
+deploy/.env.local
+
+# 前端环境变量(只保留 dev/prod 示例)
+frontend/.env.local
+frontend/.env.*.local
+
+# 保留 .env.example / .env.dev / .env.production
+!.env.example
+!frontend/.env.example
+!frontend/.env.development
+!frontend/.env.production
+!deploy/.env.example
+!deploy/.env.dev
+
 # ===== 上传 / 临时文件 =====
 uploadPath/
 tmp/
@@ -50,3 +67,7 @@ deploy/mysql/data/
 deploy/tdengine/data/
 deploy/emqx/data/
 deploy/emqx/log/
+
+# ===== 构建产物 =====
+deploy/.build/
+frontend/dist/
