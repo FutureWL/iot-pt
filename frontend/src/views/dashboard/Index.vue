@@ -43,6 +43,19 @@ function fmt(t?: string) {
   return t
 }
 
+// 产品分布柱状图宽度:取当前分布中最大 count 作为 100%,按比例缩放
+// (上限 90% 防止贴边,0 / 负数直接返回 0%)
+function countBarWidth(count: number): string {
+  if (!count || count <= 0) return '0%'
+  const max = (data.value?.productDistribution ?? []).reduce(
+    (m, p) => (p.count > m ? p.count : m),
+    0
+  )
+  if (max <= 0) return '0%'
+  const pct = Math.min(90, Math.round((count / max) * 80))
+  return `${pct}%`
+}
+
 onMounted(() => {
   load()
   timer = setInterval(load, 30000)  // 30s 自动刷新

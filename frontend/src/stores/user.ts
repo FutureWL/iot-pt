@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { login as apiLogin, logout as apiLogout, getUserInfo, type LoginParams, type LoginResult } from '@/api/auth'
-import { setToken, removeToken, setTenantId } from '@/utils/auth'
+import { getToken, setToken, removeToken, setTenantId } from '@/utils/auth'
 
 export const useUserStore = defineStore('user', () => {
-  const token = ref<string>('')
+  // 页面刷新时从 cookie 恢复 token，避免登录态丢失
+  const token = ref<string>(getToken() ?? '')
   const userInfo = ref<LoginResult | null>(null)
 
   const isLoggedIn = computed(() => !!token.value)

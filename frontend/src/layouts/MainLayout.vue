@@ -138,9 +138,9 @@ function onMenuSelect(path: string) {
 
       <!-- 内容区 -->
       <el-main class="layout-main">
-        <router-view v-slot="{ Component }">
+        <router-view v-slot="{ Component, route }">
           <transition name="fade" mode="out-in">
-            <component :is="Component" />
+            <component :is="Component" :key="route.path" />
           </transition>
         </router-view>
       </el-main>

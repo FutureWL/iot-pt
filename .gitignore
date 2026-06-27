@@ -1,3 +1,7 @@
+# ============================================================
+# IoT Platform - Git Ignore
+# ============================================================
+
 # ===== Java / Maven =====
 target/
 *.class
@@ -8,6 +12,30 @@ hs_err_pid*
 .mvn/wrapper/maven-wrapper.jar
 build/
 out/
+
+# ===== Python (设备模拟器)=====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+.eggs/
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.venv/
+venv/
+env/
+ENV/
+.mypy_cache/
+.ruff_cache/
 
 # ===== IDE =====
 .idea/
@@ -27,11 +55,19 @@ dist-ssr/
 *.local
 .pnpm-store/
 
+# ===== 测试产物(Vitest + Playwright)=====
+coverage/
+playwright-report/
+test-results/
+.nyc_output/
+*.lcov
+
 # ===== 日志 =====
 logs/
 *.log
 
 # ===== 环境变量 =====
+# 默认忽略所有 .env 真值文件,只保留示例文件
 .env
 .env.local
 .env.*.local
@@ -70,4 +106,15 @@ deploy/emqx/log/
 
 # ===== 构建产物 =====
 deploy/.build/
-frontend/dist/
+
+# ===== 客户文档(敏感,不入版本控制)=====
+# 客户需求文档涉及真实客户信息(国网专项等),
+# 本地保留但不提交,改用私有仓库或加密备份
+customer-requirements/
+
+# ============================================================
+# 注意:以下目录 **不** 忽略,显式纳入版本控制:
+#   - tools/                 工具集(设备模拟器等)
+#   - frontend/tests/        前端测试套件
+#   - frontend/playwright.config.ts
+# ============================================================

@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import AutoImport from 'unplugin-auto-import/vite'
@@ -57,6 +58,47 @@ export default defineConfig(({ mode }) => {
             'element-plus': ['element-plus', '@element-plus/icons-vue'],
             'echarts': ['echarts', 'vue-echarts']
           }
+        }
+      }
+    },
+    // ============== 测试配置 ==============
+    test: {
+      // 全局 API: describe / it / expect / vi / beforeEach 等
+      globals: true,
+      // 浏览器环境模拟
+      environment: 'happy-dom',
+      // 测试入口: 单元测试 + 组件测试
+      include: [
+        'src/**/*.{test,spec}.{ts,tsx}',
+        'tests/unit/**/*.{test,spec}.{ts,tsx}'
+      ],
+      // 全局 setup: 注册 mock、扩展 expect 等
+      setupFiles: ['./tests/setup.ts'],
+      // CSS / 静态资源在测试中通常不需要
+      css: false,
+      // 测试运行优化
+      isolate: true,
+      // 覆盖率
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'html', 'json-summary', 'lcov'],
+        reportsDirectory: './coverage',
+        include: ['src/stores/**', 'src/utils/**', 'src/components/**'],
+        exclude: [
+          'src/**/*.{test,spec}.{ts,tsx}',
+          'src/main.ts',
+          'src/**/index.ts',
+          'src/**/types.ts',
+          'src/**/*.d.ts',
+          'src/**/*.config.ts',
+          'src/**/mocks/**'
+        ],
+        // 阈值: 渐进式提升
+        thresholds: {
+          lines: 60,
+          functions: 60,
+          branches: 60,
+          statements: 60
         }
       }
     }

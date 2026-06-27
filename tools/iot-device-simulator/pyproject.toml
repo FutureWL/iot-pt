@@ -1,0 +1,61 @@
+[project]
+name = "iot-device-simulator"
+version = "0.1.0"
+description = "GUI 程序：模拟 IoT 设备上报（MQTT/TCP），用于平台调试和演示"
+requires-python = ">=3.10"
+authors = [{ name = "IoT Platform Team" }]
+readme = "README.md"
+license = { text = "MIT" }
+keywords = ["iot", "mqtt", "tcp", "simulator", "device-emulator"]
+
+dependencies = [
+    "PySide6>=6.6.0",          # Qt6 GUI
+    "paho-mqtt>=2.0.0",        # MQTT 客户端
+    "PyYAML>=6.0.1",           # YAML 配置
+    "loguru>=0.7.2",           # 日志
+    "pydantic>=2.7.0",         # 配置校验
+    "platformdirs>=4.2.0",     # 跨平台用户目录
+    "qasync>=0.27.1",          # Qt + asyncio 桥接
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.0",
+    "pytest-qt>=4.4.0",
+    "pytest-asyncio>=0.23.7",
+    "ruff>=0.4.7",
+    "mypy>=1.10.1",
+]
+packaging = [
+    "pyinstaller>=6.6.0",
+]
+
+[project.scripts]
+iot-simulator = "iot_simulator.main:main"
+
+[project.gui-scripts]
+iot-simulator-gui = "iot_simulator.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/iot_simulator"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+files = ["src/iot_simulator"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
