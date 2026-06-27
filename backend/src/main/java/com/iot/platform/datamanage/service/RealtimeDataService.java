@@ -1,6 +1,8 @@
 package com.iot.platform.datamanage.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iot.platform.common.BusinessException;
 import com.iot.platform.device.entity.IotDevice;
 import com.iot.platform.device.entity.IotDeviceProperty;
@@ -10,26 +12,104 @@ import com.iot.platform.product.entity.IotProduct;
 import com.iot.platform.product.mapper.IotProductMapper;
 import com.iot.platform.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
- * 实时数据: 从 MySQL 影子读所有在线设备的当前属性
+ * 实时数据:Redis 缓存 + MySQL 影子 + TDengine recentTs 注入
+ *
+ * <p>读路径:
+ * <ol>
+ *   <li>先查 Redis({@code iot:tenant:{tid}:realtime:v1},TTL 5s)</li>
+ *   <li>miss 则查 MySQL(原行为,不变)</li>
+ *   <li>查 TDengine {@code max(ts) GROUP BY tbname},给每个属性注入 {@code recentTs}</li>
+ *   <li>JSON 序列化写回 Redis,返回</li>
+ * </ol>
+ *
+ * <p>WebSocket 增量更新由 {@code MqttProtocolAdapter} publish {@code shadow.update}
+ * 直接到前端,不走这条路径(避免 cache 里残留旧值)。</p>
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RealtimeDataService {
 
+    /** 缓存 key 前缀。版本号 v1 用来以后结构变更时手动失效。 */
+    private static final String CACHE_KEY_PREFIX = "iot:tenant:";
+    private static final String CACHE_KEY_SUFFIX = ":realtime:v1";
+    private static final Duration CACHE_TTL = Duration.ofSeconds(5);
+
     private final IotDeviceMapper deviceMapper;
     private final IotDevicePropertyMapper propertyMapper;
     private final IotProductMapper productMapper;
+    private final StringRedisTemplate redis;
+    private final ObjectMapper objectMapper;
+    private final RealtimeTdengineService tdengineService;
 
     /**
-     * 拉取该租户下所有 status=1 的设备,展开其物模型属性 + 当前影子值
+     * 拉取该租户下所有设备的当前属性快照(走 Redis 缓存)
      */
     public List<Map<String, Object>> listLive() {
         Long tenantId = TenantContext.getTenantId();
+
+        // 1) Redis 命中
+        String cacheKey = cacheKey(tenantId);
+        try {
+            String cached = redis.opsForValue().get(cacheKey);
+            if (cached != null && !cached.isEmpty()) {
+                List<Map<String, Object>> hit = objectMapper.readValue(
+                        cached, new TypeReference<List<Map<String, Object>>>() {});
+                log.info("[实时数据] Redis 命中 tenant={}, size={} 设备", tenantId,
+                        hit == null ? 0 : hit.size());
+                return hit;
+            }
+        } catch (Exception e) {
+            log.warn("[实时数据] Redis 读失败,降级查 MySQL: {}", e.getMessage());
+        }
+
+        // 2) MySQL 查(原逻辑)
+        List<Map<String, Object>> devices = loadFromMySQL(tenantId);
+
+        // 3) TDengine 注入 recentTs(失败不影响主流程)
+        try {
+            tdengineService.injectRecentTs(tenantId, devices);
+        } catch (Exception e) {
+            log.warn("[实时数据] TDengine 注入 recentTs 失败: {}", e.getMessage());
+        }
+
+        // 4) 回填 Redis
+        try {
+            String json = objectMapper.writeValueAsString(devices);
+            redis.opsForValue().set(cacheKey, json, CACHE_TTL.toSeconds(), TimeUnit.SECONDS);
+            log.debug("[实时数据] 已写 Redis key={}, jsonLen={}", cacheKey, json.length());
+        } catch (Exception e) {
+            log.warn("[实时数据] Redis 写失败: {}", e.getMessage());
+        }
+
+        return devices;
+    }
+
+    /**
+     * 强制失效缓存(协议上报、设备状态变更时可调用;但 WS 已经实时推,这里更多是兜底)
+     */
+    public void invalidateCache() {
+        Long tenantId = TenantContext.getTenantId();
+        if (tenantId == null) return;
+        try {
+            redis.delete(cacheKey(tenantId));
+        } catch (Exception e) {
+            log.debug("[实时数据] 失效缓存失败(忽略): {}", e.getMessage());
+        }
+    }
+
+    // ============== MySQL 查询(原逻辑,等价迁移) ==============
+
+    private List<Map<String, Object>> loadFromMySQL(Long tenantId) {
         List<IotDevice> devices = deviceMapper.selectList(new LambdaQueryWrapper<IotDevice>()
                 .eq(IotDevice::getTenantId, tenantId)
                 .orderByDesc(IotDevice::getLastOnlineTime));
@@ -73,7 +153,6 @@ public class RealtimeDataService {
             List<Map<String, Object>> props = new ArrayList<>();
             Map<String, JsonNodeExt> propDefs = parsePropertyDefs(p == null ? null : p.getThingModel());
             List<IotDeviceProperty> shadows = shadowByDevice.getOrDefault(d.getId(), List.of());
-            // 先按物模型顺序
             for (Map.Entry<String, JsonNodeExt> e : propDefs.entrySet()) {
                 Map<String, Object> prop = new LinkedHashMap<>();
                 prop.put("identifier", e.getKey());
@@ -126,5 +205,9 @@ public class RealtimeDataService {
     private static class JsonNodeExt {
         String name, type, unit, accessMode;
         JsonNodeExt(String n, String t, String u, String a) { name=n; type=t; unit=u; accessMode=a; }
+    }
+
+    private String cacheKey(Long tenantId) {
+        return CACHE_KEY_PREFIX + (tenantId == null ? "0" : tenantId) + CACHE_KEY_SUFFIX;
     }
 }

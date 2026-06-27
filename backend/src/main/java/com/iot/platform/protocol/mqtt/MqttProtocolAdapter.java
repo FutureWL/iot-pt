@@ -311,7 +311,8 @@ public class MqttProtocolAdapter implements ProtocolAdapter {
     }
 
     private void markOnline(IotDevice device) {
-        if (device.getStatus() != null && device.getStatus() == 1) {
+        boolean wasOnline = device.getStatus() != null && device.getStatus() == 1;
+        if (wasOnline) {
             // 已经在在线,只更新 lastOnlineTime
             device.setLastOnlineTime(LocalDateTime.now());
             deviceMapper.updateById(device);
@@ -322,6 +323,11 @@ public class MqttProtocolAdapter implements ProtocolAdapter {
                 device.setActiveTime(LocalDateTime.now());
             }
             deviceMapper.updateById(device);
+            // 状态变化才推 WS(优化掉重复推送)
+            try {
+                wsPublisher.publishDeviceStatus(device.getTenantId(), device.getId(),
+                        device.getDeviceKey(), 1);
+            } catch (Exception ignored) {}
         }
     }
 

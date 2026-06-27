@@ -16,6 +16,7 @@ public class IotProperties {
     private Tenant tenant = new Tenant();
     private Protocol protocol = new Protocol();
     private Rule rule = new Rule();
+    private Device device = new Device();
 
     @Data
     public static class Jwt {
@@ -61,5 +62,18 @@ public class IotProperties {
         private boolean enabled = true;
         private int threadPoolSize = 4;
         private int queueCapacity = 1000;
+    }
+
+    /**
+     * 设备相关配置(超时离线、心跳等)
+     */
+    @Data
+    public static class Device {
+        /** 是否启用超时离线扫描 */
+        private boolean offlineMonitorEnabled = true;
+        /** 扫描间隔(秒) */
+        private int offlineMonitorIntervalSeconds = 30;
+        /** 多久没收到消息视为离线(秒) */
+        private int offlineTimeoutSeconds = 90;
     }
 }

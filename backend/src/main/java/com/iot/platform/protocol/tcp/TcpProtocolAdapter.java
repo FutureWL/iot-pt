@@ -346,11 +346,19 @@ public class TcpProtocolAdapter implements ProtocolAdapter {
         }
 
         private void markOnline(IotDevice d, String ip) {
+            boolean wasOnline = d.getStatus() != null && d.getStatus() == 1;
             d.setStatus(1);
             d.setLastOnlineTime(LocalDateTime.now());
             d.setIpAddress(ip);
             if (d.getActiveTime() == null) d.setActiveTime(LocalDateTime.now());
             deviceMapper.updateById(d);
+            // 状态变化才推 WS
+            if (!wasOnline) {
+                try {
+                    wsPublisher.publishDeviceStatus(d.getTenantId(), d.getId(),
+                            d.getDeviceKey(), 1);
+                } catch (Exception ignored) {}
+            }
         }
     }
 
@@ -424,6 +432,11 @@ public class TcpProtocolAdapter implements ProtocolAdapter {
         d.setStatus(0);
         d.setLastOfflineTime(LocalDateTime.now());
         deviceMapper.updateById(d);
+        // 推 WS 让前端实时刷新
+        try {
+            wsPublisher.publishDeviceStatus(d.getTenantId(), d.getId(),
+                    d.getDeviceKey(), 0);
+        } catch (Exception ignored) {}
     }
 
     // 周期清理已断开的 channel 引用

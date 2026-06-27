@@ -9,6 +9,8 @@ export interface RealtimeProperty {
   accessMode?: string
   value: string | null
   updatedAt?: string
+  /** TDengine 查到的最后上报时间戳(毫秒) */
+  recentTs?: number
 }
 
 export interface RealtimeDevice {
@@ -26,6 +28,13 @@ export interface RealtimeDevice {
 
 export function getRealtime() {
   return request<RealtimeDevice[]>({ url: '/data/realtime', method: 'get' })
+}
+
+/** 轻量刷时间戳:返回 Map<deviceId, Map<identifier, lastTsMs>> */
+export function getRealtimeTimestamps() {
+  return request<Record<string | number, Record<string, number>>>({
+    url: '/data/realtime/timestamps', method: 'get'
+  })
 }
 
 export function getHistory(deviceId: number, identifier: string, type: string,

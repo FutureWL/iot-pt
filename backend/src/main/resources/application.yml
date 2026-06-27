@@ -127,6 +127,13 @@ iot:
     enabled: true
     thread-pool-size: 4
     queue-capacity: 1000
+  device:
+    # 设备超时离线扫描(MQTT 没有 last-will 时,靠这个)
+    offline-monitor-enabled: true
+    offline-monitor-interval-seconds: 30
+    # 多久没收到上报视为离线(秒)
+    offline-timeout-seconds: 90
+
 
 # 日志
 logging:
