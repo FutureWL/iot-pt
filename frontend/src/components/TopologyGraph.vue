@@ -28,7 +28,12 @@ export type TopologyNodeType =
 export type VoltageLevel = '110kV' | '35kV' | '10kV' | '0.4kV'
 export type NodeStatus = 'normal' | 'warning' | 'fault' | 'offline'
 export type EdgeType = 'bus' | 'feeder' | 'cable' | 'tie'
-export type LayoutType = 'dagre' | 'force' | 'circular'
+// 布局预设:
+//   dagre    - 通用有向图布局(TB,流程图风格,默认)
+//   dagre-lr - 电网一次接线图风格(LR + 显式 level rank + 母线贯穿)
+//   force    - 力导向(适合无层级关系的小图)
+//   circular - 环形
+export type LayoutType = 'dagre' | 'dagre-lr' | 'force' | 'circular'
 
 export interface TopologyGraphNode {
   id: string
@@ -39,6 +44,16 @@ export interface TopologyGraphNode {
   region?: string
   deviceId?: number
   substationCode?: string
+  /**
+   * 可选:布局 rank。dagre-lr 会按此字段把节点分到不同的水平列。
+   *   - 不传:回退到自动 dagre(按边方向推 rank,环会错乱)
+   *   - 传数字:严格按数值分层,适合有环(联络线)的电网拓扑
+   * 建议值: 0 = 进线电源, 1 = 主变, 2 = 母线, 3 = 出线开关,
+   *         4 = 环网柜, 5 = 末端设备(分接箱/用户)
+   */
+  level?: number
+  /** 母线专属:水平贯穿宽度,默认 200 */
+  width?: number
 }
 
 export interface TopologyGraphEdge {
@@ -143,18 +158,46 @@ const graphEl = ref<HTMLDivElement>()
 let graph: any = null
 
 // ============= 自定义节点(idempotent 注册) =============
+// 画法参照国标 GB/T 4728(电气简图用图形符号):
+//   - 母线: 水平贯穿的粗线
+//   - 变压器: 两个相交圆(同心圆也可,这里取行业最常见画法)
+//   - 开关/断路器: 矩形 + 中间斜杠
+//   - 环网柜: 矩形 + 内部文字
+//   - 变电站: 双层矩形
+//   - 分接箱: 实心小圆点
+//   - 用户表: 圆 + 文字
 let nodesRegistered = false
 function ensureNodesRegistered() {
   if (nodesRegistered) return
 
-  function drawLabel(group: any, name: string, yOffset: number) {
+  // 节点下方的文字标签。位置由 nodeConfig.labelPosition 控制:
+  //   'below'(默认) / 'above' / 'inside'
+  function drawLabel(group: any, name: string, yOffset: number, position: string = 'below') {
     const text = name || ''
-    const w = Math.max(40, text.length * 11 + 10)
+    // 动态算宽度: 中文字符 12px, ASCII 6.5px
+    const w = Math.max(48, calcTextWidth(text, 13) + 14)
     const palette = themePalette.value
+
+    if (position === 'inside') {
+      group.addShape('text', {
+        attrs: {
+          x: 0, y: yOffset,
+          text,
+          fontSize: 12,
+          fill: '#fff',
+          fontWeight: 600,
+          textAlign: 'center',
+          textBaseline: 'middle'
+        }
+      })
+      return
+    }
+
+    const labelY = position === 'above' ? yOffset - 8 : yOffset
     group.addShape('rect', {
       attrs: {
-        x: -w / 2, y: yOffset - 8,
-        width: w, height: 16,
+        x: -w / 2, y: labelY - 9,
+        width: w, height: 18,
         fill: palette.labelBg,
         stroke: palette.labelBorder,
         lineWidth: 1,
@@ -163,9 +206,9 @@ function ensureNodesRegistered() {
     })
     group.addShape('text', {
       attrs: {
-        x: 0, y: yOffset + 3,
+        x: 0, y: labelY + 4,
         text,
-        fontSize: 11,
+        fontSize: 12,
         fill: palette.labelText,
         fontWeight: 500,
         textAlign: 'center'
@@ -173,80 +216,232 @@ function ensureNodesRegistered() {
     })
   }
 
+  // 中英文混合文本宽度估算
+  function calcTextWidth(text: string, fontSize: number): number {
+    let width = 0
+    for (const ch of text) {
+      width += /[\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]/.test(ch) ? fontSize : fontSize * 0.55
+    }
+    return Math.ceil(width)
+  }
+
+  // ============= 圆形节点: switch / ring_main / junction / meter =============
   G6.registerNode('device-circle', {
     draw(cfg: any, group: any) {
       const status = cfg.status as NodeStatus
       const color = statusColor[status]
       const isEmphasis = status === 'fault' || status === 'warning'
+      const isJunction = cfg.type === 'junction'
+      const isMeter = cfg.type === 'meter'
+      const isSwitch = cfg.type === 'switch'
+      const r = isJunction ? 7 : isMeter ? 14 : 14
       const keyShape = group.addShape('circle', {
         attrs: {
-          x: 0, y: 0, r: 14,
+          x: 0, y: 0, r,
           fill: color.fill,
           stroke: themePalette.value.nodeStroke,
           lineWidth: isEmphasis ? 3 : 2
         }
       })
-      group.addShape('text', {
-        attrs: { x: 0, y: 3, text: cfg.symbol || '·', fontSize: 10, fontWeight: 600, fill: '#fff', textAlign: 'center' }
-      })
-      if (props.showLabels) drawLabel(group, cfg.label, 24)
+      // 分接箱不画内文(太小)
+      if (!isJunction) {
+        group.addShape('text', {
+          attrs: { x: 0, y: 3, text: cfg.symbol || '·', fontSize: 11, fontWeight: 600, fill: '#fff', textAlign: 'center' }
+        })
+      }
+      if (props.showLabels) drawLabel(group, cfg.label, r + 16)
       return keyShape
     }
   }, 'circle')
 
+  // ============= 矩形节点: ring_main(环网柜) / switch(开关矩形化) =============
   G6.registerNode('device-rect', {
     draw(cfg: any, group: any) {
       const status = cfg.status as NodeStatus
       const color = statusColor[status]
       const isEmphasis = status === 'fault' || status === 'warning'
-      const isBusbar = cfg.type === 'busbar'
-      const isSubstation = cfg.type === 'substation'
-      const w = isSubstation ? 56 : isBusbar ? 50 : 40
-      const h = isBusbar ? 16 : 30
+      const isRingMain = cfg.type === 'ring_main'
+      const isSwitch = cfg.type === 'switch'
+      const w = isSwitch ? 14 : isRingMain ? 36 : 40
+      const h = isSwitch ? 10 : isRingMain ? 24 : 30
       const keyShape = group.addShape('rect', {
         attrs: {
           x: -w / 2, y: -h / 2, w, h,
-          fill: isBusbar ? color.stroke : color.fill,
+          fill: color.fill,
           stroke: themePalette.value.nodeStroke,
           lineWidth: isEmphasis ? 3 : 2,
-          radius: 3
+          radius: 2
         }
       })
-      if (isBusbar) {
+      if (isSwitch) {
+        // 开关内部画一道斜杠,表示断路器符号
         group.addShape('line', {
-          attrs: { x1: -w / 2 + 4, y1: 0, x2: w / 2 - 4, y2: 0, stroke: '#fff', lineWidth: 1.5 }
+          attrs: { x1: -w / 2 + 1, y1: h / 2 - 1, x2: w / 2 - 1, y2: -h / 2 + 1, stroke: '#fff', lineWidth: 1.5 }
         })
       } else {
         group.addShape('text', {
           attrs: { x: 0, y: 3, text: cfg.symbol || '', fontSize: 11, fontWeight: 600, fill: '#fff', textAlign: 'center' }
         })
       }
-      if (props.showLabels) drawLabel(group, cfg.label, h / 2 + 18)
+      if (props.showLabels) drawLabel(group, cfg.label, h / 2 + 16)
       return keyShape
     }
   }, 'rect')
 
-  G6.registerNode('device-diamond', {
+  // ============= 母线: 水平贯穿的粗线 =============
+  // width 由节点的 cfg.width 控制(用户可指定,默认 200)
+  G6.registerNode('busbar', {
+    draw(cfg: any, group: any) {
+      const status = cfg.status as NodeStatus
+      const color = statusColor[status]
+      const w = Number(cfg.width) || 200
+      const h = 8
+      const keyShape = group.addShape('rect', {
+        attrs: {
+          x: -w / 2, y: -h / 2, w, h,
+          fill: color.stroke,           // 母线用深色,与节点语义色不同
+          stroke: color.stroke,
+          lineWidth: 1,
+          radius: 1
+        }
+      })
+      // 母线上方标注电压等级(简洁的小标签)
+      if (cfg.voltageLevel) {
+        group.addShape('text', {
+          attrs: {
+            x: 0, y: -h / 2 - 12,
+            text: cfg.voltageLevel,
+            fontSize: 12,
+            fontWeight: 600,
+            fill: color.stroke,
+            textAlign: 'center'
+          }
+        })
+      }
+      if (props.showLabels) drawLabel(group, cfg.label, h / 2 + 14)
+      return keyShape
+    }
+  }, 'rect')
+
+  // ============= 变电站: 双层矩形 =============
+  G6.registerNode('substation', {
     draw(cfg: any, group: any) {
       const status = cfg.status as NodeStatus
       const color = statusColor[status]
       const isEmphasis = status === 'fault' || status === 'warning'
-      const s = 28
-      const keyShape = group.addShape('polygon', {
+      const w = 60, h = 36
+      // 外框
+      const keyShape = group.addShape('rect', {
         attrs: {
-          points: [[0, -s / 2], [s / 2, 0], [0, s / 2], [-s / 2, 0]],
+          x: -w / 2, y: -h / 2, w, h,
           fill: color.fill,
           stroke: themePalette.value.nodeStroke,
-          lineWidth: isEmphasis ? 3 : 2
+          lineWidth: isEmphasis ? 3 : 2,
+          radius: 3
+        }
+      })
+      // 内框(双层矩形表示变电站)
+      group.addShape('rect', {
+        attrs: {
+          x: -w / 2 + 5, y: -h / 2 + 5,
+          w: w - 10, h: h - 10,
+          fill: 'transparent',
+          stroke: '#fff',
+          lineWidth: 1.2,
+          radius: 2
         }
       })
       group.addShape('text', {
-        attrs: { x: 0, y: 3, text: cfg.symbol || 'T', fontSize: 11, fontWeight: 600, fill: '#fff', textAlign: 'center' }
+        attrs: {
+          x: 0, y: 3,
+          text: cfg.symbol || '⚡',
+          fontSize: 14,
+          fontWeight: 700,
+          fill: '#fff',
+          textAlign: 'center'
+        }
       })
-      if (props.showLabels) drawLabel(group, cfg.label, s / 2 + 22)
+      if (props.showLabels) drawLabel(group, cfg.label, h / 2 + 16)
       return keyShape
     }
-  }, 'polygon')
+  }, 'rect')
+
+  // ============= 变压器: 两个相交圆(国标 GB/T 4728) =============
+  G6.registerNode('transformer', {
+    draw(cfg: any, group: any) {
+      const status = cfg.status as NodeStatus
+      const color = statusColor[status]
+      const isEmphasis = status === 'fault' || status === 'warning'
+      const r = 12
+      // 圆心相距 r(相切),国标典型画法
+      const leftCircle = group.addShape('circle', {
+        attrs: {
+          x: -r / 2, y: 0, r,
+          fill: 'transparent',
+          stroke: color.fill,
+          lineWidth: isEmphasis ? 3 : 2
+        }
+      })
+      const rightCircle = group.addShape('circle', {
+        attrs: {
+          x: r / 2, y: 0, r,
+          fill: 'transparent',
+          stroke: color.fill,
+          lineWidth: isEmphasis ? 3 : 2
+        }
+      })
+      // 内嵌 Y 字符(变压器 symbol)
+      group.addShape('text', {
+        attrs: {
+          x: 0, y: 3,
+          text: cfg.symbol || 'T',
+          fontSize: 11,
+          fontWeight: 600,
+          fill: color.fill,
+          textAlign: 'center'
+        }
+      })
+      if (props.showLabels) drawLabel(group, cfg.label, r + 18)
+      return leftCircle  // 用左圆作为 keyShape
+    }
+  }, 'circle')
+
+  // ============= 自定义边: tie-edge(联络线,虚线 + 橙色) =============
+  G6.registerEdge('tie-edge', {
+    draw(cfg: any, group: any) {
+      const status = (cfg.status || 'normal') as NodeStatus
+      const color = statusColor[status]
+      const path = group.addShape('path', {
+        attrs: {
+          path: [['M', cfg.startPoint.x, cfg.startPoint.y],
+                 ['L', cfg.endPoint.x, cfg.endPoint.y]],
+          stroke: '#e6a23c',               // 橙色突出
+          lineWidth: 1.8,
+          lineDash: [6, 4],
+          opacity: 0.9,
+          cursor: 'pointer'
+        }
+      })
+      // 端点小箭头(国标:开放三角)
+      if (cfg.endPoint) {
+        const angle = Math.atan2(cfg.endPoint.y - cfg.startPoint.y,
+                                  cfg.endPoint.x - cfg.startPoint.x)
+        const arrowSize = 6
+        group.addShape('path', {
+          attrs: {
+            path: [['M', cfg.endPoint.x - arrowSize * Math.cos(angle - Math.PI / 7),
+                          cfg.endPoint.y - arrowSize * Math.sin(angle - Math.PI / 7)],
+                   ['L', cfg.endPoint.x, cfg.endPoint.y],
+                   ['L', cfg.endPoint.x - arrowSize * Math.cos(angle + Math.PI / 7),
+                          cfg.endPoint.y - arrowSize * Math.sin(angle + Math.PI / 7)]],
+            stroke: '#e6a23c',
+            lineWidth: 1.5
+          }
+        })
+      }
+      return path
+    }
+  }, 'line')
 
   nodesRegistered = true
 }
@@ -254,6 +449,7 @@ function ensureNodesRegistered() {
 function getLayoutConfig(): any {
   switch (props.layout) {
     case 'dagre':
+      // 通用有向图(流程图风格)
       return {
         type: 'dagre',
         rankdir: 'TB',
@@ -261,6 +457,21 @@ function getLayoutConfig(): any {
         nodesepFunc: (d: any) => (d.type === 'substation' ? 50 : 28),
         ranksepFunc: (d: any) => (d.type === 'substation' ? 80 : 50),
         preventOverlap: true
+      }
+    case 'dagre-lr':
+      // 电网一次接线图风格:
+      //   LR(从左到右)对应高压→低压
+      //   rank 函数读 node.level 显式分层,避免环(联络线)错乱
+      //   间距加大容纳母线水平贯穿
+      return {
+        type: 'dagre',
+        rankdir: 'LR',
+        align: 'UL',
+        nodesep: 60,
+        ranksep: 110,
+        preventOverlap: true,
+        nodeSize: 40,
+        rank: (node: any) => (typeof node.level === 'number' ? node.level : undefined)
       }
     case 'force':
       return {
@@ -279,16 +490,28 @@ function getLayoutConfig(): any {
 }
 
 function getShapeType(nodeType: TopologyNodeType): string {
-  const shape = nodeTypeMeta[nodeType].shape
-  return shape === 'circle' ? 'device-circle'
-    : shape === 'diamond' ? 'device-diamond'
-    : 'device-rect'
+  // 按 type 直接映射到自定义节点类型
+  switch (nodeType) {
+    case 'substation':  return 'substation'
+    case 'transformer': return 'transformer'
+    case 'busbar':      return 'busbar'
+    case 'switch':      return 'device-rect'
+    case 'ring_main':   return 'device-rect'
+    case 'junction':    return 'device-circle'
+    case 'meter':       return 'device-circle'
+  }
+}
+
+function getEdgeType(edgeType: EdgeType): string {
+  return edgeType === 'tie' ? 'tie-edge' : 'line'
 }
 
 function initGraph() {
   if (!graphEl.value) return
   ensureNodesRegistered()
   const { clientWidth: width, clientHeight: height } = graphEl.value
+  // 高 DPR 屏幕(视网膜)上必须用 devicePixelRatio 才能清晰
+  const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
 
   graph = new (G6 as any).Graph({
     container: graphEl.value,
@@ -298,7 +521,7 @@ function initGraph() {
     fitViewPadding: props.fitViewPadding,
     animate: false,
     animateCfg: { duration: 0 },
-    pixelRatio: 1,
+    pixelRatio: dpr,
     background: themePalette.value.canvasBg, // 'transparent'
     defaultNode: {
       type: 'device-circle',
@@ -307,8 +530,8 @@ function initGraph() {
     },
     defaultEdge: {
       type: 'line',
-      style: { stroke: themePalette.value.edgeDefault, lineWidth: 1.2, cursor: 'pointer' },
-      labelCfg: { style: { fontSize: 10 } }
+      style: { stroke: themePalette.value.edgeDefault, lineWidth: 1.4, cursor: 'pointer' },
+      labelCfg: { style: { fontSize: 12 } }
     },
     modes: {
       default: props.readonly
@@ -352,10 +575,10 @@ function renderGraph() {
     edges: props.edges.map(e => ({
       ...e,
       label: '',
+      type: getEdgeType(e.type),         // tie -> 'tie-edge', 其他 -> 'line'
       style: {
         stroke: statusColor[e.status].stroke,
-        lineWidth: e.type === 'tie' ? 1 : (e.type === 'bus' ? 2 : 1.5),
-        lineDash: e.type === 'tie' ? [4, 4] : undefined,
+        lineWidth: e.type === 'bus' ? 2.2 : 1.5,
         opacity: 0.85
       }
     }))

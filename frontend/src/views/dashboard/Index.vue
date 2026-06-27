@@ -89,21 +89,24 @@ const statusColor: Record<NodeStatus, { fill: string; tag: string; label: string
 }
 
 // ============= Mock 拓扑 =============
+// level 用于 dagre-lr 布局的显式 rank(从左到右)
+//   L0 变电站 → L1 主变 → L2 母线 → L3 出线开关 → L4 环网柜 → L5 末端设备
+// 这样即使存在 E13 联络线(环),所有环网柜也在同一列对齐
 function buildMockTopology(): TopologyGraphData {
   const nodes: TopologyGraphNode[] = [
-    { id: 'SUB-01',  name: '朝阳变电站',  type: 'substation',  voltageLevel: '110kV', status: 'normal',  region: '北京-朝阳' },
-    { id: 'TR-01',   name: '#1 主变',    type: 'transformer', voltageLevel: '110kV', status: 'normal',  region: '北京-朝阳' },
-    { id: 'BUS-10A', name: '10kV 母线 A', type: 'busbar',      voltageLevel: '10kV',  status: 'normal',  region: '北京-朝阳' },
-    { id: 'BUS-10B', name: '10kV 母线 B', type: 'busbar',      voltageLevel: '10kV',  status: 'normal',  region: '北京-朝阳' },
-    { id: 'SW-01',   name: '出线开关 1', type: 'switch',      voltageLevel: '10kV',  status: 'normal',  region: '北京-朝阳' },
-    { id: 'SW-02',   name: '出线开关 2', type: 'switch',      voltageLevel: '10kV',  status: 'normal',  region: '北京-朝阳' },
-    { id: 'RM-A1',   name: '环网柜 A-1', type: 'ring_main',   voltageLevel: '10kV',  status: 'warning', region: '北京-朝阳', deviceId: 101 },
-    { id: 'RM-A2',   name: '环网柜 A-2', type: 'ring_main',   voltageLevel: '10kV',  status: 'normal',  region: '北京-朝阳', deviceId: 102 },
-    { id: 'RM-B1',   name: '环网柜 B-1', type: 'ring_main',   voltageLevel: '10kV',  status: 'fault',   region: '北京-朝阳', deviceId: 103 },
-    { id: 'RM-B2',   name: '环网柜 B-2', type: 'ring_main',   voltageLevel: '10kV',  status: 'normal',  region: '北京-朝阳', deviceId: 104 },
-    { id: 'JB-01',   name: '分接箱 01',  type: 'junction',    voltageLevel: '10kV',  status: 'normal',  region: '北京-朝阳' },
-    { id: 'USR-01',  name: '国贸三期',   type: 'meter',       voltageLevel: '0.4kV', status: 'normal',  region: '北京-朝阳' },
-    { id: 'USR-02',  name: '万达广场',   type: 'meter',       voltageLevel: '0.4kV', status: 'offline', region: '北京-朝阳' }
+    { id: 'SUB-01',  name: '朝阳变电站',  type: 'substation',  voltageLevel: '110kV', status: 'normal',  region: '北京-朝阳', level: 0 },
+    { id: 'TR-01',   name: '#1 主变',    type: 'transformer', voltageLevel: '110kV', status: 'normal',  region: '北京-朝阳', level: 1 },
+    { id: 'BUS-10A', name: '10kV 母线 A', type: 'busbar',      voltageLevel: '10kV',  status: 'normal',  region: '北京-朝阳', level: 2 },
+    { id: 'BUS-10B', name: '10kV 母线 B', type: 'busbar',      voltageLevel: '10kV',  status: 'normal',  region: '北京-朝阳', level: 2 },
+    { id: 'SW-01',   name: '出线开关 1',  type: 'switch',      voltageLevel: '10kV',  status: 'normal',  region: '北京-朝阳', level: 3 },
+    { id: 'SW-02',   name: '出线开关 2',  type: 'switch',      voltageLevel: '10kV',  status: 'normal',  region: '北京-朝阳', level: 3 },
+    { id: 'RM-A1',   name: '环网柜 A-1', type: 'ring_main',   voltageLevel: '10kV',  status: 'warning', region: '北京-朝阳', deviceId: 101, level: 4 },
+    { id: 'RM-A2',   name: '环网柜 A-2', type: 'ring_main',   voltageLevel: '10kV',  status: 'normal',  region: '北京-朝阳', deviceId: 102, level: 4 },
+    { id: 'RM-B1',   name: '环网柜 B-1', type: 'ring_main',   voltageLevel: '10kV',  status: 'fault',   region: '北京-朝阳', deviceId: 103, level: 4 },
+    { id: 'RM-B2',   name: '环网柜 B-2', type: 'ring_main',   voltageLevel: '10kV',  status: 'normal',  region: '北京-朝阳', deviceId: 104, level: 4 },
+    { id: 'JB-01',   name: '分接箱 01',  type: 'junction',    voltageLevel: '10kV',  status: 'normal',  region: '北京-朝阳', level: 5 },
+    { id: 'USR-01',  name: '国贸三期',   type: 'meter',       voltageLevel: '0.4kV', status: 'normal',  region: '北京-朝阳', level: 5 },
+    { id: 'USR-02',  name: '万达广场',   type: 'meter',       voltageLevel: '0.4kV', status: 'offline', region: '北京-朝阳', level: 5 }
   ]
   const edges: TopologyGraphEdge[] = [
     { id: 'E1',  source: 'SUB-01',  target: 'TR-01',   type: 'bus',    status: 'normal' },
@@ -369,7 +372,7 @@ onBeforeUnmount(() => {
             ref="graphRef"
             :nodes="graphData?.nodes ?? []"
             :edges="graphData?.edges ?? []"
-            layout="dagre"
+            layout="dagre-lr"
             :readonly="true"
             height="100%"
             @node-click="onNodeClick"
