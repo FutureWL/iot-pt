@@ -40,7 +40,8 @@ const menus: MenuItem[] = [
       { path: '/monitor/prpd', title: 'PRPD 图谱', permission: 'monitor:prpd' },
       { path: '/monitor/temperature', title: '温度监测', permission: 'monitor:temperature' },
       { path: '/monitor/environment', title: '环境监测', permission: 'monitor:environment' },
-      { path: '/monitor/gis', title: 'GIS 地图', permission: 'monitor:gis' }
+      { path: '/monitor/gis', title: 'GIS 地图', permission: 'monitor:gis' },
+      { path: '/monitor/topology', title: '电网拓扑', permission: 'monitor:topology' }
     ]
   },
   {

@@ -64,6 +64,12 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/monitor/Gis.vue'),
         meta: { title: 'GIS 地图', icon: 'location', permission: 'monitor:gis' }
       },
+      {
+        path: 'monitor/topology',
+        name: 'MonitorTopology',
+        component: () => import('@/views/monitor/Topology.vue'),
+        meta: { title: '电网拓扑', icon: 'share', permission: 'monitor:topology' }
+      },
 
       // ============ 告警与运维 ============
       {
