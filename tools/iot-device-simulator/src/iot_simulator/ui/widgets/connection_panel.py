@@ -154,6 +154,18 @@ class ConnectionPanel(QWidget):
             enable_log_payload=self.chk_log_payload.isChecked(),
         )
 
+    def set_product_key(self, product_key: str) -> None:
+        """单独更新产品 Key(从平台导入物模型时使用)"""
+        self.product_key.setText(product_key)
+
+    def set_device_key(self, device_key: str) -> None:
+        """单独更新设备 Key(从平台导入设备时使用)"""
+        self.device_key.setText(device_key)
+
+    def set_device_secret(self, device_secret: str) -> None:
+        """单独更新设备密钥(从平台导入设备时使用)"""
+        self.device_secret.setText(device_secret)
+
     def set_config(self, cfg: DeviceConfig) -> None:
         self.product_key.setText(cfg.product_key)
         self.device_key.setText(cfg.device_key)

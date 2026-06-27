@@ -117,6 +117,30 @@ class ServiceConfig(BaseModel):
 
 
 # ============================================================
+# 平台接入 (从 iot-pt 后端拉取产品/物模型)
+# ============================================================
+class PlatformConfig(BaseModel):
+    """平台接入凭证与状态
+
+    - base_url: 后端 API 地址(默认 http://localhost:33412)
+    - username / tenant_code: 登录用,跨会话记住
+    - password: 不存盘(只在 UI 输入)
+    - token / token_expires_at: 登录成功后的 JWT,跨会话记住
+    - last_product_id: 上次选的产品,UI 下拉默认选项
+    """
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = False                       # 是否启用过平台导入
+    base_url: str = "http://localhost:33412"
+    username: str = "admin"
+    tenant_code: str = "default"
+    token: str = ""                            # JWT(保存到磁盘,供下次免登录)
+    token_expires_at: str = ""                 # ISO 时间字符串
+    last_product_id: str = ""
+    last_product_key: str = ""
+
+
+# ============================================================
 # 顶层
 # ============================================================
 class DeviceConfig(BaseModel):
@@ -141,6 +165,9 @@ class DeviceConfig(BaseModel):
     events: list[EventTriggerConfig] = Field(default_factory=list)
     services: list[ServiceConfig] = Field(default_factory=list)
 
+    # 平台接入
+    platform: PlatformConfig = Field(default_factory=PlatformConfig)
+
     # 全局
     report_on_change_only: bool = True
     enable_log_payload: bool = True
@@ -164,5 +191,6 @@ __all__ = [
     "PropertyGenConfig",
     "EventTriggerConfig",
     "ServiceConfig",
+    "PlatformConfig",
     "DeviceConfig",
 ]
