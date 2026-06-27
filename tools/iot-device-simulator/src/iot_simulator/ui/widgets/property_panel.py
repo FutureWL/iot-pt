@@ -214,8 +214,9 @@ class PropertyPanel(QWidget):
         v = cfg.initial if cfg.initial is not None else cfg.base
         self.table.setItem(r, 5, QTableWidgetItem(str(v) if v is not None else "—"))
         # 删除按钮
-        del_btn = QPushButton("✕")
+        del_btn = QPushButton(self.style().standardIcon(__import__("PySide6.QtWidgets", fromlist=["QStyle"]).QStyle.StandardPixmap.SP_TrashIcon), "")
         del_btn.setFixedWidth(30)
+        del_btn.setToolTip("删除该行")
         del_btn.clicked.connect(lambda _, rr=r: self._del_row(rr))
         self.table.setCellWidget(r, 6, del_btn)
 

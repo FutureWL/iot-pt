@@ -25,6 +25,7 @@ from ..core.config import DeviceConfig
 from ..core.simulator import DeviceSimulator
 from ..utils.storage import load_yaml, save_yaml
 from .dialogs.thing_model_dialog import ThingModelDialog
+from .dialogs.platform_import_dialog import PlatformImportDialog
 from .widgets.connection_panel import ConnectionPanel
 from .widgets.event_panel import EventPanel
 from .widgets.log_panel import LogPanel
@@ -114,17 +115,20 @@ class MainWindow(QMainWindow):
         splitter.setStretchFactor(1, 2)
 
         # ===== 底部控制栏 =====
+        from PySide6.QtWidgets import QStyle
+        style = self.style()
+
         ctrl_row = QHBoxLayout()
-        self.btn_start = QPushButton("▶ 开始模拟")
+        self.btn_start = QPushButton(style.standardIcon(QStyle.StandardPixmap.SP_MediaPlay), "开始模拟")
         self.btn_start.setStyleSheet("background:#67C23A; color:white; padding:8px 24px; font-weight:bold;")
-        self.btn_stop = QPushButton("⏹ 停止")
+        self.btn_stop = QPushButton(style.standardIcon(QStyle.StandardPixmap.SP_MediaStop), "停止")
         self.btn_stop.setEnabled(False)
         ctrl_row.addWidget(self.btn_start)
         ctrl_row.addWidget(self.btn_stop)
         ctrl_row.addStretch(1)
 
-        self.btn_load = QPushButton("📂 加载配置")
-        self.btn_save = QPushButton("💾 保存配置")
+        self.btn_load = QPushButton(style.standardIcon(QStyle.StandardPixmap.SP_DialogOpenButton), "加载配置")
+        self.btn_save = QPushButton(style.standardIcon(QStyle.StandardPixmap.SP_DialogSaveButton), "保存配置")
         ctrl_row.addWidget(self.btn_load)
         ctrl_row.addWidget(self.btn_save)
         root.addLayout(ctrl_row)
@@ -152,6 +156,23 @@ class MainWindow(QMainWindow):
         m_view.addAction(QAction("重置 100%", self, triggered=self._on_zoom_reset))
         m_help = mb.addMenu("帮助")
         m_help.addAction(QAction("关于", self, triggered=self._on_about))
+
+        # 工具菜单
+        m_tools = mb.addMenu("工具")
+        from PySide6.QtWidgets import QStyle
+        style = self.style()
+        act_import_platform = QAction(
+            style.standardIcon(QStyle.StandardPixmap.SP_ComputerIcon),
+            "从平台导入物模型...",
+            self, triggered=self._on_import_from_platform,
+        )
+        m_tools.addAction(act_import_platform)
+        act_import_file = QAction(
+            style.standardIcon(QStyle.StandardPixmap.SP_DirOpenIcon),
+            "从文件/粘贴导入物模型...",
+            self, triggered=self._on_import_thing_model,
+        )
+        m_tools.addAction(act_import_file)
 
     def _wire(self) -> None:
         self.btn_start.clicked.connect(self._on_start)
@@ -253,6 +274,77 @@ class MainWindow(QMainWindow):
                 )
             except Exception as e:
                 logger.warning("从物模型填充属性失败: {}", e)
+
+    def _on_import_from_platform(self) -> None:
+        """从平台导入物模型 (调 /iot/product/all → /iot/product/{id})"""
+        # 预填上次保存的登录信息
+        plat = self._current_cfg.platform
+        dlg = PlatformImportDialog(
+            base_url=plat.base_url,
+            username=plat.username,
+            tenant_code=plat.tenant_code,
+            token=plat.token,
+            parent=self,
+        )
+        if dlg.exec() != PlatformImportDialog.Accepted:
+            return
+
+        result = dlg.get_result()
+        if not result:
+            return
+
+        # 1) 填入产品 Key
+        self.conn_panel.set_product_key(result.product_key)
+
+        # 2) 填入设备 Key 和密钥(从平台拉到的明文)
+        if result.device_key:
+            self.conn_panel.set_device_key(result.device_key)
+        if result.device_secret:
+            self.conn_panel.set_device_secret(result.device_secret)
+
+        # 3) 填入物模型 JSON 到文本框(让用户能看到原始结构)
+        self.tm_text.setPlainText(result.thing_model_json)
+
+        # 4) 用转换结果填充各面板
+        conv = result.conversion
+        try:
+            self.prop_panel.set_properties(conv.properties)
+        except Exception as e:
+            logger.warning("填充属性面板失败: {}", e)
+        try:
+            self.event_panel.set_events(conv.events)
+        except Exception as e:
+            logger.warning("填充事件面板失败: {}", e)
+        try:
+            self.svc_panel.set_services(conv.services)
+        except Exception as e:
+            logger.warning("填充服务面板失败: {}", e)
+
+        # 5) 保存平台登录信息供下次免登录
+        base_url, username, tenant_code, token = dlg.get_auth()
+        self._current_cfg.platform = plat.model_copy(update={
+            "enabled": True,
+            "base_url": base_url,
+            "username": username,
+            "tenant_code": tenant_code,
+            "token": token,
+            "last_product_id": result.product.id,
+            "last_product_key": result.product_key,
+            "last_device_id": result.device.id if hasattr(result, "device") else "",
+        })
+
+        # 6) 提示
+        msg = (
+            f"已从平台导入:\n\n"
+            f"产品: {result.product.product_name} (Key={result.product_key})\n"
+            f"设备: {result.device_name or result.device_key}\n"
+            f"  • 属性 {len(conv.properties)} 个\n"
+            f"  • 事件 {len(conv.events)} 个\n"
+            f"  • 服务 {len(conv.services)} 个"
+        )
+        if conv.warnings:
+            msg += f"\n\n⚠ {len(conv.warnings)} 条转换告警 (详见日志)"
+        QMessageBox.information(self, "导入成功", msg)
 
     def _on_new(self) -> None:
         self._current_cfg = self._build_default_cfg()

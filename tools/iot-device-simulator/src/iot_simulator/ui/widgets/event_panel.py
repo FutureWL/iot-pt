@@ -50,7 +50,12 @@ class EventPanel(QWidget):
         top.addStretch(1)
         self.btn_add = QPushButton("+ 添加")
         self.btn_del = QPushButton("删除")
-        self.btn_fire = QPushButton("🔥 触发选中")
+        from PySide6.QtWidgets import QStyle
+        self.btn_fire = QPushButton(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay),
+            "触发选中"
+        )
+        self.btn_fire.setStyleSheet("color:#E6A23C;")
         top.addWidget(self.btn_fire)
         top.addWidget(self.btn_add)
         top.addWidget(self.btn_del)
@@ -160,8 +165,9 @@ class EventPanel(QWidget):
             output_str = "{}"
         self.table.setItem(r, 4, QTableWidgetItem(output_str))
         # 删除
-        del_btn = QPushButton("✕")
+        del_btn = QPushButton(self.style().standardIcon(__import__("PySide6.QtWidgets", fromlist=["QStyle"]).QStyle.StandardPixmap.SP_TrashIcon), "")
         del_btn.setFixedWidth(30)
+        del_btn.setToolTip("删除该行")
         del_btn.clicked.connect(lambda _, rr=r: self._del_row(rr))
         self.table.setCellWidget(r, 5, del_btn)
 

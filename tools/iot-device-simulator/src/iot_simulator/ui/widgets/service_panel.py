@@ -104,8 +104,9 @@ class ServicePanel(QWidget):
         self.table.setItem(r, 2, QTableWidgetItem(str(cfg.reply_delay_ms)))
         self.table.setItem(r, 3, QTableWidgetItem(str(cfg.reply_code)))
         self.table.setItem(r, 4, QTableWidgetItem(cfg.reply_message))
-        del_btn = QPushButton("✕")
+        del_btn = QPushButton(self.style().standardIcon(__import__("PySide6.QtWidgets", fromlist=["QStyle"]).QStyle.StandardPixmap.SP_TrashIcon), "")
         del_btn.setFixedWidth(30)
+        del_btn.setToolTip("删除该行")
         del_btn.clicked.connect(lambda _, rr=r: self._del_row(rr))
         self.table.setCellWidget(r, 5, del_btn)
 
