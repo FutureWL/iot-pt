@@ -52,6 +52,19 @@ spring:
       maximum-pool-size: 10
       minimum-idle: 2
 
+  # 缓存: Redis (Lettuce)
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+
 # MyBatis-Plus
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*Mapper.xml

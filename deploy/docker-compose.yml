@@ -90,6 +90,23 @@ services:
     networks:
       - iot-net
 
+  # ---------- Redis 7: 缓存 + 在线状态 ----------
+  redis:
+    image: redis:7-alpine
+    container_name: iot-redis
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      - "${REDIS_PORT:-33413}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - iot-net
+
   # ---------- Backend: Spring Boot 3 ----------
   backend:
     build:
@@ -104,6 +121,8 @@ services:
         condition: service_healthy
       emqx:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       MYSQL_HOST: mysql
       MYSQL_PORT: 3306        # 容器内仍用 3306(同 Docker 网络),主机端口由 MYSQL_PORT 映射
@@ -114,6 +133,9 @@ services:
       TDENGINE_PORT: 6041     # 容器内仍用 6041
       TDENGINE_USER: root
       TDENGINE_PASSWORD: taosdata
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       MQTT_BROKER: tcp://emqx:1883  # 容器内仍用 1883
       MQTT_USERNAME: ${MQTT_USERNAME:-emqx_user}
       MQTT_PASSWORD: ${MQTT_PASSWORD:-emqx_pass}
@@ -153,6 +175,7 @@ volumes:
   tdengine_data:
   emqx_data:
   emqx_log:
+  redis_data:
   backend_logs:
   backend_upload:
 

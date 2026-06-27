@@ -107,6 +107,12 @@
             <version>${tdengine.version}</version>
         </dependency>
 
+        <!-- Redis (Lettuce 客户端,Spring Boot 默认) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
         <!-- 工具 -->
         <dependency>
             <groupId>cn.hutool</groupId>
