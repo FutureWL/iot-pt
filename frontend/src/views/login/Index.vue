@@ -49,7 +49,7 @@ async function onLogin() {
     <div class="login-card">
       <div class="login-left">
         <div class="login-brand">
-          <el-icon :size="48" color="#fff"><Connection /></el-icon>
+          <el-icon :size="48" class="login-brand-icon"><Connection /></el-icon>
           <h1>物联网平台</h1>
           <p>通用设备接入 · 物模型 · 实时数据 · 规则引擎</p>
         </div>
@@ -96,6 +96,8 @@ async function onLogin() {
 </template>
 
 <style scoped lang="scss">
+@use '@/styles/tokens.scss' as *;
+
 .login-page {
   position: relative;
   height: 100vh;
@@ -109,13 +111,18 @@ async function onLogin() {
 .login-bg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #1e3a8a 0%, #0f766e 50%, #047857 100%);
+  background: linear-gradient(135deg,
+    #{$login-gradient-1} 0%,
+    #{$login-gradient-2} 50%,
+    #{$login-gradient-3} 100%);
+
   &::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at 20% 30%, rgba(64,158,255,0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(103,194,58,0.3) 0%, transparent 50%);
+    background:
+      radial-gradient(circle at 20% 30%, rgba($color-primary, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba($color-success, 0.3) 0%, transparent 50%);
   }
 }
 
@@ -123,92 +130,99 @@ async function onLogin() {
   position: relative;
   display: flex;
   width: 880px;
-  max-width: calc(100vw - 32px);
+  max-width: calc(100vw - #{$spacing-32});
   height: 520px;
-  max-height: calc(100vh - 32px);
-  background: #fff;
-  border-radius: 16px;
+  max-height: calc(100vh - #{$spacing-32});
+  background: var(--iot-bg-card);
+  border-radius: $radius-mega;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: $shadow-extra-large;
 }
 
 .login-left {
   flex: 1;
-  background: linear-gradient(160deg, #1e3a8a 0%, #0c4a6e 100%);
+  background: linear-gradient(160deg, #{$login-gradient-1} 0%, #{$login-gradient-2} 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  padding: 32px;
+  padding: $spacing-32;
   position: relative;
+
   &::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at 30% 50%, rgba(64,158,255,0.4) 0%, transparent 60%);
+    background: radial-gradient(circle at 30% 50%, rgba($color-primary, 0.4) 0%, transparent 60%);
   }
 }
 
 .login-brand {
   position: relative;
   text-align: center;
+
+  &-icon {
+    color: #fff;
+  }
+
   h1 {
-    font-size: 32px;
-    margin: 16px 0 8px;
-    font-weight: 600;
+    font-size: $font-size-mega;
+    margin: $spacing-16 0 $spacing-8;
+    font-weight: $font-weight-semibold;
+    color: #fff;
   }
   p {
-    font-size: 14px;
+    font-size: $font-size-base;
     opacity: 0.85;
-    line-height: 1.6;
+    line-height: $line-height-loose;
   }
 }
 
 .login-right {
   flex: 1;
-  padding: 48px 40px;
+  padding: $spacing-48 $spacing-40;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
 
 .login-title {
-  font-size: 24px;
-  margin: 0 0 8px;
-  color: #303133;
+  font-size: $font-size-huge;
+  margin: 0 0 $spacing-8;
+  color: var(--iot-text-primary);
 }
 
 .login-subtitle {
-  color: #909399;
-  margin: 0 0 32px;
-  font-size: 14px;
+  color: var(--iot-text-secondary);
+  margin: 0 0 $spacing-32;
+  font-size: $font-size-base;
 }
 
 .login-btn {
   width: 100%;
   height: 44px;
-  font-size: 16px;
+  font-size: $font-size-medium;
   letter-spacing: 4px;
 }
 
 .login-tip {
-  margin-top: 16px;
+  margin-top: $spacing-16;
   text-align: center;
-  color: #c0c4cc;
-  font-size: 12px;
+  color: var(--iot-text-disabled);
+  font-size: $font-size-extra-small;
 }
 
-@media (max-width: 768px) {
+@media (max-width: $breakpoint-sm) {
   .login-card {
-    width: calc(100vw - 32px);
+    width: calc(100vw - #{$spacing-32});
     height: auto;
   }
   .login-left {
     display: none;
   }
   .login-right {
-    padding: 32px 24px;
+    padding: $spacing-32 $spacing-24;
   }
-  .login-title { font-size: 20px; }
+  .login-title { font-size: $font-size-extra-large; }
 }
 </style>

@@ -1,9 +1,18 @@
 // ============================================================
-// 全局样式
+// 全局样式入口
+// 加载顺序: tokens → css-vars → element-overrides → 本文件
 // ============================================================
 
-@use 'element-plus/theme-chalk/dark/css-vars.css';
+// Element Plus dark 模式变量(默认未启用,留作 dark mode 切换用)
+@use 'element-plus/theme-chalk/dark/css-vars.css' as ep-dark;
 
+// 主题覆盖 + CSS 变量(用别名避免与 element-plus 的 css-vars.css 冲突)
+@use './css-vars.scss' as iot-vars;
+@use './element-overrides.scss' as ep-overrides;
+
+@use './tokens.scss' as *;
+
+// ============= Reset =============
 * {
   box-sizing: border-box;
 }
@@ -14,9 +23,10 @@ body {
   padding: 0;
   height: 100%;
   width: 100%;
-  font-size: 14px;
-  color: #303133;
-  background: #f5f7fa;
+  font-size: $font-size-base;
+  font-family: $font-family-base;
+  color: $text-color-primary;
+  background: $bg-color-page;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -24,6 +34,7 @@ body {
 a {
   text-decoration: none;
   color: inherit;
+  &:hover { color: $color-primary; }
 }
 
 ul,
@@ -39,71 +50,167 @@ textarea {
   font-family: inherit;
 }
 
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-weight: $font-weight-semibold;
+  color: $text-color-primary;
+}
+
+p {
+  margin: 0;
+}
+
+// ============= 滚动条 =============
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #c0c4cc;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #909399;
+  background: $text-color-placeholder;
+  border-radius: $radius-small;
+  transition: background $transition-base;
+
+  &:hover { background: $text-color-secondary; }
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 
-// 通用布局
+// ============= 通用布局类 =============
 .page-container {
-  padding: 16px;
+  padding: $spacing-16;
   height: 100%;
   overflow: auto;
 }
 
 .page-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  background: $bg-color-card;
+  border-radius: $radius-large;
+  padding: $spacing-16;
+  box-shadow: $shadow-light;
 }
 
 .page-toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: $spacing-8;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: $spacing-16;
 }
 
 .page-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 16px;
+  font-size: $font-size-large;
+  font-weight: $font-weight-semibold;
+  margin-bottom: $spacing-16;
+  color: $text-color-primary;
 }
 
-// 移动端适配
-@media (max-width: 768px) {
+.page-section {
+  margin-bottom: $spacing-24;
+}
+
+// ============= 响应式 =============
+// 平板及以下
+@media (max-width: $breakpoint-sm) {
   .page-container {
-    padding: 8px;
+    padding: $spacing-8;
   }
   .page-title {
-    font-size: 16px;
+    font-size: $font-size-medium;
   }
   .el-table {
-    font-size: 12px;
+    font-size: $font-size-extra-small;
   }
 }
 
-// 工具类
-.flex { display: flex; }
-.flex-1 { flex: 1; }
-.flex-center { display: flex; align-items: center; justify-content: center; }
-.flex-between { display: flex; align-items: center; justify-content: space-between; }
-.flex-col { display: flex; flex-direction: column; }
-.gap-8 { gap: 8px; }
-.gap-16 { gap: 16px; }
-.text-muted { color: #909399; }
-.mb-8 { margin-bottom: 8px; }
-.mb-16 { margin-bottom: 16px; }
-.mt-16 { margin-top: 16px; }
+// ============= 工具类 =============
+// Flex
+.flex       { display: flex; }
+.flex-1     { flex: 1; }
+.flex-center{ display: flex; align-items: center; justify-content: center; }
+.flex-between{ display: flex; align-items: center; justify-content: space-between; }
+.flex-col   { display: flex; flex-direction: column; }
+.flex-wrap  { flex-wrap: wrap; }
+
+.items-center { align-items: center; }
+.justify-end  { justify-content: flex-end; }
+
+// Gap
+@each $name, $value in (4: $spacing-4, 8: $spacing-8, 12: $spacing-12, 16: $spacing-16, 24: $spacing-24) {
+  .gap-#{$name} { gap: $value; }
+}
+
+// Margin / Padding 简写
+@each $name, $value in (4: $spacing-4, 8: $spacing-8, 12: $spacing-12, 16: $spacing-16, 24: $spacing-24, 32: $spacing-32) {
+  .mb-#{$name} { margin-bottom: $value; }
+  .mt-#{$name} { margin-top: $value; }
+  .ml-#{$name} { margin-left: $value; }
+  .mr-#{$name} { margin-right: $value; }
+  .p-#{$name}  { padding: $value; }
+  .px-#{$name} { padding-left: $value; padding-right: $value; }
+  .py-#{$name} { padding-top: $value; padding-bottom: $value; }
+}
+
+// 文字
+.text-primary   { color: $text-color-primary; }
+.text-regular   { color: $text-color-regular; }
+.text-secondary { color: $text-color-secondary; }
+.text-placeholder { color: $text-color-placeholder; }
+.text-disabled  { color: $text-color-disabled; }
+.text-success   { color: $color-success; }
+.text-warning   { color: $color-warning; }
+.text-danger    { color: $color-danger; }
+.text-primary-color { color: $color-primary; }
+.text-accent    { color: $color-accent; }
+.text-muted     { color: $text-color-secondary; }
+
+@each $name, $value in (xs: $font-size-extra-small, sm: $font-size-small, base: $font-size-base, md: $font-size-medium, lg: $font-size-large, xl: $font-size-extra-large, 2xl: $font-size-huge) {
+  .text-#{$name} { font-size: $value; }
+}
+
+// 字重
+.font-medium   { font-weight: $font-weight-medium; }
+.font-semibold { font-weight: $font-weight-semibold; }
+.font-bold     { font-weight: $font-weight-bold; }
+
+// 文本对齐
+.text-center    { text-align: center; }
+.text-left      { text-align: left; }
+.text-right     { text-align: right; }
+
+// 圆角
+@each $name, $value in (sm: $radius-small, base: $radius-base, md: $radius-medium, lg: $radius-large, xl: $radius-extra-large) {
+  .radius-#{$name} { border-radius: $value; }
+}
+.radius-round { border-radius: $radius-round; }
+
+// 阴影
+.shadow-light { box-shadow: $shadow-light; }
+.shadow-base  { box-shadow: $shadow-base; }
+.shadow-md    { box-shadow: $shadow-medium; }
+.shadow-lg    { box-shadow: $shadow-large; }
+
+// 背景
+.bg-page      { background: $bg-color-page; }
+.bg-card      { background: $bg-color-card; }
+.bg-hover     { background: $bg-color-hover; }
+
+// 光标
+.cursor-pointer { cursor: pointer; }
+
+// 溢出省略
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.text-ellipsis-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// 全宽
+.w-full { width: 100%; }
+.h-full { height: 100%; }

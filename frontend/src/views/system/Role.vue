@@ -268,6 +268,16 @@ onMounted(load)
 </template>
 
 <style scoped lang="scss">
-.search-bar { margin-bottom: 12px; padding: 16px; :deep(.el-form-item) { margin-bottom: 0; } }
-.pagination-wrap { display: flex; justify-content: flex-end; margin-top: 16px; }
+@use '@/styles/tokens.scss' as *;
+
+.search-bar {
+  margin-bottom: $spacing-12;
+  padding: $spacing-16;
+  :deep(.el-form-item) { margin-bottom: 0; }
+}
+.pagination-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: $spacing-16;
+}
 </style>

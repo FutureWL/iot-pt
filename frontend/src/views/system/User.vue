@@ -500,19 +500,25 @@ onMounted(load)
 </template>
 
 <style scoped lang="scss">
+@use '@/styles/tokens.scss' as *;
+
 .search-bar {
-  margin-bottom: 12px;
-  padding: 16px;
+  margin-bottom: $spacing-12;
+  padding: $spacing-16;
   :deep(.el-form-item) { margin-bottom: 0; }
 }
 .pagination-wrap {
   display: flex;
   justify-content: flex-end;
-  margin-top: 16px;
+  margin-top: $spacing-16;
 }
 .role-item {
-  padding: 6px 0;
-  .role-name { font-weight: 500; }
-  .role-desc { color: #909399; font-size: 12px; margin-left: 8px; }
+  padding: $spacing-4 0;
+  .role-name { font-weight: $font-weight-medium; }
+  .role-desc {
+    color: var(--iot-text-secondary);
+    font-size: $font-size-extra-small;
+    margin-left: $spacing-8;
+  }
 }
 </style>

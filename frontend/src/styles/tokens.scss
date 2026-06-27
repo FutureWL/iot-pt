@@ -1,0 +1,163 @@
+// ============================================================
+// Design Tokens — 编译期 SCSS 变量
+// ============================================================
+// 用法:
+//   @use '@/styles/tokens.scss' as *;
+//   .my-class { color: $color-primary; padding: $spacing-16; }
+//
+// 修改此文件即可全局生效,所有视图应引用 token 而非硬编码值。
+// ============================================================
+
+// ============= 品牌色 =============
+// 选用 Element Plus 默认蓝,与官方组件保持一致,改色零成本
+$color-primary:           #409eff;
+$color-primary-light-3:   #79bbff;
+$color-primary-light-5:   #a0cfff;
+$color-primary-light-7:   #c6e2ff;
+$color-primary-light-8:   #d9ecff;
+$color-primary-light-9:   #ecf5ff;
+$color-primary-dark-2:    #337ecc;
+
+// IoT 强调色(青绿)— 用于实时/在线状态、关键数据
+$color-accent:            #0d9488;
+$color-accent-light:      #14b8a6;
+$color-accent-dark:       #0f766e;
+
+// ============= 语义色 =============
+$color-success:           #67c23a;
+$color-success-light:     #e1f3d8;
+$color-success-dark:      #529b2e;
+
+$color-warning:           #e6a23c;
+$color-warning-light:     #faecd8;
+$color-warning-dark:      #b88230;
+
+$color-danger:            #f56c6c;
+$color-danger-light:      #fde2e2;
+$color-danger-dark:       #c45656;
+
+$color-info:              #909399;
+$color-info-light:        #e9e9eb;
+$color-info-dark:         #73767a;
+
+// ============= 中性色(文字/边框/背景)=============
+// 文字
+$text-color-primary:      #303133;
+$text-color-regular:      #606266;
+$text-color-secondary:    #909399;
+$text-color-placeholder:  #a8abb2;
+$text-color-disabled:     #c0c4cc;
+
+// 边框
+$border-color-base:       #dcdfe6;
+$border-color-light:      #e4e7ed;
+$border-color-lighter:    #ebeef5;
+$border-color-extra-light:#f2f6fc;
+
+// 背景
+$bg-color-page:           #f5f7fa;     // 页面底色
+$bg-color-card:           #ffffff;     // 卡片底色
+$bg-color-hover:          #f5f7fa;
+$bg-color-disabled:       #f4f4f5;
+
+// ============= 侧边栏(深色系,Ant Design Pro 风格)=============
+$sidebar-bg:              #001529;
+$sidebar-bg-hover:        #002140;
+$sidebar-bg-active:       #1890ff;     // active 项背景,改用 $color-primary 更统一
+$sidebar-text:            #c0c4cc;
+$sidebar-text-hover:      #ffffff;
+$sidebar-text-active:     #ffffff;
+$sidebar-border:          rgba(255, 255, 255, 0.08);
+
+// ============= 头部(浅色系)=============
+$header-bg:               #ffffff;
+$header-border:           #{$border-color-lighter};
+$header-text:             #303133;
+$header-text-hover:       #{$color-primary};
+
+// ============= 登录页(品牌渐变)=============
+$login-gradient-1:        #1e3a8a;    // 深蓝
+$login-gradient-2:        #0f766e;    // 青
+$login-gradient-3:        #047857;    // 翠绿
+
+// ============= 字体 =============
+$font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+  'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+$font-family-code: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo,
+  Monaco, 'Courier New', monospace;
+
+// 字号阶梯(8 倍数相关,2px 微调)
+$font-size-extra-small:   12px;
+$font-size-small:         13px;
+$font-size-base:          14px;   // 全局默认
+$font-size-medium:        16px;
+$font-size-large:         18px;
+$font-size-extra-large:   20px;
+$font-size-huge:          24px;
+$font-size-mega:          32px;
+
+// 字重
+$font-weight-light:       300;
+$font-weight-normal:      400;
+$font-weight-medium:      500;
+$font-weight-semibold:    600;
+$font-weight-bold:        700;
+
+// 行高
+$line-height-tight:       1.2;
+$line-height-base:        1.5;
+$line-height-loose:       1.8;
+
+// ============= 间距(8 倍数栅格 + 4 微调)=============
+$spacing-0:               0;
+$spacing-2:               2px;
+$spacing-4:               4px;
+$spacing-8:               8px;
+$spacing-12:              12px;
+$spacing-16:              16px;
+$spacing-20:              20px;
+$spacing-24:              24px;
+$spacing-32:              32px;
+$spacing-40:              40px;
+$spacing-48:              48px;
+$spacing-64:              64px;
+
+// ============= 圆角 =============
+$radius-none:             0;
+$radius-small:            2px;
+$radius-base:             4px;     // 全局默认
+$radius-medium:           6px;
+$radius-large:            8px;
+$radius-extra-large:      12px;
+$radius-mega:             16px;
+$radius-round:            9999px;  // 圆形/胶囊
+
+// ============= 阴影 =============
+$shadow-none:             none;
+$shadow-light:            0 1px 2px rgba(0, 0, 0, 0.04);
+$shadow-base:             0 2px 8px rgba(0, 0, 0, 0.06);
+$shadow-medium:           0 4px 12px rgba(0, 0, 0, 0.08);
+$shadow-large:            0 8px 24px rgba(0, 0, 0, 0.12);
+$shadow-extra-large:      0 12px 48px rgba(0, 0, 0, 0.16);
+
+// ============= 断点 =============
+$breakpoint-xs:           480px;    // 手机
+$breakpoint-sm:           768px;    // 平板
+$breakpoint-md:           992px;    // 小桌面
+$breakpoint-lg:           1200px;   // 桌面
+$breakpoint-xl:           1920px;   // 大屏
+
+// ============= Z-Index =============
+$z-index-dropdown:        1000;
+$z-index-sticky:          1020;
+$z-index-fixed:           1030;
+$z-index-modal-backdrop:  1040;
+$z-index-modal:           1050;
+$z-index-popover:         1060;
+$z-index-tooltip:         1070;
+
+// ============= 动画 =============
+$transition-fast:         150ms ease-in-out;
+$transition-base:         250ms ease-in-out;
+$transition-slow:         400ms ease-in-out;

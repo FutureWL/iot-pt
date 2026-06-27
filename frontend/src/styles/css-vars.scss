@@ -1,0 +1,119 @@
+// ============================================================
+// CSS 自定义属性 — 运行时变量(JS 可访问)
+// ============================================================
+// 用法:
+//   .my-class { color: var(--iot-color-primary); }
+//   JS 中:    getComputedStyle(document.documentElement).getPropertyValue('--iot-color-primary')
+//
+// 这一层把 SCSS tokens 暴露为 CSS 变量,主要用于:
+//   1. Vue 组件 :style 绑定
+//   2. ECharts 配置
+//   3. 第三方组件主题接入
+//   4. 未来 dark mode 切换
+// ============================================================
+
+@use './tokens.scss' as *;
+
+:root {
+  // ---- 品牌色 ----
+  --iot-color-primary: #{$color-primary};
+  --iot-color-primary-light-3: #{$color-primary-light-3};
+  --iot-color-primary-light-5: #{$color-primary-light-5};
+  --iot-color-primary-light-7: #{$color-primary-light-7};
+  --iot-color-primary-light-8: #{$color-primary-light-8};
+  --iot-color-primary-light-9: #{$color-primary-light-9};
+  --iot-color-primary-dark-2: #{$color-primary-dark-2};
+
+  --iot-color-accent: #{$color-accent};
+  --iot-color-accent-light: #{$color-accent-light};
+  --iot-color-accent-dark: #{$color-accent-dark};
+
+  // ---- 语义色 ----
+  --iot-color-success: #{$color-success};
+  --iot-color-success-light: #{$color-success-light};
+  --iot-color-warning: #{$color-warning};
+  --iot-color-warning-light: #{$color-warning-light};
+  --iot-color-danger: #{$color-danger};
+  --iot-color-danger-light: #{$color-danger-light};
+  --iot-color-info: #{$color-info};
+  --iot-color-info-light: #{$color-info-light};
+
+  // ---- 文字 ----
+  --iot-text-primary: #{$text-color-primary};
+  --iot-text-regular: #{$text-color-regular};
+  --iot-text-secondary: #{$text-color-secondary};
+  --iot-text-placeholder: #{$text-color-placeholder};
+  --iot-text-disabled: #{$text-color-disabled};
+
+  // ---- 边框 ----
+  --iot-border-base: #{$border-color-base};
+  --iot-border-light: #{$border-color-light};
+  --iot-border-lighter: #{$border-color-lighter};
+  --iot-border-extra-light: #{$border-color-extra-light};
+
+  // ---- 背景 ----
+  --iot-bg-page: #{$bg-color-page};
+  --iot-bg-card: #{$bg-color-card};
+  --iot-bg-hover: #{$bg-color-hover};
+  --iot-bg-disabled: #{$bg-color-disabled};
+
+  // ---- 布局 ----
+  --iot-sidebar-bg: #{$sidebar-bg};
+  --iot-sidebar-bg-hover: #{$sidebar-bg-hover};
+  --iot-sidebar-text: #{$sidebar-text};
+  --iot-sidebar-text-hover: #{$sidebar-text-hover};
+  --iot-sidebar-text-active: #{$sidebar-text-active};
+  --iot-sidebar-border: #{$sidebar-border};
+
+  --iot-header-bg: #{$header-bg};
+  --iot-header-border: #{$header-border};
+  --iot-header-text: #{$header-text};
+  --iot-header-text-hover: #{$header-text-hover};
+
+  // ---- 字体 ----
+  --iot-font-family-base: #{$font-family-base};
+  --iot-font-family-code: #{$font-family-code};
+  --iot-font-size-xs: #{$font-size-extra-small};
+  --iot-font-size-sm: #{$font-size-small};
+  --iot-font-size-base: #{$font-size-base};
+  --iot-font-size-md: #{$font-size-medium};
+  --iot-font-size-lg: #{$font-size-large};
+  --iot-font-size-xl: #{$font-size-extra-large};
+  --iot-font-size-2xl: #{$font-size-huge};
+  --iot-font-size-3xl: #{$font-size-mega};
+
+  // ---- 圆角 ----
+  --iot-radius-sm: #{$radius-small};
+  --iot-radius-base: #{$radius-base};
+  --iot-radius-md: #{$radius-medium};
+  --iot-radius-lg: #{$radius-large};
+  --iot-radius-xl: #{$radius-extra-large};
+  --iot-radius-2xl: #{$radius-mega};
+  --iot-radius-round: #{$radius-round};
+
+  // ---- 阴影 ----
+  --iot-shadow-light: #{$shadow-light};
+  --iot-shadow-base: #{$shadow-base};
+  --iot-shadow-md: #{$shadow-medium};
+  --iot-shadow-lg: #{$shadow-large};
+  --iot-shadow-xl: #{$shadow-extra-large};
+
+  // ---- 间距(常用暴露几个,其他用 SCSS 即可)----
+  --iot-spacing-4: #{$spacing-4};
+  --iot-spacing-8: #{$spacing-8};
+  --iot-spacing-12: #{$spacing-12};
+  --iot-spacing-16: #{$spacing-16};
+  --iot-spacing-24: #{$spacing-24};
+  --iot-spacing-32: #{$spacing-32};
+
+  // ---- 断点(暴露给 JS,通常用 matchMedia)----
+  // SCSS 中通过 @media 使用,这里只是记录,实际不用 CSS 变量
+
+  // ---- Z-index ----
+  --iot-z-dropdown: #{$z-index-dropdown};
+  --iot-z-sticky: #{$z-index-sticky};
+  --iot-z-fixed: #{$z-index-fixed};
+  --iot-z-modal: #{$z-index-modal};
+  --iot-z-popover: #{$z-index-popover};
+  --iot-z-tooltip: #{$z-index-tooltip};
+}

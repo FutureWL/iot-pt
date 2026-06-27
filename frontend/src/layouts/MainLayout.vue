@@ -60,15 +60,12 @@ function onMenuSelect(path: string) {
     <!-- 桌面端侧边栏 -->
     <el-aside v-if="!isMobile" width="220px" class="layout-aside">
       <div class="layout-logo">
-        <el-icon :size="22" color="#fff"><Connection /></el-icon>
+        <el-icon :size="22" class="layout-logo-icon"><Connection /></el-icon>
         <span class="layout-logo-text">IoT 平台</span>
       </div>
       <el-menu
         :default-active="activeMenu"
         class="layout-menu"
-        background-color="#001529"
-        text-color="#c0c4cc"
-        active-text-color="#fff"
         @select="onMenuSelect"
       >
         <el-menu-item v-for="m in menus" :key="m.path" :index="m.path">
@@ -87,15 +84,12 @@ function onMenuSelect(path: string) {
       :with-header="false"
     >
       <div class="layout-logo layout-logo-mobile">
-        <el-icon :size="22" color="#fff"><Connection /></el-icon>
+        <el-icon :size="22" class="layout-logo-icon"><Connection /></el-icon>
         <span class="layout-logo-text">IoT 平台</span>
       </div>
       <el-menu
         :default-active="activeMenu"
         class="layout-menu"
-        background-color="#001529"
-        text-color="#c0c4cc"
-        active-text-color="#fff"
         @select="onMenuSelect"
       >
         <el-menu-item v-for="m in menus" :key="m.path" :index="m.path">
@@ -155,16 +149,18 @@ function onMenuSelect(path: string) {
 </template>
 
 <style scoped lang="scss">
+@use '@/styles/tokens.scss' as *;
+
 .layout {
   height: 100vh;
   width: 100%;
 }
 
 .layout-aside {
-  background: #001529;
+  background: var(--iot-sidebar-bg);
   overflow-x: hidden;
   overflow-y: auto;
-  transition: width 0.2s;
+  transition: width $transition-base;
 }
 
 .layout-logo {
@@ -172,13 +168,21 @@ function onMenuSelect(path: string) {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  color: #fff;
-  background: #002140;
-  &-mobile { background: #002140; }
+  gap: $spacing-8;
+  color: var(--iot-sidebar-text-active);
+  background: var(--iot-sidebar-bg-hover);
+
+  &-icon {
+    color: var(--iot-sidebar-text-active);
+  }
+
+  &-mobile {
+    background: var(--iot-sidebar-bg-hover);
+  }
+
   &-text {
-    font-size: 16px;
-    font-weight: 600;
+    font-size: $font-size-medium;
+    font-weight: $font-weight-semibold;
     white-space: nowrap;
   }
 }
@@ -186,57 +190,59 @@ function onMenuSelect(path: string) {
 .layout-menu {
   border-right: none;
   height: calc(100vh - 56px);
+  background: transparent;
 }
 
 .layout-header {
-  background: #fff;
-  border-bottom: 1px solid #ebeef5;
+  background: var(--iot-header-bg);
+  border-bottom: 1px solid var(--iot-header-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: 0 $spacing-16;
   height: 56px;
 }
 
 .layout-header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: $spacing-12;
 }
 
 .layout-menu-btn {
-  color: #303133;
+  color: var(--iot-text-primary);
 }
 
 .layout-header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: $spacing-12;
 }
 
 .layout-user {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: $spacing-4;
   cursor: pointer;
-  padding: 0 6px;
-  &:hover { color: #409eff; }
+  padding: 0 $spacing-4;
+  transition: color $transition-base;
+  &:hover { color: var(--iot-color-primary); }
 }
 
 .layout-user-name {
-  font-size: 14px;
-  @media (max-width: 480px) { display: none; }
+  font-size: $font-size-base;
+  @media (max-width: $breakpoint-xs) { display: none; }
 }
 
 .layout-main {
-  background: #f5f7fa;
+  background: var(--iot-bg-page);
   padding: 0;
   overflow: auto;
 }
 
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.15s;
+  transition: opacity $transition-fast;
 }
 .fade-enter-from,
 .fade-leave-to {
@@ -245,6 +251,6 @@ function onMenuSelect(path: string) {
 
 :deep(.el-drawer__body) {
   padding: 0;
-  background: #001529;
+  background: var(--iot-sidebar-bg);
 }
 </style>
