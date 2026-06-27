@@ -284,6 +284,7 @@ class MainWindow(QMainWindow):
             username=plat.username,
             tenant_code=plat.tenant_code,
             token=plat.token,
+            last_product_id=plat.last_product_id,
             parent=self,
         )
         if dlg.exec() != PlatformImportDialog.Accepted:

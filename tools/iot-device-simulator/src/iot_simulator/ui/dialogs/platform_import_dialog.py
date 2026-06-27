@@ -76,6 +76,7 @@ class PlatformImportDialog(QDialog):
         username: str = "admin",
         tenant_code: str = "default",
         token: str = "",
+        last_product_id: str = "",
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
@@ -90,6 +91,7 @@ class PlatformImportDialog(QDialog):
         self._full_device_secret: str = ""  # 选中设备后拉到的明文密钥
         self._result: ImportResult | None = None
         self._loop: asyncio.AbstractEventLoop | None = None
+        self._last_product_id: str = last_product_id  # 上次选过的产品 id(加载后自动选中)
 
         self._build_ui()
         # 预填上次登录信息
@@ -319,7 +321,7 @@ class PlatformImportDialog(QDialog):
             self._set_status(f"✓ 已加载 {len(products)} 个产品")
 
             # 自动选中上次选过的
-            last_id = self._last_product_id
+            last_id = self.last_product_id
             if last_id:
                 for i, p in enumerate(products):
                     if p.id == last_id:
@@ -608,7 +610,8 @@ class PlatformImportDialog(QDialog):
 
     @property
     def last_product_id(self) -> str:
-        return self._selected_product.id if self._selected_product else ""
+        """上次选过的产品 id(由 main_window 从 PlatformConfig 传入)"""
+        return self._last_product_id
 
     def get_auth(self) -> tuple[str, str, str, str]:
         """返回 (base_url, username, tenant_code, token) 供 main_window 持久化"""
