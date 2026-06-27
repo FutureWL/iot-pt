@@ -1,6 +1,9 @@
 package com.iot.platform.protocol.core;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
@@ -8,27 +11,38 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * 协议分发器 - 全局单例
+ * 协议分发器
  *
- * 1. 启动时收集所有 ProtocolAdapter bean;
- * 2. 提供按名称获取适配器;
- * 3. 维护设备 session 索引(在线设备表);
- * 4. 平台启动时设置统一 MessageHandler。
+ * <p>职责:
+ *   1. 收集所有 ProtocolAdapter
+ *   2. 维护设备 session 索引(在线设备表)
+ *   3. 适配器收到消息 → 包装成 IotMessageEnvelope → 通过 IotMessagePublisher 发出
+ * </p>
  *
- * @author IoT Platform Team
+ * <p>具体发布方式(local / Redis)由 IotMessagePublisher 的实现决定,
+ * 与本类解耦。</p>
  */
 @Slf4j
+@Component
+@RequiredArgsConstructor
 public class ProtocolDispatcher {
+
+    @org.springframework.beans.factory.annotation.Autowired
+    @org.springframework.beans.factory.annotation.Qualifier("localIotMessagePublisher")
+    private IotMessagePublisher publisher;
+
+    /**
+     * 兼容直接 new ProtocolDispatcher() 的场景(无 Spring 上下文)
+     */
+    public ProtocolDispatcher(IotMessagePublisher publisher) { this.publisher = publisher; }
 
     private final Map<String, ProtocolAdapter> adapters = new ConcurrentHashMap<>();
     private final Map<String, DeviceSession> onlineSessions = new ConcurrentHashMap<>();
 
-    private MessageHandler messageHandler;
-
     public void register(ProtocolAdapter adapter) {
         adapters.put(adapter.getName(), adapter);
-        adapter.setMessageHandler(message -> dispatch(message));
-        // 上线/下线由适配器主动调 onSessionConnect / onSessionDisconnect
+        // 适配器收到原始字节流,解析后回调 dispatch()
+        adapter.setMessageHandler(this::dispatch);
     }
 
     public ProtocolAdapter get(String name) {
@@ -43,17 +57,33 @@ public class ProtocolDispatcher {
         return onlineSessions;
     }
 
-    public void setMessageHandler(MessageHandler handler) {
-        this.messageHandler = handler;
+    /** 适配器调这里 → 发到下游 */
+    public void dispatch(DeviceMessage message) {
+        log.info("[dispatcher] 收到 deviceKey={} type={}", message.getDeviceKey(), message.getType());
+        try {
+            IotMessageEnvelope env = IotMessageEnvelope.builder()
+                    .id(java.util.UUID.randomUUID().toString())
+                    .type(message.getType() == null ? "" : message.getType().name())
+                    .protocol(message.getProtocol())
+                    .deviceKey(message.getDeviceKey())
+                    .productKey(message.getProductKey())
+                    .payload(serializePayload(message))
+                    .timestamp(message.getTimestamp())
+                    .receivedAt(java.time.Instant.now().toEpochMilli())
+                    .build();
+            publisher.publish(env);
+        } catch (Exception e) {
+            log.error("dispatch 失败: deviceKey={}", message.getDeviceKey(), e);
+        }
     }
 
-    private void dispatch(DeviceMessage message) {
-        if (messageHandler != null) {
-            try {
-                messageHandler.onMessage(message);
-            } catch (Exception e) {
-                log.error("处理设备消息异常: deviceKey={}, type={}", message.getDeviceKey(), message.getType(), e);
-            }
+    private String serializePayload(DeviceMessage msg) {
+        if (msg.getPayload() == null || msg.getPayload().isEmpty()) return null;
+        try {
+            return new com.fasterxml.jackson.databind.ObjectMapper()
+                    .writeValueAsString(msg.getPayload());
+        } catch (Exception e) {
+            return msg.getPayload().toString();
         }
     }
 
@@ -62,17 +92,34 @@ public class ProtocolDispatcher {
     public void onSessionConnect(DeviceSession session) {
         onlineSessions.put(session.getDeviceKey(), session);
         log.info("设备上线: protocol={}, deviceKey={}", session.getProtocol(), session.getDeviceKey());
-        // 业务层需要感知上下线时,可在此发事件(M3 阶段接入 Spring ApplicationEventPublisher)
+        // 通知业务层
+        publisher.publish(IotMessageEnvelope.builder()
+                .id(java.util.UUID.randomUUID().toString())
+                .type("ONLINE")
+                .protocol(session.getProtocol())
+                .deviceKey(session.getDeviceKey())
+                .productKey(session.getProductKey())
+                .remoteAddress(session.getRemoteAddress())
+                .receivedAt(java.time.Instant.now().toEpochMilli())
+                .build());
     }
 
     public void onSessionDisconnect(DeviceSession session) {
         DeviceSession removed = onlineSessions.remove(session.getDeviceKey());
         if (removed != null) {
             log.info("设备离线: protocol={}, deviceKey={}", session.getProtocol(), session.getDeviceKey());
+            publisher.publish(IotMessageEnvelope.builder()
+                    .id(java.util.UUID.randomUUID().toString())
+                    .type("OFFLINE")
+                    .protocol(session.getProtocol())
+                    .deviceKey(session.getDeviceKey())
+                    .productKey(session.getProductKey())
+                    .receivedAt(java.time.Instant.now().toEpochMilli())
+                    .build());
         }
     }
 
-    /** 全局启动/停止入口 */
+    /** 全局启动/停止入口(给 ProtocolAutoConfiguration 用) */
     public void startAll() {
         adapters.values().forEach(ProtocolAdapter::start);
     }

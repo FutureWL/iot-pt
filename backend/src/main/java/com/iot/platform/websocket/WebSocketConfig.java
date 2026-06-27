@@ -2,6 +2,7 @@ package com.iot.platform.websocket;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
@@ -13,6 +14,7 @@ import org.springframework.context.annotation.Bean;
  * WebSocket 配置 - 启用 Spring 原生 WebSocket
  */
 @Slf4j
+@ConditionalOnProperty(name = "iot.role", havingValue = "api", matchIfMissing = true)
 @Configuration
 @EnableWebSocket
 @RequiredArgsConstructor

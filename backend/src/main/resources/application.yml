@@ -99,6 +99,14 @@ knife4j:
 
 # JWT 配置
 iot:
+  # role: all(单进程,默认) | api(独立 API 进程) | iot(独立 IoT 进程)
+  role: ${IOT_ROLE:all}
+  # 是否启用协议层(MQTT/TCP 适配器): 独立 API 进程设为 false
+  protocol-layer-enabled: ${IOT_PROTOCOL_LAYER_ENABLED:true}
+  # IoT 控制台(独立 IoT 进程时启用,单进程模式也可打开)
+  console:
+    enabled: ${IOT_CONSOLE_ENABLED:true}
+    spy-enabled: ${IOT_CONSOLE_SPY_ENABLED:true}
   jwt:
     secret: ${JWT_SECRET:iot-platform-super-secret-key-must-be-at-least-32-bytes-long-for-hs256}
     expire: 86400          # 24 小时(秒)
