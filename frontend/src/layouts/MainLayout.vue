@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { UserFilled } from '@element-plus/icons-vue'
+import { useThemeStore } from '@/stores/theme'
+import {
+  UserFilled, Fold, Expand, Sunny, MoonNight, Monitor, Check
+} from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+const themeStore = useThemeStore()
 
 // ============== 移动端 ==============
 const isMobile = ref(window.innerWidth < 768)
@@ -19,8 +23,22 @@ function handleResize() {
 onMounted(() => window.addEventListener('resize', handleResize))
 onBeforeUnmount(() => window.removeEventListener('resize', handleResize))
 
-// ============== 菜单数据(支持二级) ==============
-// 子项 hidden=true 表示不显示在菜单中(由父项或操作触发跳转,如物模型/工单详情)
+// ============== 侧边栏折叠(持久化) ==============
+const collapsed = ref(localStorage.getItem('iot-sidebar-collapsed') === 'true')
+
+watch(collapsed, (v) => {
+  localStorage.setItem('iot-sidebar-collapsed', String(v))
+})
+
+const asideWidth = computed(() => collapsed.value ? '64px' : '220px')
+
+// ============== 主题切换 ==============
+// 委托给 Pinia store,MainLayout 不再持有主题状态
+function onThemeSelect(cmd: 'light' | 'dark' | 'system') {
+  themeStore.setMode(cmd)
+}
+
+// ============== 菜单数据 ==============
 interface MenuItem {
   path?: string
   title: string
@@ -35,70 +53,68 @@ const menus: MenuItem[] = [
   {
     title: '监测中心', icon: 'Monitor',
     children: [
-      { path: '/device/overview', title: '设备总览', permission: 'device:overview' },
-      { path: '/monitor/pd', title: '局放监测', permission: 'monitor:pd' },
-      { path: '/monitor/prpd', title: 'PRPD 图谱', permission: 'monitor:prpd' },
-      { path: '/monitor/temperature', title: '温度监测', permission: 'monitor:temperature' },
-      { path: '/monitor/environment', title: '环境监测', permission: 'monitor:environment' },
-      { path: '/monitor/gis', title: 'GIS 地图', permission: 'monitor:gis' },
-      { path: '/monitor/topology', title: '电网拓扑', permission: 'monitor:topology' }
+      { path: '/device/overview',  title: '设备总览', icon: 'Odometer',     permission: 'device:overview' },
+      { path: '/monitor/pd',       title: '局放监测', icon: 'Cpu',          permission: 'monitor:pd' },
+      { path: '/monitor/prpd',     title: 'PRPD 图谱', icon: 'DataLine',    permission: 'monitor:prpd' },
+      { path: '/monitor/temperature', title: '温度监测', icon: 'Histogram',   permission: 'monitor:temperature' },
+      { path: '/monitor/environment', title: '环境监测', icon: 'Cloudy',      permission: 'monitor:environment' },
+      { path: '/monitor/gis',      title: 'GIS 地图', icon: 'Location',     permission: 'monitor:gis' },
+      { path: '/monitor/topology', title: '电网拓扑', icon: 'Share',        permission: 'monitor:topology' }
     ]
   },
   {
     title: '告警与运维', icon: 'Warning',
     children: [
-      { path: '/alert/center', title: '告警中心', permission: 'alert:center' },
-      { path: '/workorder/list', title: '工单管理', permission: 'workorder:list' },
-      { path: '/knowledge/list', title: '知识库', permission: 'knowledge:list' },
-      { path: '/ops/statistics', title: '运维统计', permission: 'ops:statistics' }
+      { path: '/alert/center',     title: '告警中心', icon: 'Warning',       permission: 'alert:center' },
+      { path: '/workorder/list',   title: '工单管理', icon: 'Tickets',       permission: 'workorder:list' },
+      { path: '/knowledge/list',   title: '知识库',   icon: 'Reading',       permission: 'knowledge:list' },
+      { path: '/ops/statistics',   title: '运维统计', icon: 'DataAnalysis',  permission: 'ops:statistics' }
     ]
   },
   {
     title: '产品与设备', icon: 'Box',
     children: [
-      { path: '/device/list', title: '设备列表', permission: 'device:list' },
-      { path: '/device/group', title: '设备分组', permission: 'device:group' },
-      { path: '/device/shadow', title: '设备影子', permission: 'device:shadow' },
-      { path: '/product', title: '产品管理', permission: 'product:list' }
+      { path: '/device/list',      title: '设备列表', icon: 'List',       permission: 'device:list' },
+      { path: '/device/group',     title: '设备分组', icon: 'Folder',     permission: 'device:group' },
+      { path: '/device/shadow',    title: '设备影子', icon: 'Document',   permission: 'device:shadow' },
+      { path: '/product',          title: '产品管理', icon: 'Goods',      permission: 'product:list' }
     ]
   },
   {
     title: '数据服务', icon: 'DataAnalysis',
     children: [
-      { path: '/data/realtime', title: '实时数据', permission: 'data:realtime' },
-      { path: '/data/history', title: '历史数据', permission: 'data:history' },
-      { path: '/report/center', title: '报表中心', permission: 'report:center' }
+      { path: '/data/realtime',    title: '实时数据', icon: 'VideoPlay',     permission: 'data:realtime' },
+      { path: '/data/history',     title: '历史数据', icon: 'Clock',         permission: 'data:history' },
+      { path: '/report/center',    title: '报表中心', icon: 'DocumentCopy',  permission: 'report:center' }
     ]
   },
   {
     title: '大屏可视化', icon: 'PieChart',
     children: [
-      { path: '/screen', title: '可视化大屏', permission: 'screen:view' },
-      { path: '/iot-console', title: 'IoT 控制台', permission: 'iot-console:view' }
+      { path: '/screen',           title: '可视化大屏', icon: 'Monitor',    permission: 'screen:view' },
+      { path: '/iot-console',      title: 'IoT 控制台', icon: 'Cpu',        permission: 'iot-console:view' }
     ]
   },
   {
     title: '系统管理', icon: 'Setting',
     children: [
-      { path: '/system/user', title: '用户管理', permission: 'system:user' },
-      { path: '/system/role', title: '角色管理', permission: 'system:role' },
-      { path: '/system/tenant', title: '租户管理', permission: 'system:tenant' },
-      { path: '/system/organization', title: '组织架构', permission: 'system:organization' },
-      { path: '/system/menu', title: '菜单管理', permission: 'system:menu' },
-      { path: '/system/dict', title: '字典管理', permission: 'system:dict' },
-      { path: '/system/log', title: '操作日志', permission: 'system:log' },
-      { path: '/system/notify', title: '通知渠道', permission: 'system:notify' }
+      { path: '/system/user',         title: '用户管理',   icon: 'User',            permission: 'system:user' },
+      { path: '/system/role',         title: '角色管理',   icon: 'UserFilled',      permission: 'system:role' },
+      { path: '/system/tenant',       title: '租户管理',   icon: 'OfficeBuilding',  permission: 'system:tenant' },
+      { path: '/system/organization', title: '组织架构',   icon: 'Connection',      permission: 'system:organization' },
+      { path: '/system/menu',         title: '菜单管理',   icon: 'Menu',            permission: 'system:menu' },
+      { path: '/system/dict',         title: '字典管理',   icon: 'Collection',      permission: 'system:dict' },
+      { path: '/system/log',          title: '操作日志',   icon: 'DocumentChecked', permission: 'system:log' },
+      { path: '/system/notify',       title: '通知渠道',   icon: 'Message',         permission: 'system:notify' }
     ]
   }
 ]
 
-// 过滤掉 hidden 子项,渲染菜单
 function visibleItems(items?: MenuItem[]): MenuItem[] {
   if (!items) return []
   return items.filter(i => !i.hidden)
 }
 
-// 按 RBAC 过滤菜单
 function hasPerm(p?: string): boolean {
   if (!p) return true
   if (userStore.roles.includes('SUPER_ADMIN')) return true
@@ -109,20 +125,16 @@ const visibleMenus = computed<MenuItem[]>(() =>
   menus
     .map(m => {
       if (!m.children) {
-        // 一级菜单,按 permission 过滤
         return hasPerm(m.permission) ? m : null
       }
-      // 二级菜单:有可见子项才显示父项
       const kids = visibleItems(m.children).filter(c => hasPerm(c.permission))
       return kids.length > 0 ? { ...m, children: kids } : null
     })
     .filter((m): m is MenuItem => m !== null)
 )
 
-// 当前激活项 = 当前路由路径
 const activeMenu = computed(() => route.path)
 
-// 打开的子菜单(用于刷新后保持展开状态)
 const openedMenus = computed<string[]>(() => {
   const list: string[] = []
   for (const m of visibleMenus.value) {
@@ -133,7 +145,6 @@ const openedMenus = computed<string[]>(() => {
   return list
 })
 
-// 面包屑:从路由路径反查父分组
 const breadcrumb = computed<string[]>(() => {
   const title = (route.meta?.title as string) || ''
   const items = ['物联网平台']
@@ -159,38 +170,53 @@ async function onLogout() {
 }
 
 function onMenuSelect(path: string) {
-  // 子菜单的 index 不是路径,忽略(虽然我们这里用 path 渲染 menu-item)
   if (!path || !path.startsWith('/')) return
   router.push(path)
   if (isMobile.value) drawerVisible.value = false
 }
+
+function toggleCollapsed() {
+  collapsed.value = !collapsed.value
+}
+
+// ============== 生命周期 ==============
+onMounted(() => {
+  // 初始化主题 + 注册系统主题变化监听(store 内部 refCount 防重复)
+  themeStore.init()
+})
+
+onBeforeUnmount(() => {
+  // 释放系统主题监听
+  themeStore.dispose()
+})
 </script>
 
 <template>
   <el-container class="layout">
     <!-- 桌面端侧边栏 -->
-    <el-aside v-if="!isMobile" width="220px" class="layout-aside">
+    <el-aside v-if="!isMobile" :width="asideWidth" class="layout-aside">
       <div class="layout-logo">
         <el-icon :size="22" class="layout-logo-icon"><Connection /></el-icon>
-        <span class="layout-logo-text">IoT 平台</span>
+        <span v-show="!collapsed" class="layout-logo-text">IoT 平台</span>
       </div>
+
       <el-menu
         :default-active="activeMenu"
         :default-openeds="openedMenus"
+        :collapse="collapsed"
+        :collapse-transition="false"
         class="layout-menu"
         @select="onMenuSelect"
       >
-        <!-- 一级菜单(无子项) -->
         <el-menu-item
           v-for="m in visibleMenus.filter(x => !x.children)"
           :key="m.path"
           :index="m.path!"
         >
           <el-icon><component :is="m.icon" /></el-icon>
-          <span>{{ m.title }}</span>
+          <template #title>{{ m.title }}</template>
         </el-menu-item>
 
-        <!-- 一级菜单(有子项) -->
         <el-sub-menu
           v-for="m in visibleMenus.filter(x => x.children)"
           :key="m.title"
@@ -206,10 +232,18 @@ function onMenuSelect(path: string) {
             :index="c.path!"
           >
             <el-icon><component :is="c.icon || 'Minus'" /></el-icon>
-            <span>{{ c.title }}</span>
+            <template #title>{{ c.title }}</template>
           </el-menu-item>
         </el-sub-menu>
       </el-menu>
+
+      <!-- 折叠切换按钮(底部) -->
+      <div class="layout-collapse-btn" @click="toggleCollapsed">
+        <el-icon :size="18">
+          <component :is="collapsed ? 'Expand' : 'Fold'" />
+        </el-icon>
+        <span v-show="!collapsed">收起菜单</span>
+      </div>
     </el-aside>
 
     <!-- 移动端抽屉菜单 -->
@@ -277,13 +311,43 @@ function onMenuSelect(path: string) {
           </el-breadcrumb>
         </div>
         <div class="layout-header-right">
+          <!-- 主题切换(用原生 title 避免 el-tooltip 拦截 el-dropdown 触发) -->
+          <el-dropdown trigger="click" @command="onThemeSelect">
+            <el-button link class="header-icon-btn"
+              :title="`当前主题:${themeStore.mode === 'system' ? '跟随系统' : themeStore.mode === 'dark' ? '暗色' : '亮色'} · 点击切换`">
+              <el-icon :size="18">
+                <component :is="themeStore.mode === 'light' ? 'Sunny' : themeStore.mode === 'dark' ? 'MoonNight' : 'Monitor'" />
+              </el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="light">
+                  <el-icon><Sunny /></el-icon>
+                  <span class="theme-label">浅色</span>
+                  <el-icon v-if="themeStore.mode === 'light'" class="theme-check"><Check /></el-icon>
+                </el-dropdown-item>
+                <el-dropdown-item command="dark">
+                  <el-icon><MoonNight /></el-icon>
+                  <span class="theme-label">暗色</span>
+                  <el-icon v-if="themeStore.mode === 'dark'" class="theme-check"><Check /></el-icon>
+                </el-dropdown-item>
+                <el-dropdown-item command="system">
+                  <el-icon><Monitor /></el-icon>
+                  <span class="theme-label">跟随系统</span>
+                  <el-icon v-if="themeStore.mode === 'system'" class="theme-check"><Check /></el-icon>
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+
+          <!-- 用户菜单 -->
           <el-dropdown trigger="click" @command="(c: string) => c === 'logout' && onLogout()">
             <span class="layout-user">
               <el-avatar :size="32" :icon="UserFilled" />
               <span class="layout-user-name">
                 {{ userStore.userInfo?.nickname || userStore.userInfo?.username || '未登录' }}
               </span>
-              <el-icon><ArrowDown /></el-icon>
+              <el-icon><Fold /></el-icon>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
@@ -320,6 +384,8 @@ function onMenuSelect(path: string) {
   overflow-x: hidden;
   overflow-y: auto;
   transition: width $transition-base;
+  display: flex;
+  flex-direction: column;
 }
 
 .layout-logo {
@@ -330,26 +396,52 @@ function onMenuSelect(path: string) {
   gap: $spacing-8;
   color: var(--iot-sidebar-text-active);
   background: var(--iot-sidebar-bg-hover);
+  flex-shrink: 0;
 
-  &-icon {
-    color: var(--iot-sidebar-text-active);
-  }
-
-  &-mobile {
-    background: var(--iot-sidebar-bg-hover);
-  }
-
+  &-icon { color: var(--iot-sidebar-text-active); }
+  &-mobile { background: var(--iot-sidebar-bg-hover); }
   &-text {
     font-size: $font-size-medium;
     font-weight: $font-weight-semibold;
     white-space: nowrap;
+    overflow: hidden;
   }
 }
 
 .layout-menu {
   border-right: none;
-  height: calc(100vh - 56px);
+  flex: 1;
   background: transparent;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+// 折叠切换按钮
+.layout-collapse-btn {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-8;
+  color: var(--iot-sidebar-text);
+  cursor: pointer;
+  border-top: 1px solid var(--iot-sidebar-border);
+  transition: color $transition-fast, background $transition-fast;
+  flex-shrink: 0;
+  user-select: none;
+  &:hover {
+    color: var(--iot-sidebar-text-active);
+    background: var(--iot-sidebar-bg-hover);
+  }
+  span {
+    font-size: $font-size-small;
+    white-space: nowrap;
+  }
+}
+
+// 折叠时 el-menu 子菜单弹层位置微调
+:deep(.el-menu--collapse) {
+  width: 64px;
 }
 
 .layout-header {
@@ -368,15 +460,21 @@ function onMenuSelect(path: string) {
   gap: $spacing-12;
 }
 
-.layout-menu-btn {
-  color: var(--iot-text-primary);
-}
+.layout-menu-btn { color: var(--iot-text-primary); }
 
 .layout-header-right {
   display: flex;
   align-items: center;
   gap: $spacing-12;
 }
+
+.header-icon-btn {
+  color: var(--iot-text-regular);
+  &:hover { color: var(--iot-color-primary); }
+}
+
+.theme-label { margin: 0 $spacing-8; }
+.theme-check { color: var(--iot-color-primary); margin-left: auto; }
 
 .layout-user {
   display: flex;
@@ -385,6 +483,7 @@ function onMenuSelect(path: string) {
   cursor: pointer;
   padding: 0 $spacing-4;
   transition: color $transition-base;
+  color: var(--iot-text-primary);
   &:hover { color: var(--iot-color-primary); }
 }
 
@@ -411,5 +510,12 @@ function onMenuSelect(path: string) {
 :deep(.el-drawer__body) {
   padding: 0;
   background: var(--iot-sidebar-bg);
+}
+
+// 主题切换 dropdown item 内的 icon 对齐
+:deep(.el-dropdown-menu__item) {
+  display: flex;
+  align-items: center;
+  min-width: 140px;
 }
 </style>

@@ -25,16 +25,17 @@ body {
   width: 100%;
   font-size: $font-size-base;
   font-family: $font-family-base;
-  color: $text-color-primary;
-  background: $bg-color-page;
+  color: var(--iot-text-primary);
+  background: var(--iot-bg-page);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color $transition-base, color $transition-base;
 }
 
 a {
   text-decoration: none;
   color: inherit;
-  &:hover { color: $color-primary; }
+  &:hover { color: var(--iot-color-primary); }
 }
 
 ul,
@@ -53,7 +54,7 @@ textarea {
 h1, h2, h3, h4, h5, h6 {
   margin: 0;
   font-weight: $font-weight-semibold;
-  color: $text-color-primary;
+  color: var(--iot-text-primary);
 }
 
 p {
@@ -66,11 +67,11 @@ p {
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: $text-color-placeholder;
+  background: var(--iot-text-placeholder);
   border-radius: $radius-small;
   transition: background $transition-base;
 
-  &:hover { background: $text-color-secondary; }
+  &:hover { background: var(--iot-text-secondary); }
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -81,13 +82,15 @@ p {
   padding: $spacing-16;
   height: 100%;
   overflow: auto;
+  background: var(--iot-bg-page);
 }
 
 .page-card {
-  background: $bg-color-card;
+  background: var(--iot-bg-card);
+  border: 1px solid var(--iot-border-lighter);
   border-radius: $radius-large;
   padding: $spacing-16;
-  box-shadow: $shadow-light;
+  box-shadow: var(--iot-shadow-light);
 }
 
 .page-toolbar {
@@ -152,17 +155,17 @@ p {
 }
 
 // 文字
-.text-primary   { color: $text-color-primary; }
-.text-regular   { color: $text-color-regular; }
-.text-secondary { color: $text-color-secondary; }
-.text-placeholder { color: $text-color-placeholder; }
-.text-disabled  { color: $text-color-disabled; }
-.text-success   { color: $color-success; }
-.text-warning   { color: $color-warning; }
-.text-danger    { color: $color-danger; }
-.text-primary-color { color: $color-primary; }
-.text-accent    { color: $color-accent; }
-.text-muted     { color: $text-color-secondary; }
+.text-primary   { color: var(--iot-text-primary); }
+.text-regular   { color: var(--iot-text-regular); }
+.text-secondary { color: var(--iot-text-secondary); }
+.text-placeholder { color: var(--iot-text-placeholder); }
+.text-disabled  { color: var(--iot-text-disabled); }
+.text-success   { color: var(--iot-color-success); }
+.text-warning   { color: var(--iot-color-warning); }
+.text-danger    { color: var(--iot-color-danger); }
+.text-primary-color { color: var(--iot-color-primary); }
+.text-accent    { color: var(--iot-color-accent); }
+.text-muted     { color: var(--iot-text-secondary); }
 
 @each $name, $value in (xs: $font-size-extra-small, sm: $font-size-small, base: $font-size-base, md: $font-size-medium, lg: $font-size-large, xl: $font-size-extra-large, 2xl: $font-size-huge) {
   .text-#{$name} { font-size: $value; }
@@ -185,14 +188,14 @@ p {
 .radius-round { border-radius: $radius-round; }
 
 // 阴影
-.shadow-light { box-shadow: $shadow-light; }
-.shadow-base  { box-shadow: $shadow-base; }
-.shadow-md    { box-shadow: $shadow-medium; }
-.shadow-lg    { box-shadow: $shadow-large; }
+.shadow-light { box-shadow: var(--iot-shadow-light); }
+.shadow-base  { box-shadow: var(--iot-shadow-base); }
+.shadow-md    { box-shadow: var(--iot-shadow-md); }
+.shadow-lg    { box-shadow: var(--iot-shadow-lg); }
 
 // 背景
-.bg-page      { background: $bg-color-page; }
-.bg-card      { background: $bg-color-card; }
+.bg-page      { background: var(--iot-bg-page); }
+.bg-card      { background: var(--iot-bg-card); }
 .bg-hover     { background: $bg-color-hover; }
 
 // 光标

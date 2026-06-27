@@ -117,3 +117,68 @@
   --iot-z-popover: #{$z-index-popover};
   --iot-z-tooltip: #{$z-index-tooltip};
 }
+
+// ============================================================
+// 暗色模式 — 由 html.dark 激活
+// ============================================================
+// 用法: 在 <html> 上加 class="dark" 即生效
+// 所有使用 var(--iot-*) 的组件自动适配,无需改组件代码
+// ============================================================
+
+html.dark {
+  // ---- 品牌色(暗色下亮度提升 10~15%) ----
+  --iot-color-primary: #5ba6ff;
+  --iot-color-primary-light-3: #7ab8ff;
+  --iot-color-primary-light-5: #9cc9ff;
+  --iot-color-primary-light-7: #c0dfff;
+  --iot-color-primary-light-8: #d8ebff;
+  --iot-color-primary-light-9: #1e3a5c;   // 暗色下作为浅背景
+  --iot-color-primary-dark-2: #409eff;
+
+  --iot-color-accent: #2dd4bf;
+  --iot-color-accent-light: #5eead4;
+  --iot-color-accent-dark: #14b8a6;
+
+  // ---- 语义色 ----
+  --iot-color-success: #85ce61;
+  --iot-color-success-light: #2d4a35;
+  --iot-color-warning: #eebe77;
+  --iot-color-warning-light: #4a3a25;
+  --iot-color-danger: #f78989;
+  --iot-color-danger-light: #4a2d2d;
+  --iot-color-info: #a6a9ad;
+  --iot-color-info-light: #2e3236;
+
+  // ---- 文字(亮→暗) ----
+  --iot-text-primary: #e2e8f0;
+  --iot-text-regular: #cbd5e1;
+  --iot-text-secondary: #94a3b8;
+  --iot-text-placeholder: #64748b;
+  --iot-text-disabled: #475569;
+
+  // ---- 边框 ----
+  --iot-border-base: #334155;
+  --iot-border-light: #475569;
+  --iot-border-lighter: #1e293b;
+  --iot-border-extra-light: #0f172a;
+
+  // ---- 背景(深色 Slate) ----
+  --iot-bg-page: #0f172a;
+  --iot-bg-card: #1e293b;
+  --iot-bg-hover: #334155;
+  --iot-bg-disabled: #1e293b;
+
+  // ---- 侧边栏 ----
+  --iot-sidebar-bg: #020617;
+  --iot-sidebar-bg-hover: #0f172a;
+  --iot-sidebar-text: #94a3b8;
+  --iot-sidebar-text-hover: #cbd5e1;
+  --iot-sidebar-text-active: #ffffff;
+  --iot-sidebar-border: rgba(255, 255, 255, 0.06);
+
+  // ---- 头部 ----
+  --iot-header-bg: #1e293b;
+  --iot-header-border: #334155;
+  --iot-header-text: #e2e8f0;
+  --iot-header-text-hover: #{$color-primary};
+}

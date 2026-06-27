@@ -54,11 +54,40 @@ export const useThemeStore = defineStore('theme', () => {
     writeModeToStorage(m)
   }
 
+  // ---- 系统主题监听(仅当 mode === 'system' 时响应) ----
+  // 模块级单例:整个应用只注册一个监听器,即使多个组件 useThemeStore() 也不重复绑定
+  let mediaQuery: MediaQueryList | null = null
+  let listener: ((e: MediaQueryListEvent) => void) | null = null
+  let refCount = 0
+
+  function onSystemThemeChange(): void {
+    if (mode.value === 'system') {
+      resolved.value = resolveFromMode('system')
+      applyClass(resolved.value)
+    }
+  }
+
   function init(): void {
     mode.value = readModeFromStorage()
     resolved.value = resolveFromMode(mode.value)
     applyClass(resolved.value)
+
+    refCount++
+    if (refCount === 1 && typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+      mediaQuery = window.matchMedia(MEDIA_QUERY)
+      listener = onSystemThemeChange
+      mediaQuery.addEventListener('change', listener)
+    }
   }
 
-  return { mode, resolved, isDark, setMode, init }
+  function dispose(): void {
+    refCount = Math.max(0, refCount - 1)
+    if (refCount === 0 && mediaQuery && listener) {
+      mediaQuery.removeEventListener('change', listener)
+      mediaQuery = null
+      listener = null
+    }
+  }
+
+  return { mode, resolved, isDark, setMode, init, dispose }
 })
