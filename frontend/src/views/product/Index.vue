@@ -9,6 +9,7 @@ import {
   updateProduct,
   deleteProduct,
   defaultThingModel,
+  getProduct,
   type IotProductVO,
   type IotProductDTO,
   type IotProductQuery

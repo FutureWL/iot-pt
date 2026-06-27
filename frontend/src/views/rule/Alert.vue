@@ -54,12 +54,12 @@ async function onHandle(row: IotAlertVO, status: 1 | 2) {
   const action = status === 1 ? '处理' : '忽略'
   let remark = ''
   if (status === 1) {
-    const { value } = await ElMessageBox.prompt(
+    const promptRes = await ElMessageBox.prompt(
       `确认标记为「已处理」?可填写处理说明:`, `处理告警: ${row.title}`,
       { inputPlaceholder: '处理说明(可空)', confirmButtonText: '确定', cancelButtonText: '取消' }
     ).catch(() => null)
-    if (value === null) return
-    remark = value || ''
+    if (promptRes === null) return
+    remark = promptRes.value || ''
   } else {
     await ElMessageBox.confirm(`确认忽略告警「${row.title}」?`, '忽略确认', { type: 'warning' })
   }

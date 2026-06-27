@@ -30,7 +30,7 @@ async function loginAs(page: any, context: any) {
  */
 async function mockBackend(page: any) {
   // Mock 用户信息接口
-  await page.route('**/api/auth/info', async (route) => {
+  await page.route('**/api/auth/info', async (route: any) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -50,7 +50,7 @@ async function mockBackend(page: any) {
   })
 
   // Mock dashboard summary 接口
-  await page.route('**/api/dashboard/summary', async (route) => {
+  await page.route('**/api/dashboard/summary', async (route: any) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',

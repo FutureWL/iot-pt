@@ -39,7 +39,10 @@ public class SecurityConfig {
             "/webjars/**",
             "/doc.html",
             "/favicon.ico",
-            "/ws/**"
+            "/ws/**",
+            // IoT 控制台 - SSE 不能带 Authorization header,暂放行
+            // (生产应改为 cookie + CSRF,或 SSE 走 query token)
+            "/iot-console/**"
     };
 
     @Bean

@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.*;
 
+import com.iot.platform.common.R;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,9 +39,9 @@ public class IotConsoleController {
     private final SpyBuffer spyBuffer;
 
     @GetMapping("/status")
-    public Map<String, Object> status() {
+    public R<Map<String, Object>> status() {
         var online = dispatcher.onlineSessions();
-        return Map.of(
+        return R.ok(Map.of(
             "onlineDevices", online.size(),
             "txTotal", metrics.getTxTotal(),
             "rxTotal", metrics.getRxTotal(),
@@ -49,11 +50,11 @@ public class IotConsoleController {
             "rxTps", metrics.getRxSinceTick(),
             "spyBufferSize", spyBuffer.size(),
             "ts", System.currentTimeMillis()
-        );
+        ));
     }
 
     @GetMapping("/devices")
-    public List<Map<String, Object>> devices() {
+    public R<List<Map<String, Object>>> devices() {
         List<Map<String, Object>> out = new ArrayList<>();
         var sessions = dispatcher.onlineSessions();
         for (var session : sessions.values()) {
@@ -66,20 +67,20 @@ public class IotConsoleController {
                 "lastActiveTime", session.getLastActiveTime() == null ? 0 : session.getLastActiveTime().toEpochMilli()
             ));
         }
-        return out;
+        return R.ok(out);
     }
 
     @GetMapping("/messages")
-    public List<IotMessageEnvelope> messages(
+    public R<List<IotMessageEnvelope>> messages(
             @RequestParam(defaultValue = "100") int limit) {
-        return spyBuffer.snapshot(Math.min(limit, 1000));
+        return R.ok(spyBuffer.snapshot(Math.min(limit, 1000)));
     }
 
     @PostMapping("/devices/{key}/kick")
-    public Map<String, Object> kick(@PathVariable String key) {
+    public R<Map<String, Object>> kick(@PathVariable String key) {
         var session = dispatcher.onlineSessions().get(key);
         if (session == null) {
-            return Map.of("ok", false, "msg", "设备不在线或无 session");
+            return R.ok(Map.of("ok", false, "msg", "设备不在线或无 session"));
         }
         try {
             // 通过 dispatcher 找协议适配器 → 调 sendDownMessage 关闭连接
@@ -88,19 +89,19 @@ public class IotConsoleController {
                 // 注: 这里只是标记意图,实际关连接在适配器内部
                 dispatcher.onSessionDisconnect(session);
             }
-            return Map.of("ok", true, "msg", "已请求断开 " + key);
+            return R.ok(Map.of("ok", true, "msg", "已请求断开 " + key));
         } catch (Exception e) {
             log.error("[iot-console] 踢设备失败: {}", key, e);
-            return Map.of("ok", false, "msg", e.getMessage());
+            return R.ok(Map.of("ok", false, "msg", e.getMessage()));
         }
     }
 
     @PostMapping("/protocols/{name}/restart")
-    public Map<String, Object> restartProtocol(@PathVariable String name) {
+    public R<Map<String, Object>> restartProtocol(@PathVariable String name) {
         try {
             var adapter = dispatcher.get(name);
             if (adapter == null) {
-                return Map.of("ok", false, "msg", "协议不存在: " + name);
+                return R.ok(Map.of("ok", false, "msg", "协议不存在: " + name));
             }
             // 起新线程避免阻塞
             new Thread(() -> {
@@ -108,9 +109,9 @@ public class IotConsoleController {
                 try { Thread.sleep(500); } catch (InterruptedException ignored) {}
                 try { adapter.start(); } catch (Exception ignored) {}
             }, "iot-console-restart-" + name).start();
-            return Map.of("ok", true, "msg", "重启中: " + name);
+            return R.ok(Map.of("ok", true, "msg", "重启中: " + name));
         } catch (Exception e) {
-            return Map.of("ok", false, "msg", e.getMessage());
+            return R.ok(Map.of("ok", false, "msg", e.getMessage()));
         }
     }
 

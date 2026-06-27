@@ -86,6 +86,12 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '可视化大屏', icon: 'pie-chart', permission: 'screen:view' }
       },
       {
+        path: 'iot-console',
+        name: 'IotConsole',
+        component: () => import('@/views/iot-console/Index.vue'),
+        meta: { title: 'IoT 控制台', icon: 'cpu', permission: 'iot-console:view' }
+      },
+      {
         path: 'system/user',
         name: 'SystemUser',
         component: () => import('@/views/system/User.vue'),

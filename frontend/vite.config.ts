@@ -36,6 +36,12 @@ export default defineConfig(({ mode }) => {
       // 允许通过这些域名访问 dev server(Vite 5+ 默认有 host 检查)
       allowedHosts: ['huntercat.cn', '.huntercat.cn'],
       proxy: {
+        // iot-console 端点只在 broker 上(role=iot),转发到 broker 端口
+        // 注意:必须放在 /api 之前,vite proxy 按声明顺序匹配
+        '/api/iot-console': {
+          target: `http://localhost:${process.env.BROKER_PORT || '9101'}`,
+          changeOrigin: true
+        },
         '/api': {
           target: proxyTarget,
           changeOrigin: true
