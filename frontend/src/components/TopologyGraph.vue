@@ -249,7 +249,7 @@ function ensureNodesRegistered() {
           attrs: { x: 0, y: 3, text: cfg.symbol || '·', fontSize: 11, fontWeight: 600, fill: '#fff', textAlign: 'center' }
         })
       }
-      if (props.showLabels) drawLabel(group, cfg.label, r + 16)
+      if (props.showLabels) drawLabel(group, cfg.name, r + 16)
       return keyShape
     }
   }, 'circle')
@@ -283,7 +283,7 @@ function ensureNodesRegistered() {
           attrs: { x: 0, y: 3, text: cfg.symbol || '', fontSize: 11, fontWeight: 600, fill: '#fff', textAlign: 'center' }
         })
       }
-      if (props.showLabels) drawLabel(group, cfg.label, h / 2 + 16)
+      if (props.showLabels) drawLabel(group, cfg.name, h / 2 + 16)
       return keyShape
     }
   }, 'rect')
@@ -318,7 +318,7 @@ function ensureNodesRegistered() {
           }
         })
       }
-      if (props.showLabels) drawLabel(group, cfg.label, h / 2 + 14)
+      if (props.showLabels) drawLabel(group, cfg.name, h / 2 + 14)
       return keyShape
     }
   }, 'rect')
@@ -361,7 +361,7 @@ function ensureNodesRegistered() {
           textAlign: 'center'
         }
       })
-      if (props.showLabels) drawLabel(group, cfg.label, h / 2 + 16)
+      if (props.showLabels) drawLabel(group, cfg.name, h / 2 + 16)
       return keyShape
     }
   }, 'rect')
@@ -401,7 +401,7 @@ function ensureNodesRegistered() {
           textAlign: 'center'
         }
       })
-      if (props.showLabels) drawLabel(group, cfg.label, r + 18)
+      if (props.showLabels) drawLabel(group, cfg.name, r + 18)
       return leftCircle  // 用左圆作为 keyShape
     }
   }, 'circle')
@@ -568,7 +568,9 @@ function renderGraph() {
   const data = {
     nodes: props.nodes.map(n => ({
       ...n,
-      label: n.name,
+      // 不传 label 字段!G6 内置 rect/circle/polygon 会根据 cfg.label 自动
+      // 在节点中心画一遍名字,与我们的 drawLabel 形成双重渲染。
+      // 名字完全交给 drawLabel 处理(读 cfg.name)。
       symbol: nodeTypeMeta[n.type].symbol,
       type: getShapeType(n.type)
     })),
