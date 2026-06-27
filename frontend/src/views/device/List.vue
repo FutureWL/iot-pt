@@ -242,6 +242,16 @@ onMounted(() => { loadOptions(); load() })
             </el-tag>
           </template>
         </el-table-column>
+        <el-table-column label="健康度" width="110">
+          <template #default="{ row }">
+            <template v-if="row.healthScore != null">
+              <el-progress :percentage="row.healthScore" :stroke-width="6" :show-text="false"
+                :color="row.healthScore >= 75 ? '#67c23a' : row.healthScore >= 60 ? '#e6a23c' : '#f56c6c'" />
+              <span class="text-secondary text-xs ml-4">{{ row.healthScore }}</span>
+            </template>
+            <span v-else class="text-disabled">—</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="location" label="位置" min-width="140" show-overflow-tooltip />
         <el-table-column label="密钥" width="160">
           <template #default="{ row }">
@@ -333,4 +343,5 @@ onMounted(() => { loadOptions(); load() })
   font-family: 'Menlo', 'Consolas', monospace;
   font-size: 12px;
 }
+.ml-4 { margin-left: 4px; }
 </style>

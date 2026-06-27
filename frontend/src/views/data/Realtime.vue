@@ -266,31 +266,31 @@ onBeforeUnmount(() => {
   padding: 8px 4px;
   cursor: pointer;
   user-select: none;
-  &:hover { background: #f5f7fa; }
-  .caret { color: #909399; transition: transform 0.2s; }
+  &:hover { background: var(--iot-bg-page); }
+  .caret { color: var(--iot-text-secondary); transition: transform 0.2s; }
   .device-key { font-weight: 500; display: flex; align-items: center; gap: 4px; }
-  .last-online { color: #909399; font-size: 12px; }
-  .property-summary { color: #409eff; font-size: 12px; margin-left: auto; }
+  .last-online { color: var(--iot-text-secondary); font-size: 12px; }
+  .property-summary { color: var(--iot-color-primary); font-size: 12px; margin-left: auto; }
 }
 .property-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 12px;
   padding: 12px 0 0;
-  border-top: 1px solid #ebeef5;
+  border-top: 1px solid var(--iot-border-lighter);
   margin-top: 8px;
 }
 .property-cell {
-  background: #fafafa;
-  border: 1px solid #ebeef5;
+  background: var(--iot-bg-page);
+  border: 1px solid var(--iot-border-lighter);
   border-radius: 6px;
   padding: 10px 12px;
-  .prop-name { font-size: 12px; color: #606266; display: flex; align-items: center; gap: 6px; }
-  .prop-identifier { color: #909399; font-size: 11px; font-family: monospace; }
+  .prop-name { font-size: 12px; color: var(--iot-text-regular); display: flex; align-items: center; gap: 6px; }
+  .prop-identifier { color: var(--iot-text-secondary); font-size: 11px; font-family: monospace; }
   .prop-value { font-size: 18px; font-weight: 600; margin: 4px 0; font-family: 'Menlo', monospace;
-    .prop-unit { font-size: 12px; color: #909399; margin-left: 4px; font-weight: 400; }
-    .not-reported { color: #c0c4cc; font-size: 14px; font-weight: 400; }
+    .prop-unit { font-size: 12px; color: var(--iot-text-secondary); margin-left: 4px; font-weight: 400; }
+    .not-reported { color: var(--iot-text-disabled); font-size: 14px; font-weight: 400; }
   }
-  .prop-meta { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #909399; .prop-time { margin-left: auto; } }
+  .prop-meta { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--iot-text-secondary); .prop-time { margin-left: auto; } }
 }
 </style>

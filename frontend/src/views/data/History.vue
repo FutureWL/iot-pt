@@ -245,7 +245,7 @@ window.addEventListener('resize', () => chart?.resize())
   margin-bottom: 8px;
   font-weight: 500;
   span { display: flex; align-items: center; gap: 4px; }
-  .text-muted { color: #909399; font-size: 12px; font-weight: 400; }
+  .text-muted { color: var(--iot-text-secondary); font-size: 12px; font-weight: 400; }
 }
 .chart-container { width: 100%; height: 420px; }
 
@@ -261,9 +261,9 @@ window.addEventListener('resize', () => chart?.resize())
   gap: 4px;
   margin-bottom: 12px;
 }
-.stat-num { font-size: 22px; font-weight: 600; color: #303133; font-family: 'Menlo', monospace; }
-.stat-label { font-size: 12px; color: #909399; }
-.stat-blue { background: linear-gradient(135deg, #ecf5ff 0%, #fff 100%); color: #409eff; }
-.stat-red { background: linear-gradient(135deg, #fef0f0 0%, #fff 100%); color: #f56c6c; }
-.stat-green { background: linear-gradient(135deg, #f0f9eb 0%, #fff 100%); color: #67c23a; }
+.stat-num { font-size: 22px; font-weight: 600; color: var(--iot-text-primary); font-family: 'Menlo', monospace; }
+.stat-label { font-size: 12px; color: var(--iot-text-secondary); }
+.stat-blue { background: linear-gradient(135deg, var(--iot-color-primary-light-9) 0%, #fff 100%); color: var(--iot-color-primary); }
+.stat-red { background: linear-gradient(135deg, var(--iot-color-danger-light) 0%, #fff 100%); color: var(--iot-color-danger); }
+.stat-green { background: linear-gradient(135deg, #f0f9eb 0%, #fff 100%); color: var(--iot-color-success); }
 </style>

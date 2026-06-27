@@ -255,10 +255,10 @@ onMounted(load)
   .meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .actions { display: flex; gap: 8px; }
 }
-.text-muted { color: #909399; font-size: 13px; }
+.text-muted { color: var(--iot-text-secondary); font-size: 13px; }
 .identifier {
   background: #f0f9eb;
-  color: #67c23a;
+  color: var(--iot-color-success);
   padding: 2px 6px;
   border-radius: 3px;
   font-family: 'Menlo', 'Consolas', monospace;

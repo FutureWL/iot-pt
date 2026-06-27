@@ -19,17 +19,96 @@ export const routes: RouteRecordRaw[] = [
     component: Layout,
     redirect: '/dashboard',
     children: [
+      // ============ 工作台 ============
       {
         path: 'dashboard',
         name: 'Dashboard',
         component: () => import('@/views/dashboard/Index.vue'),
         meta: { title: '工作台', icon: 'odometer', permission: 'dashboard:view' }
       },
+
+      // ============ 监测中心 ============
+      {
+        path: 'device/overview',
+        name: 'DeviceOverview',
+        component: () => import('@/views/device/Overview.vue'),
+        meta: { title: '设备总览', icon: 'monitor', permission: 'device:overview' }
+      },
+      {
+        path: 'monitor/pd',
+        name: 'MonitorPd',
+        component: () => import('@/views/monitor/Pd.vue'),
+        meta: { title: '局放监测', icon: 'cpu', permission: 'monitor:pd' }
+      },
+      {
+        path: 'monitor/prpd',
+        name: 'MonitorPrpd',
+        component: () => import('@/views/monitor/Prpd.vue'),
+        meta: { title: 'PRPD 图谱', icon: 'data-line', permission: 'monitor:prpd' }
+      },
+      {
+        path: 'monitor/temperature',
+        name: 'MonitorTemperature',
+        component: () => import('@/views/monitor/Temperature.vue'),
+        meta: { title: '温度监测', icon: 'thermometer', permission: 'monitor:temperature' }
+      },
+      {
+        path: 'monitor/environment',
+        name: 'MonitorEnvironment',
+        component: () => import('@/views/monitor/Environment.vue'),
+        meta: { title: '环境监测', icon: 'cloudy', permission: 'monitor:environment' }
+      },
+      {
+        path: 'monitor/gis',
+        name: 'MonitorGis',
+        component: () => import('@/views/monitor/Gis.vue'),
+        meta: { title: 'GIS 地图', icon: 'location', permission: 'monitor:gis' }
+      },
+
+      // ============ 告警与运维 ============
+      {
+        path: 'alert/center',
+        name: 'AlertCenter',
+        component: () => import('@/views/alert/Center.vue'),
+        meta: { title: '告警中心', icon: 'warning', permission: 'alert:center' }
+      },
+      {
+        path: 'workorder/list',
+        name: 'WorkOrderList',
+        component: () => import('@/views/workorder/List.vue'),
+        meta: { title: '工单管理', icon: 'tickets', permission: 'workorder:list' }
+      },
+      {
+        path: 'workorder/detail/:id',
+        name: 'WorkOrderDetail',
+        component: () => import('@/views/workorder/Detail.vue'),
+        meta: { title: '工单详情', activeMenu: '/workorder/list', permission: 'workorder:list' }
+      },
+      {
+        path: 'knowledge/list',
+        name: 'KnowledgeList',
+        component: () => import('@/views/knowledge/List.vue'),
+        meta: { title: '知识库', icon: 'reading', permission: 'knowledge:list' }
+      },
+      {
+        path: 'knowledge/editor/:id?',
+        name: 'KnowledgeEditor',
+        component: () => import('@/views/knowledge/Editor.vue'),
+        meta: { title: '知识编辑', activeMenu: '/knowledge/list', permission: 'knowledge:list' }
+      },
+      {
+        path: 'ops/statistics',
+        name: 'OpsStatistics',
+        component: () => import('@/views/ops/Statistics.vue'),
+        meta: { title: '运维统计', icon: 'data-analysis', permission: 'ops:statistics' }
+      },
+
+      // ============ 产品与设备 ============
       {
         path: 'device/list',
         name: 'DeviceList',
         component: () => import('@/views/device/List.vue'),
-        meta: { title: '设备列表', icon: 'monitor', permission: 'device:list' }
+        meta: { title: '设备列表', icon: 'list', permission: 'device:list' }
       },
       {
         path: 'device/group',
@@ -55,6 +134,8 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/product/ThingModel.vue'),
         meta: { title: '物模型编辑', activeMenu: '/product', permission: 'product:list' }
       },
+
+      // ============ 数据服务 ============
       {
         path: 'data/realtime',
         name: 'DataRealtime',
@@ -68,17 +149,13 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '历史数据', icon: 'histogram', permission: 'data:history' }
       },
       {
-        path: 'rule/list',
-        name: 'RuleList',
-        component: () => import('@/views/rule/List.vue'),
-        meta: { title: '规则列表', icon: 'set-up', permission: 'rule:list' }
+        path: 'report/center',
+        name: 'ReportCenter',
+        component: () => import('@/views/report/Center.vue'),
+        meta: { title: '报表中心', icon: 'document-copy', permission: 'report:center' }
       },
-      {
-        path: 'rule/alert',
-        name: 'RuleAlert',
-        component: () => import('@/views/rule/Alert.vue'),
-        meta: { title: '告警记录', icon: 'warning', permission: 'rule:alert' }
-      },
+
+      // ============ 大屏可视化 ============
       {
         path: 'screen',
         name: 'Screen',
@@ -91,6 +168,8 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/iot-console/Index.vue'),
         meta: { title: 'IoT 控制台', icon: 'cpu', permission: 'iot-console:view' }
       },
+
+      // ============ 系统管理 ============
       {
         path: 'system/user',
         name: 'SystemUser',
@@ -114,6 +193,24 @@ export const routes: RouteRecordRaw[] = [
         name: 'SystemTenant',
         component: () => import('@/views/system/Tenant.vue'),
         meta: { title: '租户管理', icon: 'office-building', permission: 'system:tenant' }
+      },
+      {
+        path: 'system/organization',
+        name: 'SystemOrganization',
+        component: () => import('@/views/system/Organization.vue'),
+        meta: { title: '组织架构', icon: 'share', permission: 'system:organization' }
+      },
+      {
+        path: 'system/dict',
+        name: 'SystemDict',
+        component: () => import('@/views/system/Dict.vue'),
+        meta: { title: '字典管理', icon: 'collection', permission: 'system:dict' }
+      },
+      {
+        path: 'system/log',
+        name: 'SystemLog',
+        component: () => import('@/views/system/Log.vue'),
+        meta: { title: '操作日志', icon: 'document-checked', permission: 'system:log' }
       },
       {
         path: 'system/notify',

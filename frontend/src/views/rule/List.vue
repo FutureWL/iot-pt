@@ -275,7 +275,7 @@ onMounted(load)
 <style scoped lang="scss">
 .search-bar { margin-bottom: 12px; padding: 16px; :deep(.el-form-item) { margin-bottom: 0; } }
 .pagination-wrap { display: flex; justify-content: flex-end; margin-top: 16px; }
-.hint { color: #909399; font-size: 12px; margin-top: 4px; line-height: 1.6; }
+.hint { color: var(--iot-text-secondary); font-size: 12px; margin-top: 4px; line-height: 1.6; }
 .preview-pre {
   background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 6px;
   font-family: 'Menlo','Consolas',monospace; font-size: 12px; line-height: 1.5;

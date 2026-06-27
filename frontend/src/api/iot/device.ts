@@ -22,6 +22,7 @@ export interface IotDeviceVO {
   location?: string
   tags?: string
   description?: string
+  healthScore?: number     // 0-100,蓝图 P0 健康度评分字段
   createdAt?: string
   updatedAt?: string
 }

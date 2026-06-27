@@ -61,6 +61,14 @@ export default defineConfig(({ mode }) => {
         }
       }
     },
+    css: {
+      preprocessorOptions: {
+        scss: {
+          // 使用 modern API 解决 @use 在某些组件中的解析问题
+          api: 'modern-compiler'
+        }
+      }
+    },
     build: {
       target: 'es2015',
       outDir: 'dist',

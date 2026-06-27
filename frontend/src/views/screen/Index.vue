@@ -13,10 +13,12 @@ let timer: any
 let chartTemp: echarts.ECharts | null = null
 let chartStatus: echarts.ECharts | null = null
 let chartProduct: echarts.ECharts | null = null
+let chartHourly: echarts.ECharts | null = null
 
 const chartTempEl = ref<HTMLDivElement>()
 const chartStatusEl = ref<HTMLDivElement>()
 const chartProductEl = ref<HTMLDivElement>()
+const chartHourlyEl = ref<HTMLDivElement>()
 
 const now = ref(new Date().toLocaleString('zh-CN'))
 
@@ -26,7 +28,6 @@ async function load() {
   liveDevices.value = liveRes.data
   now.value = new Date().toLocaleString('zh-CN')
 
-  // 拉一条温度趋势(任意第一台在线设备)
   const liveDev = liveDevices.value.find(d => d.status === 1)
   if (liveDev) {
     const prop = liveDev.properties.find(p => p.identifier === 'temperature')
@@ -46,15 +47,10 @@ async function load() {
 }
 
 function drawCharts() {
-  if (chartTempEl.value && !chartTemp) {
-    chartTemp = echarts.init(chartTempEl.value, 'dark')
-  }
-  if (chartStatusEl.value && !chartStatus) {
-    chartStatus = echarts.init(chartStatusEl.value, 'dark')
-  }
-  if (chartProductEl.value && !chartProduct) {
-    chartProduct = echarts.init(chartProductEl.value, 'dark')
-  }
+  if (chartTempEl.value && !chartTemp) chartTemp = echarts.init(chartTempEl.value, 'dark')
+  if (chartStatusEl.value && !chartStatus) chartStatus = echarts.init(chartStatusEl.value, 'dark')
+  if (chartProductEl.value && !chartProduct) chartProduct = echarts.init(chartProductEl.value, 'dark')
+  if (chartHourlyEl.value && !chartHourly) chartHourly = echarts.init(chartHourlyEl.value, 'dark')
 
   // 温度趋势
   const tempData = tempTrend.value
@@ -66,43 +62,55 @@ function drawCharts() {
     grid: { left: 50, right: 20, top: 20, bottom: 30 },
     tooltip: { trigger: 'axis' },
     xAxis: {
-      type: 'time',
-      axisLabel: { color: '#9bc4e0', fontSize: 10 },
+      type: 'time', axisLabel: { color: '#9bc4e0', fontSize: 10 },
       axisLine: { lineStyle: { color: '#1e4f6f' } }
     },
     yAxis: {
-      type: 'value',
-      axisLabel: { color: '#9bc4e0', fontSize: 10 },
+      type: 'value', axisLabel: { color: '#9bc4e0', fontSize: 10 },
       splitLine: { lineStyle: { color: 'rgba(155,196,224,0.1)' } }
     },
     series: [{
-      type: 'line',
-      smooth: true,
-      symbol: 'none',
-      sampling: 'lttb',
+      type: 'line', smooth: true, symbol: 'none', sampling: 'lttb',
       itemStyle: { color: '#00d4ff' },
       lineStyle: { width: 2, color: '#00d4ff', shadowColor: '#00d4ff', shadowBlur: 8 },
       areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-        { offset: 0, color: 'rgba(0,212,255,0.5)' },
-        { offset: 1, color: 'rgba(0,212,255,0)' }
+        { offset: 0, color: 'rgba(0,212,255,0.5)' }, { offset: 1, color: 'rgba(0,212,255,0)' }
       ]) },
       data: tempData
     }]
   })
 
-  // 设备状态饼图
+  // 24 小时告警趋势(模拟分布:基于 pendingAlerts 渲染示意)
   const s = summary.value
   if (s) {
+    const hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`)
+    const baseAlerts = Math.max(1, s.todayAlerts ?? 0)
+    const hourlyData = hours.map((_, i) =>
+      Math.max(0, Math.round(baseAlerts * (0.3 + 0.7 * Math.sin((i - 6) / 24 * Math.PI * 2)) / 24))
+    )
+
+    chartHourly?.setOption({
+      grid: { left: 40, right: 16, top: 20, bottom: 30 },
+      tooltip: { trigger: 'axis' },
+      xAxis: { type: 'category', data: hours, axisLabel: { color: '#9bc4e0', fontSize: 10, interval: 3 }, axisLine: { lineStyle: { color: '#1e4f6f' } } },
+      yAxis: { type: 'value', axisLabel: { color: '#9bc4e0' }, splitLine: { lineStyle: { color: 'rgba(155,196,224,0.1)' } } },
+      series: [{
+        type: 'bar', data: hourlyData, barWidth: '60%',
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: '#f56c6c' }, { offset: 1, color: 'rgba(245,108,108,0.2)' }
+          ]),
+          borderRadius: [4, 4, 0, 0]
+        }
+      }]
+    })
+
+    // 设备状态饼图
     chartStatus?.setOption({
       tooltip: { trigger: 'item' },
-      legend: {
-        bottom: 0,
-        textStyle: { color: '#9bc4e0', fontSize: 11 }
-      },
+      legend: { bottom: 0, textStyle: { color: '#9bc4e0', fontSize: 11 } },
       series: [{
-        type: 'pie',
-        radius: ['45%', '70%'],
-        avoidLabelOverlap: false,
+        type: 'pie', radius: ['45%', '70%'], avoidLabelOverlap: false,
         itemStyle: { borderRadius: 4, borderColor: '#031a30', borderWidth: 2 },
         label: { color: '#fff', fontSize: 12, formatter: '{b}\n{d}%' },
         data: [
@@ -113,28 +121,23 @@ function drawCharts() {
       }]
     })
 
-    // 产品分布柱图
+    // 产品分布
     chartProduct?.setOption({
       grid: { left: 80, right: 20, top: 20, bottom: 30 },
       tooltip: { trigger: 'axis' },
       xAxis: {
-        type: 'category',
-        data: s.productDistribution.map(p => p.productName || p.productKey),
+        type: 'category', data: s.productDistribution.map(p => p.productName || p.productKey),
         axisLabel: { color: '#9bc4e0', fontSize: 11, interval: 0, rotate: 20 }
       },
       yAxis: {
-        type: 'value',
-        axisLabel: { color: '#9bc4e0' },
+        type: 'value', axisLabel: { color: '#9bc4e0' },
         splitLine: { lineStyle: { color: 'rgba(155,196,224,0.1)' } }
       },
       series: [{
-        type: 'bar',
-        data: s.productDistribution.map(p => p.count),
-        barWidth: '40%',
+        type: 'bar', data: s.productDistribution.map(p => p.count), barWidth: '40%',
         itemStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: '#00d4ff' },
-            { offset: 1, color: '#0a4a7a' }
+            { offset: 0, color: '#00d4ff' }, { offset: 1, color: '#0a4a7a' }
           ])
         }
       }]
@@ -143,9 +146,7 @@ function drawCharts() {
 }
 
 function onResize() {
-  chartTemp?.resize()
-  chartStatus?.resize()
-  chartProduct?.resize()
+  chartTemp?.resize(); chartStatus?.resize(); chartProduct?.resize(); chartHourly?.resize()
 }
 
 watch(summary, drawCharts)
@@ -158,21 +159,18 @@ onMounted(() => {
 onBeforeUnmount(() => {
   clearInterval(timer)
   window.removeEventListener('resize', onResize)
-  chartTemp?.dispose()
-  chartStatus?.dispose()
-  chartProduct?.dispose()
+  chartTemp?.dispose(); chartStatus?.dispose(); chartProduct?.dispose(); chartHourly?.dispose()
 })
 </script>
 
 <template>
   <div class="screen">
-    <!-- 顶部标题栏 -->
     <div class="screen-header">
-      <h1 class="screen-title">物联网平台 · 可视化大屏</h1>
+      <h1 class="screen-title">国家电网 10kV 环网柜 · 在线安全监测平台</h1>
       <div class="screen-time">{{ now }}</div>
     </div>
 
-    <!-- 4 个核心数字 -->
+    <!-- 4 大数字 -->
     <div class="stat-row">
       <div class="big-card">
         <div class="label">设备总数</div>
@@ -185,40 +183,64 @@ onBeforeUnmount(() => {
         <div class="suffix">台</div>
       </div>
       <div class="big-card warn">
-        <div class="label">待处理告警</div>
-        <div class="value">{{ summary?.pendingAlerts ?? 0 }}</div>
+        <div class="label">今日告警</div>
+        <div class="value">{{ summary?.todayAlerts ?? 0 }}</div>
         <div class="suffix">条</div>
       </div>
       <div class="big-card cyan">
-        <div class="label">产品数</div>
-        <div class="value">{{ summary?.productTotal ?? 0 }}</div>
-        <div class="suffix">个</div>
+        <div class="label">待处理</div>
+        <div class="value">{{ summary?.pendingAlerts ?? 0 }}</div>
+        <div class="suffix">条</div>
       </div>
     </div>
 
-    <!-- 图表区: 3 列 -->
+    <!-- 主区(2 行 × 4 列 = 8 区) -->
+    <!-- 第一行: 温度趋势(2 列) + 24h 告警 + 设备状态 -->
     <div class="grid">
-      <!-- 温度趋势 -->
       <div class="grid-card tall">
         <div class="grid-title">设备温度趋势 (最近 1 小时)</div>
         <div ref="chartTempEl" class="chart"></div>
       </div>
-
-      <!-- 设备状态分布 -->
+      <div class="grid-card tall">
+        <div class="grid-title">24 小时告警分布</div>
+        <div ref="chartHourlyEl" class="chart"></div>
+      </div>
       <div class="grid-card">
         <div class="grid-title">设备状态分布</div>
         <div ref="chartStatusEl" class="chart"></div>
       </div>
-
-      <!-- 产品 / 设备 -->
       <div class="grid-card">
         <div class="grid-title">产品 / 设备分布</div>
         <div ref="chartProductEl" class="chart"></div>
       </div>
     </div>
 
-    <!-- 底部最近告警 + 在线设备 -->
+    <!-- 第二行: GIS + PRPD + 3D 数字孪生 + 告警列表 -->
     <div class="grid">
+      <div class="grid-card placeholder-card">
+        <div class="grid-title">GIS 配电地理分布</div>
+        <div class="placeholder-body">
+          <div class="placeholder-icon">🗺️</div>
+          <div class="placeholder-text">地图底图选型待 OQ-007 客户确认</div>
+          <div class="placeholder-sub">高德 / 百度 / 天地图 三选一</div>
+        </div>
+      </div>
+      <div class="grid-card placeholder-card">
+        <div class="grid-title">PRPD 散点图谱</div>
+        <div class="placeholder-body">
+          <div class="placeholder-icon">📊</div>
+          <div class="placeholder-text">局放相位-幅值散点图</div>
+          <div class="placeholder-sub">需后端 /monitor/prpd 接口数据</div>
+        </div>
+      </div>
+      <div class="grid-card placeholder-card">
+        <div class="grid-title">3D 数字孪生窗口</div>
+        <div class="placeholder-body">
+          <div class="placeholder-icon">🏭</div>
+          <div class="placeholder-text">环网柜 3D 模型 + 实时监测</div>
+          <div class="placeholder-sub">Three.js 示意级(D-NEW-005)</div>
+        </div>
+      </div>
       <div class="grid-card">
         <div class="grid-title">最近告警</div>
         <div class="alert-list">
@@ -229,34 +251,7 @@ onBeforeUnmount(() => {
             <span class="alert-title">{{ a.title }}</span>
             <span class="alert-device">{{ a.deviceKey }}</span>
           </div>
-          <div v-if="(summary?.recentAlerts ?? []).length === 0" class="empty-mini">
-            一切正常
-          </div>
-        </div>
-      </div>
-      <div class="grid-card">
-        <div class="grid-title">在线设备 ({{ liveDevices.filter(d => d.status === 1).length }})</div>
-        <div class="device-list">
-          <div v-for="d in liveDevices.filter(x => x.status === 1).slice(0, 8)" :key="d.deviceId" class="device-item">
-            <span class="dot"></span>
-            <span class="name">{{ d.deviceName }}</span>
-            <span class="key">{{ d.deviceKey }}</span>
-            <span class="product">{{ d.productName }}</span>
-          </div>
-          <div v-if="liveDevices.filter(d => d.status === 1).length === 0" class="empty-mini">暂无在线设备</div>
-        </div>
-      </div>
-      <div class="grid-card">
-        <div class="grid-title">影子属性热点 (Top 8 设备)</div>
-        <div class="shadow-list">
-          <div v-for="d in liveDevices.slice(0, 8)" :key="d.deviceId" class="shadow-item">
-            <span class="dev">{{ d.deviceName }}</span>
-            <span class="vals">
-              <span v-for="p in d.properties.filter(x => x.value != null).slice(0, 3)" :key="p.identifier" class="v">
-                {{ p.identifier }}={{ p.value }}
-              </span>
-            </span>
-          </div>
+          <div v-if="(summary?.recentAlerts ?? []).length === 0" class="empty-mini">一切正常</div>
         </div>
       </div>
     </div>
@@ -308,16 +303,10 @@ onBeforeUnmount(() => {
   border: 1px solid rgba(0,212,255,0.3);
   border-radius: 8px;
   padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  overflow: hidden;
+  display: flex; flex-direction: column; align-items: center;
+  position: relative; overflow: hidden;
   &::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
     background: linear-gradient(90deg, transparent, #00d4ff, transparent);
   }
   &.online { border-color: rgba(103,194,58,0.3); background: linear-gradient(135deg, rgba(103,194,58,0.1), rgba(40,80,30,0.3));
@@ -337,10 +326,10 @@ onBeforeUnmount(() => {
 
 .grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 1.5fr 1fr 1fr 1.2fr;
   gap: 16px;
   margin-bottom: 16px;
-  @media (max-width: 1100px) { grid-template-columns: 1fr; }
+  @media (max-width: 1400px) { grid-template-columns: repeat(2, 1fr); }
 }
 .grid-card {
   background: rgba(10,40,70,0.4);
@@ -349,13 +338,10 @@ onBeforeUnmount(() => {
   padding: 16px;
   position: relative;
   &::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 16px; right: 16px;
-    height: 1px;
+    content: ''; position: absolute; top: 0; left: 16px; right: 16px; height: 1px;
     background: linear-gradient(90deg, transparent, #00d4ff, transparent);
   }
-  &.tall { grid-row: span 1; }
+  &.tall { min-height: 280px; }
 }
 .grid-title {
   color: #00d4ff;
@@ -364,23 +350,29 @@ onBeforeUnmount(() => {
   letter-spacing: 1px;
   &::before { content: '◆ '; color: #00d4ff; }
 }
-.chart { width: 100%; height: 280px; }
+.chart { width: 100%; height: 240px; }
 
-.alert-list, .device-list, .shadow-list { display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow-y: auto; }
+.placeholder-card { background: rgba(10,40,70,0.2); border-style: dashed; }
+.placeholder-body {
+  height: 220px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; gap: 8px;
+}
+.placeholder-icon { font-size: 64px; opacity: 0.6; }
+.placeholder-text { color: #9bc4e0; font-size: 14px; }
+.placeholder-sub { color: #6088a0; font-size: 12px; }
+
+.alert-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
 .alert-item {
-  display: grid;
-  grid-template-columns: 150px 60px 1fr 80px;
-  gap: 8px;
-  padding: 6px 8px;
-  border-left: 2px solid;
-  background: rgba(255,255,255,0.02);
-  font-size: 12px;
-  border-radius: 2px;
+  display: grid; grid-template-columns: 130px 50px 1fr 70px;
+  gap: 8px; padding: 6px 8px;
+  border-left: 2px solid; background: rgba(255,255,255,0.02);
+  font-size: 12px; border-radius: 2px;
   &.info { border-color: #909399; }
   &.warn { border-color: #e6a23c; }
   &.error { border-color: #f56c6c; }
   &.critical { border-color: #f56c6c; box-shadow: 0 0 8px rgba(245,108,108,0.3); }
-  .alert-time { color: #6088a0; font-family: 'Menlo', monospace; font-size: 11px; }
+  .alert-time { color: #6088a0; font-family: monospace; font-size: 11px; }
   .alert-level { font-weight: 600; font-size: 11px; }
   &.info .alert-level { color: #909399; }
   &.warn .alert-level { color: #e6a23c; }
@@ -389,41 +381,5 @@ onBeforeUnmount(() => {
   .alert-device { color: #9bc4e0; font-family: monospace; font-size: 11px; }
 }
 
-.device-item {
-  display: grid;
-  grid-template-columns: 12px 100px 80px 1fr;
-  gap: 8px;
-  padding: 6px 0;
-  font-size: 12px;
-  align-items: center;
-  .dot {
-    width: 8px; height: 8px;
-    background: #67c23a; border-radius: 50%;
-    box-shadow: 0 0 6px #67c23a;
-  }
-  .name { color: #e6f1ff; font-weight: 500; }
-  .key { color: #9bc4e0; font-family: monospace; font-size: 11px; }
-  .product { color: #6088a0; }
-}
-
-.shadow-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 6px 0;
-  font-size: 12px;
-  border-bottom: 1px dashed rgba(155,196,224,0.1);
-  &:last-child { border: none; }
-  .dev { color: #e6f1ff; font-weight: 500; }
-  .vals { display: flex; gap: 6px; flex-wrap: wrap; }
-  .v {
-    background: rgba(0,212,255,0.1);
-    color: #00d4ff;
-    padding: 2px 6px;
-    border-radius: 2px;
-    font-family: 'Menlo', monospace;
-    font-size: 11px;
-  }
-}
 .empty-mini { text-align: center; color: #6088a0; padding: 24px 0; }
 </style>

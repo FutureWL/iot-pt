@@ -2,7 +2,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Edit, Delete, Search, Refresh, View, Setting } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete, Search, Refresh, View, Setting, ArrowDown } from '@element-plus/icons-vue'
 import {
   pageProducts,
   createProduct,
@@ -152,6 +152,108 @@ function openThingModel(row: IotProductVO) {
   router.push(`/product/thing-model/${row.id}`)
 }
 
+// ========== 国网芯产品模板(P1 蓝图扩展) ==========
+interface ProductTemplate {
+  key: string
+  name: string
+  category: string
+  description: string
+  nodeType: number
+  netType: string
+  authType: string
+  thingModel: string
+}
+
+const PRODUCT_TEMPLATES: ProductTemplate[] = [
+  {
+    key: 'sg_pd_monitor',
+    name: '国网芯局放监测终端',
+    category: '在线监测装置',
+    description: 'UHF + HFCT 双通道局放监测,内置阈值告警',
+    nodeType: 0, netType: 'MQTT', authType: 'deviceSecret',
+    thingModel: JSON.stringify({
+      properties: [
+        { identifier: 'dischargeAmplitude', name: '局放幅值', type: 'double', specs: { unit: 'pC', min: 0, max: 5000, step: 0.1 }, accessMode: 'ro' },
+        { identifier: 'pulseCount', name: '脉冲计数', type: 'int', specs: { unit: '个', min: 0, max: 999999 }, accessMode: 'ro' },
+        { identifier: 'phaseAngle', name: '相位', type: 'double', specs: { unit: '°', min: 0, max: 360 }, accessMode: 'ro' },
+        { identifier: 'channelType', name: '通道类型', type: 'enum', specs: { 0: 'UHF', 1: 'HFCT' }, accessMode: 'ro' }
+      ],
+      events: [
+        { identifier: 'pd_alarm', name: '局放告警', type: 'alert', params: [{ identifier: 'amplitude', type: 'double' }, { identifier: 'level', type: 'enum' }] }
+      ],
+      services: [
+        { identifier: 'set_threshold', name: '设置告警阈值', params: [{ identifier: 'value', type: 'double' }] }
+      ]
+    }, null, 2)
+  },
+  {
+    key: 'sg_temp_sensor',
+    name: '国网芯温度传感器',
+    category: '在线监测装置',
+    description: '母排/触头/电缆接头无线温度监测',
+    nodeType: 0, netType: 'MQTT', authType: 'deviceSecret',
+    thingModel: JSON.stringify({
+      properties: [
+        { identifier: 'temperature', name: '温度', type: 'double', specs: { unit: '℃', min: -40, max: 200, step: 0.1 }, accessMode: 'ro' },
+        { identifier: 'batteryLevel', name: '电量', type: 'int', specs: { unit: '%', min: 0, max: 100 }, accessMode: 'ro' },
+        { identifier: 'location', name: '安装位置', type: 'enum', specs: { 0: '母排', 1: '触头', 2: '电缆接头' }, accessMode: 'rw' }
+      ],
+      events: [
+        { identifier: 'over_temp', name: '超温告警', type: 'alert', params: [{ identifier: 'temperature', type: 'double' }] }
+      ],
+      services: []
+    }, null, 2)
+  },
+  {
+    key: 'sg_env_monitor',
+    name: '国网芯柜内环境监测',
+    category: '在线监测装置',
+    description: '柜内微环境(温湿度/水浸/倾角/振动)',
+    nodeType: 0, netType: 'MQTT', authType: 'deviceSecret',
+    thingModel: JSON.stringify({
+      properties: [
+        { identifier: 'temperature', name: '柜内温度', type: 'double', specs: { unit: '℃' }, accessMode: 'ro' },
+        { identifier: 'humidity', name: '柜内湿度', type: 'double', specs: { unit: '%' }, accessMode: 'ro' },
+        { identifier: 'waterStatus', name: '水浸状态', type: 'enum', specs: { 0: '正常', 1: '水浸' }, accessMode: 'ro' },
+        { identifier: 'tiltAngle', name: '倾角', type: 'double', specs: { unit: '°' }, accessMode: 'ro' },
+        { identifier: 'vibrationRMS', name: '振动 RMS', type: 'double', specs: { unit: 'g' }, accessMode: 'ro' }
+      ],
+      events: [
+        { identifier: 'water_alarm', name: '水浸告警', type: 'alert' },
+        { identifier: 'condensation', name: '凝露预警', type: 'alert' }
+      ],
+      services: []
+    }, null, 2)
+  },
+  {
+    key: 'sg_gateway',
+    name: '国网芯边缘网关',
+    category: '边缘网关',
+    description: '汇聚多台监测装置数据,通过 MQTT/4G 上行',
+    nodeType: 1, netType: 'MQTT', authType: 'deviceSecret',
+    thingModel: JSON.stringify({
+      properties: [
+        { identifier: 'onlineCount', name: '在线子设备数', type: 'int', accessMode: 'ro' },
+        { identifier: 'uplinkRssi', name: '上行信号强度', type: 'int', specs: { unit: 'dBm' }, accessMode: 'ro' }
+      ],
+      events: [],
+      services: [
+        { identifier: 'add_sub_device', name: '添加子设备', params: [{ identifier: 'subDeviceKey', type: 'string' }] }
+      ]
+    }, null, 2)
+  }
+]
+
+function useTemplate(t: ProductTemplate) {
+  dialogMode.value = 'create'
+  Object.assign(form, {
+    id: undefined, productKey: t.key, productName: t.name, category: t.category,
+    description: t.description, authType: t.authType, nodeType: t.nodeType,
+    netType: t.netType, status: 1, thingModel: t.thingModel
+  })
+  dialogVisible.value = true
+}
+
 // 只读预览(用 dialog 弹 JSON)
 const tslVisible = ref(false)
 const tslContent = ref('')
@@ -189,6 +291,19 @@ onMounted(load)
           <el-button type="primary" :icon="Search" @click="onSearch">查询</el-button>
           <el-button :icon="Refresh" @click="onReset">重置</el-button>
           <el-button type="success" :icon="Plus" @click="openCreate">新建产品</el-button>
+          <el-dropdown trigger="click" @command="useTemplate">
+            <el-button type="primary" plain>
+              从模板新建<el-icon class="el-icon--right"><ArrowDown /></el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item v-for="t in PRODUCT_TEMPLATES" :key="t.key" :command="t">
+                  <div style="font-weight: 500;">{{ t.name }}</div>
+                  <div style="font-size: 11px; color: #909399;">{{ t.description }}</div>
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </el-form-item>
       </el-form>
     </div>
