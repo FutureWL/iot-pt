@@ -12,15 +12,22 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import App from './App.vue'
 import router from './router'
 import './styles/index.scss'
+import { useThemeStore } from './stores/theme'
 
 const app = createApp(App)
+
+app.use(createPinia())
+
+// 主题初始化(必须在 mount 之前 — 读 localStorage + 写 .dark class + 注册 matchMedia 监听)
+// init() 内部使用 refCount 防止多实例重复注册监听器
+const themeStore = useThemeStore()
+themeStore.init()
 
 // 注册所有 Element Plus 图标
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
 
-app.use(createPinia())
 app.use(router)
 app.use(ElementPlus, { locale: zhCn, size: 'default' })
 
