@@ -1,8 +1,12 @@
 /**
  * WebSocket 客户端(自动重连 + 事件订阅)
  *
+ * 路径默认从环境变量 VITE_WS_BASE_URL 读取(后端 context-path 是 /api,
+ *   所以默认 '/api/ws'),与后端 Spring WebSocket endpoint 对齐。
+ *
  * 用法:
- *   const ws = new WSClient('/ws/shadow')
+ *   const ws = new WSClient()                    // 用默认路径
+ *   const ws = new WSClient('/api/ws/other')     // 自定义路径
  *   ws.on('shadow.update', (evt) => { ... })
  *   ws.connect()
  *   ...
@@ -11,6 +15,9 @@
 import { ElMessage } from 'element-plus'
 
 type Handler = (data: any) => void
+
+/** 默认 WS 前缀:对齐后端 server.servlet.context-path=/api */
+const DEFAULT_WS_BASE = import.meta.env.VITE_WS_BASE_URL || '/api/ws'
 
 export class WSClient {
   private url: string
@@ -22,8 +29,10 @@ export class WSClient {
   private reconnectDelay = 1000
   private maxReconnectDelay = 30000
   private connected = ref(false)
+  /** 最近一次失败原因(用于排查) */
+  lastError = ref<string>('')
 
-  constructor(path = '/ws/shadow', token?: string) {
+  constructor(path = `${DEFAULT_WS_BASE}/shadow`, token?: string) {
     this.token = token || this.readToken()
     this.url = this.buildUrl(path)
   }
@@ -71,14 +80,16 @@ export class WSClient {
     console.log('[WS] 连接中:', this.url.replace(/token=.*/, 'token=***'))
     try {
       this.ws = new WebSocket(this.url)
-    } catch (e) {
-      console.error('[WS] 创建失败', e)
+    } catch (e: any) {
+      console.error('[WS] 创建失败', e?.message || e)
+      this.lastError.value = `创建失败: ${e?.message || e}`
       this.scheduleReconnect()
       return
     }
     this.ws.onopen = () => {
-      console.log('[WS] 已连接')
+      console.log('[WS] 已连接', this.url.replace(/token=.*/, 'token=***'))
       this.connected.value = true
+      this.lastError.value = ''
       this.reconnectDelay = 1000
       this.emit('connected', {})
       this.startPing()
@@ -92,13 +103,17 @@ export class WSClient {
       }
     }
     this.ws.onerror = (e) => {
-      console.warn('[WS] 错误', e)
+      const msg = (e as any)?.message || '连接错误'
+      console.warn('[WS] 错误', msg, this.url.replace(/token=.*/, 'token=***'))
+      this.lastError.value = msg
     }
-    this.ws.onclose = () => {
-      console.log('[WS] 断开')
+    this.ws.onclose = (ev) => {
+      // 记录 code + reason,排查路径/鉴权问题时很关键
+      console.log('[WS] 断开', `code=${ev.code} reason=${ev.reason || '(空)'}`)
       this.connected.value = false
+      this.lastError.value = `code=${ev.code}${ev.reason ? ' ' + ev.reason : ''}`
       this.stopPing()
-      this.emit('disconnected', {})
+      this.emit('disconnected', { code: ev.code, reason: ev.reason })
       this.scheduleReconnect()
     }
   }

@@ -40,6 +40,14 @@ export default defineConfig(({ mode }) => {
           target: proxyTarget,
           changeOrigin: true
         },
+        // 后端 context-path 是 /api,WebSocket 真实路径是 /api/ws/shadow
+        // 注意:必须带 ws: true 才会升级为 WebSocket 连接(默认只代理 HTTP)
+        '/api/ws': {
+          target: proxyTarget,
+          ws: true,
+          changeOrigin: true
+        },
+        // 兼容历史代码:仍保留 /ws 前缀的 WS 代理
         '/ws': {
           target: proxyTarget,
           ws: true,
