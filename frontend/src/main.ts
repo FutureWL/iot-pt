@@ -13,6 +13,7 @@ import App from './App.vue'
 import router from './router'
 import './styles/index.scss'
 import { useThemeStore } from './stores/theme'
+import { installUnhandledRejectionGuard } from './utils/error-boundary'
 
 const app = createApp(App)
 
@@ -32,3 +33,7 @@ app.use(router)
 app.use(ElementPlus, { locale: zhCn, size: 'default' })
 
 app.mount('#app')
+
+// 全局兜底: 阻止未捕获的 Promise rejection 污染 console
+// (详见 utils/error-boundary.ts)
+installUnhandledRejectionGuard()

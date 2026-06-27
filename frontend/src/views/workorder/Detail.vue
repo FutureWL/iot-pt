@@ -30,6 +30,11 @@ async function load() {
     ])
     detail.value = dRes.data ?? null
     logs.value = lRes.data ?? []
+  } catch {
+    // API 失败时(request.ts 拦截器已弹 ElMessage)保留空状态,
+    // 让模板的 el-empty 兜底,避免整页空白 + Promise 冒泡
+    detail.value = null
+    logs.value = []
   } finally {
     loading.value = false
   }
@@ -167,6 +172,7 @@ onMounted(load)
         </el-col>
       </el-row>
     </template>
+    <el-empty v-else-if="!loading" description="工单不存在或加载失败,请返回列表重试" />
   </div>
 </template>
 
