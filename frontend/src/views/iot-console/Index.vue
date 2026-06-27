@@ -16,11 +16,11 @@ import {
   DataLine, Warning, CircleClose
 } from '@element-plus/icons-vue'
 import {
-  getStatus, getDevices,
   kickDevice, restartProtocol,
   subscribeStream,
   type ConsoleStatusVO, ConsoleDeviceVO, ConsoleEnvelopeVO
 } from '@/api/iot/console'
+// getStatus/getDevices 已移除 — 所有状态由 SSE 推送
 
 // ============ 状态 ============
 const activeTab = ref('overview')
@@ -41,27 +41,7 @@ const protocols = computed(() => {
 })
 
 // ============ 定时刷新概览/设备 ============
-let pollTimer: number | null = null
-
-async function refreshStatus() {
-  try {
-    status.value = await getStatus()
-  } catch (e) {
-    // ignore, 概览不阻塞
-  }
-}
-
-async function refreshDevices() {
-  try {
-    devices.value = await getDevices()
-  } catch (e) {
-    // ignore
-  }
-}
-
-
-
-// ============ SSE 流 ============
+// ============ SSE 流(所有状态都由后端推送) ============
 function startStream() {
   if (stream) return
   stream = subscribeStream({
@@ -77,7 +57,11 @@ function startStream() {
       if (messages.value.length > 500) {
         messages.value.splice(0, messages.value.length - 500)
       }
-    }
+    },
+    // status: 后端每 5 秒推一次,直接覆盖本地状态
+    onStatus: (s) => { status.value = s },
+    // devices: 后端每 5 秒推一次,直接覆盖
+    onDevices: (d) => { devices.value = d }
   })
 }
 
@@ -100,7 +84,7 @@ async function onKick(row: ConsoleDeviceVO) {
     const res = await kickDevice(row.deviceKey)
     if (res.ok) {
       ElMessage.success(res.msg)
-      refreshDevices()
+      // 设备列表会在 5 秒内由后端 SSE 推送更新
     } else {
       ElMessage.warning(res.msg)
     }
@@ -179,19 +163,13 @@ function tryParsePayload(s?: string): any {
 
 // ============ 生命周期 ============
 onMounted(() => {
-  refreshStatus()
-  refreshDevices()
+  // 只连 SSE。所有状态(status/devices/msg)由后端推送
+  // SSE 连接时后端立即推一次 status + devices + 50 条历史 msg
   startStream()
-  // 1 秒刷新概览/设备
-  pollTimer = window.setInterval(() => {
-    refreshStatus()
-    refreshDevices()
-  }, 1000)
 })
 
 onBeforeUnmount(() => {
   stopStream()
-  if (pollTimer) clearInterval(pollTimer)
 })
 </script>
 
