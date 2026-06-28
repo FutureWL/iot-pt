@@ -10,6 +10,6 @@
  */
 
 export { useDict } from './useDict'
-// export { useTable } from './useTable'
+export { useTable } from './useTable'
 
 export {}
