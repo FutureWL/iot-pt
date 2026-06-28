@@ -10,9 +10,9 @@
  * - CRUD 综合: CrudList
  */
 
-// 基础原子组件 — 在 C2-C5 提交后逐个解注释
-// export { default as EmptyState } from './EmptyState.vue'
-// export { default as StatusTag } from './StatusTag.vue'
+// 基础原子组件
+export { default as EmptyState } from './EmptyState.vue'
+export { default as StatusTag } from './StatusTag.vue'
 // export { default as KpiCard } from './KpiCard.vue'
 // export { default as DescriptionList } from './DescriptionList.vue'
 
