@@ -1,5 +1,6 @@
 import request from '@/api/request'
 import type { PageQuery } from '@/types/common'
+import { adaptCrudPage, adaptCrudRemove } from '@/api/crud'
 
 export interface IotRuleVO {
   id: number
@@ -58,4 +59,10 @@ export function deleteRule(id: number) {
 
 export function toggleRule(id: number, status: number) {
   return request<void>({ url: `/rule/${id}/status/${status}`, method: 'put' })
+}
+
+/** CrudList 适配 */
+export const ruleCrud = {
+  page: adaptCrudPage<IotRuleVO, IotRuleQuery>(pageRules),
+  remove: adaptCrudRemove<IotRuleVO>(deleteRule)
 }
