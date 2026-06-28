@@ -1,0 +1,130 @@
+# Dependabot 配置
+# 自动监控并开 PR 升级依赖,每周一北京时间 09:00 检查
+# 文档: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+
+version: 2
+
+# 默认配置:所有 PR 自动开为 draft,等待人工 review
+# 防止半夜自动合入破坏主分支
+
+updates:
+  # ============================================================
+  # 前端 npm 依赖
+  # ============================================================
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 10
+    labels:
+      - "deps"
+      - "frontend"
+    groups:
+      # 测试与 lint 工具合一个 PR,减少噪音
+      dev-tools:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
+          - "eslint*"
+          - "@eslint/*"
+          - "prettier"
+          - "husky"
+          - "lint-staged"
+          - "@commitlint/*"
+          - "stylelint*"
+          - "@stylistic/*"
+          - "@playwright/*"
+          - "happy-dom"
+          - "sass"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # ============================================================
+  # 后端 Maven 依赖
+  # ============================================================
+  - package-ecosystem: "maven"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 10
+    labels:
+      - "deps"
+      - "backend"
+    groups:
+      # Spring Boot 全家桶合一个 PR
+      spring-boot:
+        patterns:
+          - "org.springframework.boot:*"
+          - "org.springframework:*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # ============================================================
+  # Docker 镜像(后端 + 前端 Dockerfile + docker-compose)
+  # ============================================================
+  - package-ecosystem: "docker"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "09:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 5
+    labels:
+      - "deps"
+      - "docker"
+      - "backend"
+
+  - package-ecosystem: "docker"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "09:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 5
+    labels:
+      - "deps"
+      - "docker"
+      - "frontend"
+
+  - package-ecosystem: "docker"
+    directory: "/deploy"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "09:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 5
+    labels:
+      - "deps"
+      - "docker"
+      - "deploy"
+
+  # ============================================================
+  # GitHub Actions
+  # ============================================================
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "09:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 5
+    labels:
+      - "deps"
+      - "ci"
+    groups:
+      actions:
+        patterns:
+          - "actions/*"
+          - "github/codeql-action"

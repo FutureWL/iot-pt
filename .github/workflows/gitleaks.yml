@@ -1,0 +1,52 @@
+# GitHub Actions - Gitleaks Secret Scan
+# 扫描 PR + push 触发的提交,检测密钥泄露
+# 文档: https://github.com/gitleaks/gitleaks-action
+
+name: Gitleaks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  # 允许在 Actions 页面手动触发
+  workflow_dispatch:
+
+# 同 PR 多个并发 push 取消前一个,避免浪费 CI
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  # security-events: write  # 仅在需要上传 SARIF 时开启
+
+jobs:
+  gitleaks:
+    name: Scan for secrets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # 拉取完整 git history 以便扫描历史提交
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          # GITHUB_TOKEN 由 GitHub 自动注入,无需 secret 配置
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 自定义配置路径(项目根留空使用默认规则)
+          GITLEAKS_CONFIG: .github/gitleaks.toml
+          # 启用上传模式(默认就行)
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: true
+          GITLEAKS_ENABLE_SUMMARY: true
+
+      # 如需将结果作为 SARIF 上传到 Security tab,取消下面注释:
+      # - name: Upload SARIF
+      #   if: always()
+      #   uses: github/codeql-action/upload-sarif@v3
+      #   with:
+      #     sarif_file: results.sarif
+      #   continue-on-error: true
