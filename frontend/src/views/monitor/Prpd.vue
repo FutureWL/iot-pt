@@ -83,46 +83,97 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="page-container prpd-page" v-loading="loading">
+  <div
+    v-loading="loading"
+    class="page-container prpd-page"
+  >
     <div class="page-header">
-      <h2 class="page-title">PRPD 图谱</h2>
+      <h2 class="page-title">
+        PRPD 图谱
+      </h2>
       <div class="header-right">
-        <el-input-number v-model="deviceId" :min="1" :max="99999" controls-position="right" style="width: 140px" />
-        <el-button :icon="Refresh" type="primary" @click="load">刷新</el-button>
+        <el-input-number
+          v-model="deviceId"
+          :min="1"
+          :max="99999"
+          controls-position="right"
+          style="width: 140px"
+        />
+        <el-button
+          :icon="Refresh"
+          type="primary"
+          @click="load"
+        >
+          刷新
+        </el-button>
       </div>
     </div>
 
     <!-- 识别结果 -->
     <div class="page-card mb-16">
-      <el-row :gutter="16" align="middle">
-        <el-col :xs="12" :sm="6">
+      <el-row
+        :gutter="16"
+        align="middle"
+      >
+        <el-col
+          :xs="12"
+          :sm="6"
+        >
           <div class="result-item">
-            <div class="result-label">设备</div>
-            <div class="result-value text-primary">{{ result?.deviceName ?? '—' }}</div>
+            <div class="result-label">
+              设备
+            </div>
+            <div class="result-value text-primary">
+              {{ result?.deviceName ?? '—' }}
+            </div>
           </div>
         </el-col>
-        <el-col :xs="12" :sm="6">
+        <el-col
+          :xs="12"
+          :sm="6"
+        >
           <div class="result-item">
-            <div class="result-label">采集时间</div>
-            <div class="result-value">{{ result?.collectedAt ?? '—' }}</div>
-          </div>
-        </el-col>
-        <el-col :xs="12" :sm="6">
-          <div class="result-item">
-            <div class="result-label">放电类型识别</div>
+            <div class="result-label">
+              采集时间
+            </div>
             <div class="result-value">
-              <el-tag :color="dischargeTypeColor[result?.dischargeType ?? '未识别']" effect="dark" size="large">
+              {{ result?.collectedAt ?? '—' }}
+            </div>
+          </div>
+        </el-col>
+        <el-col
+          :xs="12"
+          :sm="6"
+        >
+          <div class="result-item">
+            <div class="result-label">
+              放电类型识别
+            </div>
+            <div class="result-value">
+              <el-tag
+                :color="dischargeTypeColor[result?.dischargeType ?? '未识别']"
+                effect="dark"
+                size="large"
+              >
                 {{ result?.dischargeType ?? '—' }}
               </el-tag>
             </div>
           </div>
         </el-col>
-        <el-col :xs="12" :sm="6">
+        <el-col
+          :xs="12"
+          :sm="6"
+        >
           <div class="result-item">
-            <div class="result-label">识别置信度</div>
+            <div class="result-label">
+              识别置信度
+            </div>
             <div class="result-value">
-              <el-progress :percentage="Math.round((result?.confidence ?? 0) * 100)" :stroke-width="10"
-                :color="(result?.confidence ?? 0) >= 0.8 ? '#67c23a' : (result?.confidence ?? 0) >= 0.5 ? '#e6a23c' : '#f56c6c'" />
+              <el-progress
+                :percentage="Math.round((result?.confidence ?? 0) * 100)"
+                :stroke-width="10"
+                :color="(result?.confidence ?? 0) >= 0.8 ? '#67c23a' : (result?.confidence ?? 0) >= 0.5 ? '#e6a23c' : '#f56c6c'"
+              />
             </div>
           </div>
         </el-col>
@@ -135,14 +186,26 @@ onBeforeUnmount(() => {
         <el-icon><Cpu /></el-icon>
         相位 - 幅值 - 脉冲数 散点图 (φ-q-n)
       </h3>
-      <div ref="mainRef" class="chart-area-large"></div>
-      <el-empty v-if="!result" description="暂无 PRPD 数据,请选择有效设备" />
+      <div
+        ref="mainRef"
+        class="chart-area-large"
+      />
+      <el-empty
+        v-if="!result"
+        description="暂无 PRPD 数据,请选择有效设备"
+      />
     </div>
 
     <!-- 历史对比(占位区) -->
     <div class="page-card mt-16">
-      <h3 class="card-title">历史趋势叠加</h3>
-      <el-alert type="info" :closable="false" show-icon>
+      <h3 class="card-title">
+        历史趋势叠加
+      </h3>
+      <el-alert
+        type="info"
+        :closable="false"
+        show-icon
+      >
         历史趋势叠加需要后端 PRPD 历史接口(`/monitor/prpd/history`)就绪。当前 API 骨架已就绪,
         后端实现后此处会自动启用对比图层(用不同色阶叠加展示 7 天内同设备 PRPD 演变)。
       </el-alert>

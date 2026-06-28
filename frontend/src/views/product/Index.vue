@@ -268,38 +268,102 @@ onMounted(load)
 
 <template>
   <div class="page-container">
-    <h2 class="page-title">产品管理</h2>
+    <h2 class="page-title">
+      产品管理
+    </h2>
 
     <div class="page-card search-bar">
-      <el-form :inline="true" @submit.prevent>
+      <el-form
+        :inline="true"
+        @submit.prevent
+      >
         <el-form-item label="关键字">
-          <el-input v-model="query.keyword" placeholder="Key / 名称 / 描述" clearable style="width: 220px"
-            @keyup.enter="onSearch" />
+          <el-input
+            v-model="query.keyword"
+            placeholder="Key / 名称 / 描述"
+            clearable
+            style="width: 220px"
+            @keyup.enter="onSearch"
+          />
         </el-form-item>
         <el-form-item label="联网方式">
-          <el-select v-model="query.netType" placeholder="全部" clearable style="width: 120px">
-            <el-option v-for="o in netTypeOptions" :key="o.value" :label="o.label" :value="o.value" />
+          <el-select
+            v-model="query.netType"
+            placeholder="全部"
+            clearable
+            style="width: 120px"
+          >
+            <el-option
+              v-for="o in netTypeOptions"
+              :key="o.value"
+              :label="o.label"
+              :value="o.value"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="query.status" placeholder="全部" clearable style="width: 120px">
-            <el-option label="启用" :value="1" />
-            <el-option label="禁用" :value="0" />
+          <el-select
+            v-model="query.status"
+            placeholder="全部"
+            clearable
+            style="width: 120px"
+          >
+            <el-option
+              label="启用"
+              :value="1"
+            />
+            <el-option
+              label="禁用"
+              :value="0"
+            />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :icon="Search" @click="onSearch">查询</el-button>
-          <el-button :icon="Refresh" @click="onReset">重置</el-button>
-          <el-button type="success" :icon="Plus" @click="openCreate">新建产品</el-button>
-          <el-dropdown trigger="click" @command="useTemplate">
-            <el-button type="primary" plain>
-              从模板新建<el-icon class="el-icon--right"><ArrowDown /></el-icon>
+          <el-button
+            type="primary"
+            :icon="Search"
+            @click="onSearch"
+          >
+            查询
+          </el-button>
+          <el-button
+            :icon="Refresh"
+            @click="onReset"
+          >
+            重置
+          </el-button>
+          <el-button
+            type="success"
+            :icon="Plus"
+            @click="openCreate"
+          >
+            新建产品
+          </el-button>
+          <el-dropdown
+            trigger="click"
+            @command="useTemplate"
+          >
+            <el-button
+              type="primary"
+              plain
+            >
+              从模板新建<el-icon class="el-icon--right">
+                <ArrowDown />
+              </el-icon>
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item v-for="t in PRODUCT_TEMPLATES" :key="t.key" :command="t">
-                  <div style="font-weight: 500;">{{ t.name }}</div>
-                  <div style="font-size: 11px; color: #909399;">{{ t.description }}</div>
+                <el-dropdown-item
+                  v-for="t in PRODUCT_TEMPLATES"
+                  :key="t.key"
+                  :command="t"
+                >
+                  <div style="font-weight: 500;">
+                    {{ t.name }}
+                  </div>
+                  <div style="font-size: 11px; color: #909399;">
+                    {{ t.description }}
+                  </div>
                 </el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -309,44 +373,136 @@ onMounted(load)
     </div>
 
     <div class="page-card">
-      <el-table v-loading="loading" :data="list" stripe border>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="productKey" label="产品 Key" min-width="160">
+      <el-table
+        v-loading="loading"
+        :data="list"
+        stripe
+        border
+      >
+        <el-table-column
+          prop="id"
+          label="ID"
+          width="80"
+        />
+        <el-table-column
+          prop="productKey"
+          label="产品 Key"
+          min-width="160"
+        >
           <template #default="{ row }">
-            <el-tag size="small" type="info">{{ row.productKey }}</el-tag>
+            <el-tag
+              size="small"
+              type="info"
+            >
+              {{ row.productKey }}
+            </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="productName" label="产品名称" min-width="160" />
-        <el-table-column prop="category" label="分类" min-width="100" />
-        <el-table-column label="节点类型" width="120">
+        <el-table-column
+          prop="productName"
+          label="产品名称"
+          min-width="160"
+        />
+        <el-table-column
+          prop="category"
+          label="分类"
+          min-width="100"
+        />
+        <el-table-column
+          label="节点类型"
+          width="120"
+        >
           <template #default="{ row }">
-            <el-tag size="small">{{ nodeTypeLabel(row.nodeType) }}</el-tag>
+            <el-tag size="small">
+              {{ nodeTypeLabel(row.nodeType) }}
+            </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="netType" label="联网" width="90" />
-        <el-table-column label="认证" width="110">
+        <el-table-column
+          prop="netType"
+          label="联网"
+          width="90"
+        />
+        <el-table-column
+          label="认证"
+          width="110"
+        >
           <template #default="{ row }">
-            <el-tag size="small" type="warning">{{ authTypeLabel(row.authType) }}</el-tag>
+            <el-tag
+              size="small"
+              type="warning"
+            >
+              {{ authTypeLabel(row.authType) }}
+            </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip />
-        <el-table-column label="状态" width="80">
+        <el-table-column
+          prop="description"
+          label="描述"
+          min-width="200"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          label="状态"
+          width="80"
+        >
           <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'info'" size="small">
+            <el-tag
+              :type="row.status === 1 ? 'success' : 'info'"
+              size="small"
+            >
               {{ row.status === 1 ? '启用' : '禁用' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createdAt" label="创建时间" width="170" />
-        <el-table-column label="操作" width="280" fixed="right">
+        <el-table-column
+          prop="createdAt"
+          label="创建时间"
+          width="170"
+        />
+        <el-table-column
+          label="操作"
+          width="280"
+          fixed="right"
+        >
           <template #default="{ row }">
-            <el-button link type="primary" :icon="Edit" @click="openEdit(row)">编辑</el-button>
-            <el-button link type="success" :icon="Setting" @click="openThingModel(row)">物模型</el-button>
-            <el-button link type="info" :icon="View" @click="previewTsl(row)">预览</el-button>
-            <el-button link type="danger" :icon="Delete" @click="onDelete(row)">删除</el-button>
+            <el-button
+              link
+              type="primary"
+              :icon="Edit"
+              @click="openEdit(row)"
+            >
+              编辑
+            </el-button>
+            <el-button
+              link
+              type="success"
+              :icon="Setting"
+              @click="openThingModel(row)"
+            >
+              物模型
+            </el-button>
+            <el-button
+              link
+              type="info"
+              :icon="View"
+              @click="previewTsl(row)"
+            >
+              预览
+            </el-button>
+            <el-button
+              link
+              type="danger"
+              :icon="Delete"
+              @click="onDelete(row)"
+            >
+              删除
+            </el-button>
           </template>
         </el-table-column>
-        <template #empty><el-empty description="暂无产品" /></template>
+        <template #empty>
+          <el-empty description="暂无产品" />
+        </template>
       </el-table>
 
       <div class="pagination-wrap">
@@ -357,67 +513,144 @@ onMounted(load)
           :total="total"
           layout="total, sizes, prev, pager, next, jumper"
           @current-change="onPageChange"
-          @size-change="onSizeChange" />
+          @size-change="onSizeChange"
+        />
       </div>
     </div>
 
     <!-- 新建/编辑对话框 -->
-    <el-dialog v-model="dialogVisible"
+    <el-dialog
+      v-model="dialogVisible"
       :title="dialogMode === 'create' ? '新建产品' : '编辑产品'"
-      width="640px" destroy-on-close>
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" @submit.prevent>
-        <el-form-item label="产品 Key" prop="productKey">
-          <el-input v-model="form.productKey" placeholder="英文,设备上报会用,如 th_sensor" />
+      width="640px"
+      destroy-on-close
+    >
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="100px"
+        @submit.prevent
+      >
+        <el-form-item
+          label="产品 Key"
+          prop="productKey"
+        >
+          <el-input
+            v-model="form.productKey"
+            placeholder="英文,设备上报会用,如 th_sensor"
+          />
         </el-form-item>
-        <el-form-item label="产品名称" prop="productName">
-          <el-input v-model="form.productName" placeholder="中文展示名,如 温湿度传感器" />
+        <el-form-item
+          label="产品名称"
+          prop="productName"
+        >
+          <el-input
+            v-model="form.productName"
+            placeholder="中文展示名,如 温湿度传感器"
+          />
         </el-form-item>
         <el-form-item label="分类">
-          <el-input v-model="form.category" placeholder="如 传感器 / 执行器 / 网关" />
+          <el-input
+            v-model="form.category"
+            placeholder="如 传感器 / 执行器 / 网关"
+          />
         </el-form-item>
         <el-form-item label="节点类型">
           <el-radio-group v-model="form.nodeType">
-            <el-radio v-for="o in nodeTypeOptions" :key="o.value" :value="o.value">{{ o.label }}</el-radio>
+            <el-radio
+              v-for="o in nodeTypeOptions"
+              :key="o.value"
+              :value="o.value"
+            >
+              {{ o.label }}
+            </el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="联网方式" prop="netType">
+        <el-form-item
+          label="联网方式"
+          prop="netType"
+        >
           <el-radio-group v-model="form.netType">
-            <el-radio v-for="o in netTypeOptions" :key="o.value" :value="o.value">{{ o.label }}</el-radio>
+            <el-radio
+              v-for="o in netTypeOptions"
+              :key="o.value"
+              :value="o.value"
+            >
+              {{ o.label }}
+            </el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="认证方式" prop="authType">
-          <el-select v-model="form.authType" style="width: 220px">
-            <el-option v-for="o in authTypeOptions" :key="o.value" :label="o.label" :value="o.value" />
+        <el-form-item
+          label="认证方式"
+          prop="authType"
+        >
+          <el-select
+            v-model="form.authType"
+            style="width: 220px"
+          >
+            <el-option
+              v-for="o in authTypeOptions"
+              :key="o.value"
+              :label="o.label"
+              :value="o.value"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
           <el-radio-group v-model="form.status">
-            <el-radio :value="1">启用</el-radio>
-            <el-radio :value="0">禁用</el-radio>
+            <el-radio :value="1">
+              启用
+            </el-radio>
+            <el-radio :value="0">
+              禁用
+            </el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="描述">
-          <el-input v-model="form.description" type="textarea" :rows="2" />
+          <el-input
+            v-model="form.description"
+            type="textarea"
+            :rows="2"
+          />
         </el-form-item>
         <el-form-item label="物模型 JSON">
-          <el-input v-model="form.thingModel" type="textarea" :rows="6"
-            placeholder='{"properties":[],"events":[],"services":[]}' />
-          <div class="hint">P1-② 阶段会提供可视化编辑器,目前先手填 JSON</div>
+          <el-input
+            v-model="form.thingModel"
+            type="textarea"
+            :rows="6"
+            placeholder="{&quot;properties&quot;:[],&quot;events&quot;:[],&quot;services&quot;:[]}"
+          />
+          <div class="hint">
+            P1-② 阶段会提供可视化编辑器,目前先手填 JSON
+          </div>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="onSubmit">
+        <el-button @click="dialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="submitting"
+          @click="onSubmit"
+        >
           {{ dialogMode === 'create' ? '创建' : '保存' }}
         </el-button>
       </template>
     </el-dialog>
 
     <!-- 物模型预览 -->
-    <el-dialog v-model="tslVisible" title="物模型 (TSL)" width="640px">
+    <el-dialog
+      v-model="tslVisible"
+      title="物模型 (TSL)"
+      width="640px"
+    >
       <pre class="tsl-pre">{{ tslContent }}</pre>
       <template #footer>
-        <el-button @click="tslVisible = false">关闭</el-button>
+        <el-button @click="tslVisible = false">
+          关闭
+        </el-button>
       </template>
     </el-dialog>
   </div>

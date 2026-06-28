@@ -78,60 +78,152 @@ onMounted(load)
 
 <template>
   <div class="page-container">
-    <h2 class="page-title">设备分组</h2>
+    <h2 class="page-title">
+      设备分组
+    </h2>
 
     <div class="page-card search-bar">
       <span class="hint">分组用于把设备归类,如按车间、按项目、按客户。新建设备时可选择分组。</span>
-      <el-button type="success" :icon="Plus" @click="openCreate">新建分组</el-button>
-      <el-button :icon="Refresh" @click="load">刷新</el-button>
+      <el-button
+        type="success"
+        :icon="Plus"
+        @click="openCreate"
+      >
+        新建分组
+      </el-button>
+      <el-button
+        :icon="Refresh"
+        @click="load"
+      >
+        刷新
+      </el-button>
     </div>
 
     <div class="page-card">
-      <el-table v-loading="loading" :data="list" stripe border>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column label="分组名" min-width="200">
+      <el-table
+        v-loading="loading"
+        :data="list"
+        stripe
+        border
+      >
+        <el-table-column
+          prop="id"
+          label="ID"
+          width="80"
+        />
+        <el-table-column
+          label="分组名"
+          min-width="200"
+        >
           <template #default="{ row }">
             <el-icon><Folder /></el-icon>
             <span style="margin-left: 6px; font-weight: 500">{{ row.groupName }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="description" label="描述" min-width="240" show-overflow-tooltip />
-        <el-table-column prop="sort" label="排序" width="80" />
-        <el-table-column label="设备数" width="100">
+        <el-table-column
+          prop="description"
+          label="描述"
+          min-width="240"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          prop="sort"
+          label="排序"
+          width="80"
+        />
+        <el-table-column
+          label="设备数"
+          width="100"
+        >
           <template #default="{ row }">
-            <el-tag :type="row.deviceCount > 0 ? 'success' : 'info'" size="small">
+            <el-tag
+              :type="row.deviceCount > 0 ? 'success' : 'info'"
+              size="small"
+            >
               {{ row.deviceCount }} 台
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createdAt" label="创建时间" width="170" />
-        <el-table-column label="操作" width="180" fixed="right">
+        <el-table-column
+          prop="createdAt"
+          label="创建时间"
+          width="170"
+        />
+        <el-table-column
+          label="操作"
+          width="180"
+          fixed="right"
+        >
           <template #default="{ row }">
-            <el-button link type="primary" :icon="Edit" @click="openEdit(row)">编辑</el-button>
-            <el-button link type="danger" :icon="Delete" @click="onDelete(row)">删除</el-button>
+            <el-button
+              link
+              type="primary"
+              :icon="Edit"
+              @click="openEdit(row)"
+            >
+              编辑
+            </el-button>
+            <el-button
+              link
+              type="danger"
+              :icon="Delete"
+              @click="onDelete(row)"
+            >
+              删除
+            </el-button>
           </template>
         </el-table-column>
-        <template #empty><el-empty description="暂无分组" /></template>
+        <template #empty>
+          <el-empty description="暂无分组" />
+        </template>
       </el-table>
     </div>
 
-    <el-dialog v-model="dialogVisible"
+    <el-dialog
+      v-model="dialogVisible"
       :title="dialogMode === 'create' ? '新建分组' : '编辑分组'"
-      width="480px" destroy-on-close>
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="80px" @submit.prevent>
-        <el-form-item label="分组名" prop="groupName">
-          <el-input v-model="form.groupName" placeholder="如 一号车间" />
+      width="480px"
+      destroy-on-close
+    >
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="80px"
+        @submit.prevent
+      >
+        <el-form-item
+          label="分组名"
+          prop="groupName"
+        >
+          <el-input
+            v-model="form.groupName"
+            placeholder="如 一号车间"
+          />
         </el-form-item>
         <el-form-item label="排序">
-          <el-input-number v-model="form.sort" :min="0" :max="9999" />
+          <el-input-number
+            v-model="form.sort"
+            :min="0"
+            :max="9999"
+          />
         </el-form-item>
         <el-form-item label="描述">
-          <el-input v-model="form.description" type="textarea" :rows="2" />
+          <el-input
+            v-model="form.description"
+            type="textarea"
+            :rows="2"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="onSubmit">
+        <el-button @click="dialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="onSubmit"
+        >
           {{ dialogMode === 'create' ? '创建' : '保存' }}
         </el-button>
       </template>

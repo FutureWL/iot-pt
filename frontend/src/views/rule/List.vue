@@ -144,61 +144,173 @@ onMounted(load)
 
 <template>
   <div class="page-container">
-    <h2 class="page-title">规则列表</h2>
+    <h2 class="page-title">
+      规则列表
+    </h2>
 
     <div class="page-card search-bar">
-      <el-form :inline="true" @submit.prevent>
+      <el-form
+        :inline="true"
+        @submit.prevent
+      >
         <el-form-item label="关键字">
-          <el-input v-model="query.keyword" placeholder="规则名 / 描述" clearable style="width: 220px" @keyup.enter="onSearch" />
+          <el-input
+            v-model="query.keyword"
+            placeholder="规则名 / 描述"
+            clearable
+            style="width: 220px"
+            @keyup.enter="onSearch"
+          />
         </el-form-item>
         <el-form-item label="触发器">
-          <el-select v-model="query.triggerType" placeholder="全部" clearable style="width: 140px">
-            <el-option v-for="t in triggerTypes" :key="t.value" :label="t.label" :value="t.value" />
+          <el-select
+            v-model="query.triggerType"
+            placeholder="全部"
+            clearable
+            style="width: 140px"
+          >
+            <el-option
+              v-for="t in triggerTypes"
+              :key="t.value"
+              :label="t.label"
+              :value="t.value"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="query.status" placeholder="全部" clearable style="width: 120px">
-            <el-option label="启用" :value="1" />
-            <el-option label="停用" :value="0" />
+          <el-select
+            v-model="query.status"
+            placeholder="全部"
+            clearable
+            style="width: 120px"
+          >
+            <el-option
+              label="启用"
+              :value="1"
+            />
+            <el-option
+              label="停用"
+              :value="0"
+            />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :icon="Search" @click="onSearch">查询</el-button>
-          <el-button :icon="Refresh" @click="onReset">重置</el-button>
-          <el-button type="success" :icon="Plus" @click="openCreate">新建规则</el-button>
+          <el-button
+            type="primary"
+            :icon="Search"
+            @click="onSearch"
+          >
+            查询
+          </el-button>
+          <el-button
+            :icon="Refresh"
+            @click="onReset"
+          >
+            重置
+          </el-button>
+          <el-button
+            type="success"
+            :icon="Plus"
+            @click="openCreate"
+          >
+            新建规则
+          </el-button>
         </el-form-item>
       </el-form>
     </div>
 
     <div class="page-card">
-      <el-table v-loading="loading" :data="list" stripe border>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="ruleName" label="规则名" min-width="180" />
-        <el-table-column label="触发器" width="120">
+      <el-table
+        v-loading="loading"
+        :data="list"
+        stripe
+        border
+      >
+        <el-table-column
+          prop="id"
+          label="ID"
+          width="80"
+        />
+        <el-table-column
+          prop="ruleName"
+          label="规则名"
+          min-width="180"
+        />
+        <el-table-column
+          label="触发器"
+          width="120"
+        >
           <template #default="{ row }">
-            <el-tag size="small">{{ triggerTypes.find(t => t.value === row.triggerType)?.label || row.triggerType }}</el-tag>
+            <el-tag size="small">
+              {{ triggerTypes.find(t => t.value === row.triggerType)?.label || row.triggerType }}
+            </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip />
-        <el-table-column label="状态" width="80">
+        <el-table-column
+          prop="description"
+          label="描述"
+          min-width="200"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          label="状态"
+          width="80"
+        >
           <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'info'" size="small">
+            <el-tag
+              :type="row.status === 1 ? 'success' : 'info'"
+              size="small"
+            >
               {{ row.status === 1 ? '启用' : '停用' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createdAt" label="创建时间" width="170" />
-        <el-table-column label="操作" width="260" fixed="right">
+        <el-table-column
+          prop="createdAt"
+          label="创建时间"
+          width="170"
+        />
+        <el-table-column
+          label="操作"
+          width="260"
+          fixed="right"
+        >
           <template #default="{ row }">
-            <el-button link type="primary" :icon="Edit" @click="openEdit(row)">编辑</el-button>
-            <el-button link type="info" @click="showPreview(row)">查看</el-button>
-            <el-button link :type="row.status === 1 ? 'info' : 'success'" @click="onToggle(row)">
+            <el-button
+              link
+              type="primary"
+              :icon="Edit"
+              @click="openEdit(row)"
+            >
+              编辑
+            </el-button>
+            <el-button
+              link
+              type="info"
+              @click="showPreview(row)"
+            >
+              查看
+            </el-button>
+            <el-button
+              link
+              :type="row.status === 1 ? 'info' : 'success'"
+              @click="onToggle(row)"
+            >
               {{ row.status === 1 ? '停用' : '启用' }}
             </el-button>
-            <el-button link type="danger" :icon="Delete" @click="onDelete(row)">删除</el-button>
+            <el-button
+              link
+              type="danger"
+              :icon="Delete"
+              @click="onDelete(row)"
+            >
+              删除
+            </el-button>
           </template>
         </el-table-column>
-        <template #empty><el-empty description="暂无规则" /></template>
+        <template #empty>
+          <el-empty description="暂无规则" />
+        </template>
       </el-table>
 
       <div class="pagination-wrap">
@@ -209,44 +321,106 @@ onMounted(load)
           :total="total"
           layout="total, sizes, prev, pager, next, jumper"
           @current-change="onPageChange"
-          @size-change="onSizeChange" />
+          @size-change="onSizeChange"
+        />
       </div>
     </div>
 
     <!-- 新建/编辑对话框 -->
-    <el-dialog v-model="dialogVisible" :title="dialogMode === 'create' ? '新建规则' : '编辑规则'"
-      width="720px" destroy-on-close>
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" @submit.prevent>
-        <el-form-item label="规则名" prop="ruleName">
-          <el-input v-model="form.ruleName" placeholder="如 高温告警" />
+    <el-dialog
+      v-model="dialogVisible"
+      :title="dialogMode === 'create' ? '新建规则' : '编辑规则'"
+      width="720px"
+      destroy-on-close
+    >
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="100px"
+        @submit.prevent
+      >
+        <el-form-item
+          label="规则名"
+          prop="ruleName"
+        >
+          <el-input
+            v-model="form.ruleName"
+            placeholder="如 高温告警"
+          />
         </el-form-item>
         <el-form-item label="描述">
-          <el-input v-model="form.description" type="textarea" :rows="2" />
+          <el-input
+            v-model="form.description"
+            type="textarea"
+            :rows="2"
+          />
         </el-form-item>
-        <el-form-item label="触发器" prop="triggerType">
-          <el-select v-model="form.triggerType" style="width: 100%">
-            <el-option v-for="t in triggerTypes" :key="t.value" :label="`${t.label} (${t.desc})`" :value="t.value" />
+        <el-form-item
+          label="触发器"
+          prop="triggerType"
+        >
+          <el-select
+            v-model="form.triggerType"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="t in triggerTypes"
+              :key="t.value"
+              :label="`${t.label} (${t.desc})`"
+              :value="t.value"
+            />
           </el-select>
         </el-form-item>
-        <el-form-item label="过滤条件" prop="filterExpr">
-          <el-input v-model="form.filterExpr" type="textarea" :rows="4"
-            placeholder='{"property":"temperature","op":">","value":30}' />
+        <el-form-item
+          label="过滤条件"
+          prop="filterExpr"
+        >
+          <el-input
+            v-model="form.filterExpr"
+            type="textarea"
+            :rows="4"
+            placeholder="{&quot;property&quot;:&quot;temperature&quot;,&quot;op&quot;:&quot;>&quot;,&quot;value&quot;:30}"
+          />
           <div class="hint">
             可选模板:
-            <el-link v-for="t in filterTemplates" :key="t.label" type="primary" :underline="false"
-              style="margin-right: 8px" @click="form.filterExpr = t.expr">{{ t.label }}</el-link>
+            <el-link
+              v-for="t in filterTemplates"
+              :key="t.label"
+              type="primary"
+              :underline="false"
+              style="margin-right: 8px"
+              @click="form.filterExpr = t.expr"
+            >
+              {{ t.label }}
+            </el-link>
           </div>
           <div class="hint">
             支持: <code>property</code> 属性名 / <code>op</code> 比较(>,&lt;,&gt;=,&lt;=,==,!=,contains) / <code>value</code> 比较值 / <code>allOf</code> AND / <code>anyOf</code> OR
           </div>
         </el-form-item>
-        <el-form-item label="动作" prop="actions">
-          <el-input v-model="form.actions" type="textarea" :rows="3"
-            placeholder='[{"type":"alert","level":"WARN","title":"...","content":"..."}]' />
+        <el-form-item
+          label="动作"
+          prop="actions"
+        >
+          <el-input
+            v-model="form.actions"
+            type="textarea"
+            :rows="3"
+            placeholder="[{&quot;type&quot;:&quot;alert&quot;,&quot;level&quot;:&quot;WARN&quot;,&quot;title&quot;:&quot;...&quot;,&quot;content&quot;:&quot;...&quot;}]"
+          />
           <div class="hint">
             可选模板:
-            <el-link v-for="t in actionTemplates" :key="t.label" type="primary" :underline="false"
-              style="margin-right: 8px" @click="form.actions = t.actions">{{ t.label }}</el-link>
+            <el-link
+              v-for="t in actionTemplates"
+              :key="t.label"
+              type="primary"
+              :underline="false"
+              style="margin-right: 8px"
+              @click="form.actions = t.actions"
+            >
+              {{ t.label }}
+            </el-link>
           </div>
           <div class="hint">
             支持变量: <code>${value}</code> <code>${identifier}</code> <code>${deviceKey}</code> <code>${productKey}</code> 以及所有当前属性值
@@ -254,19 +428,35 @@ onMounted(load)
         </el-form-item>
         <el-form-item label="状态">
           <el-radio-group v-model="form.status">
-            <el-radio :value="1">启用</el-radio>
-            <el-radio :value="0">停用</el-radio>
+            <el-radio :value="1">
+              启用
+            </el-radio>
+            <el-radio :value="0">
+              停用
+            </el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="onSubmit">保存</el-button>
+        <el-button @click="dialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="submitting"
+          @click="onSubmit"
+        >
+          保存
+        </el-button>
       </template>
     </el-dialog>
 
     <!-- 详情预览 -->
-    <el-dialog v-model="previewVisible" title="规则定义" width="600px">
+    <el-dialog
+      v-model="previewVisible"
+      title="规则定义"
+      width="600px"
+    >
       <pre class="preview-pre">{{ previewContent }}</pre>
     </el-dialog>
   </div>

@@ -178,71 +178,155 @@ onBeforeUnmount(() => {
     <!-- 顶部状态栏 -->
     <div class="topbar">
       <div class="topbar-left">
-        <el-tag :type="sseConnected ? 'success' : 'danger'" size="small" effect="dark">
+        <el-tag
+          :type="sseConnected ? 'success' : 'danger'"
+          size="small"
+          effect="dark"
+        >
           <el-icon><Connection /></el-icon>
           SSE {{ sseConnected ? '已连接' : '已断开' }}
         </el-tag>
-        <el-tag v-if="ssePaused" type="warning" size="small">已暂停</el-tag>
+        <el-tag
+          v-if="ssePaused"
+          type="warning"
+          size="small"
+        >
+          已暂停
+        </el-tag>
         <span class="topbar-text">缓冲: {{ messages.length }} 条</span>
       </div>
       <div class="topbar-right">
-        <el-button :icon="ssePaused ? VideoPlay : VideoPause" size="small" @click="onTogglePause">
+        <el-button
+          :icon="ssePaused ? VideoPlay : VideoPause"
+          size="small"
+          @click="onTogglePause"
+        >
           {{ ssePaused ? '恢复' : '暂停' }}
         </el-button>
-        <el-button :icon="Delete" size="small" @click="onClearMessages">清空</el-button>
+        <el-button
+          :icon="Delete"
+          size="small"
+          @click="onClearMessages"
+        >
+          清空
+        </el-button>
       </div>
     </div>
 
     <!-- Tab 切换 -->
-    <el-tabs v-model="activeTab" class="console-tabs">
+    <el-tabs
+      v-model="activeTab"
+      class="console-tabs"
+    >
       <!-- ========== Tab 1: 概览 ========== -->
-      <el-tab-pane label="概览" name="overview">
+      <el-tab-pane
+        label="概览"
+        name="overview"
+      >
         <template #label>
           <span><el-icon><DataLine /></el-icon> 概览</span>
         </template>
         <div class="overview-grid">
-          <el-card class="metric-card" shadow="hover">
-            <div class="metric-label"><el-icon><Monitor /></el-icon> 在线设备</div>
-            <div class="metric-value" :class="{ zero: !status.onlineDevices }">
+          <el-card
+            class="metric-card"
+            shadow="hover"
+          >
+            <div class="metric-label">
+              <el-icon><Monitor /></el-icon> 在线设备
+            </div>
+            <div
+              class="metric-value"
+              :class="{ zero: !status.onlineDevices }"
+            >
               {{ status.onlineDevices ?? 0 }}
             </div>
           </el-card>
 
-          <el-card class="metric-card" shadow="hover">
-            <div class="metric-label"><el-icon><Cpu /></el-icon> RX 消息总数</div>
-            <div class="metric-value primary">{{ status.rxTotal ?? 0 }}</div>
+          <el-card
+            class="metric-card"
+            shadow="hover"
+          >
+            <div class="metric-label">
+              <el-icon><Cpu /></el-icon> RX 消息总数
+            </div>
+            <div class="metric-value primary">
+              {{ status.rxTotal ?? 0 }}
+            </div>
           </el-card>
 
-          <el-card class="metric-card" shadow="hover">
-            <div class="metric-label"><el-icon><Cpu /></el-icon> TX 消息总数</div>
-            <div class="metric-value success">{{ status.txTotal ?? 0 }}</div>
+          <el-card
+            class="metric-card"
+            shadow="hover"
+          >
+            <div class="metric-label">
+              <el-icon><Cpu /></el-icon> TX 消息总数
+            </div>
+            <div class="metric-value success">
+              {{ status.txTotal ?? 0 }}
+            </div>
           </el-card>
 
-          <el-card class="metric-card" shadow="hover">
-            <div class="metric-label"><el-icon><Warning /></el-icon> 错误总数</div>
-            <div class="metric-value" :class="{ danger: (status.errTotal ?? 0) > 0 }">
+          <el-card
+            class="metric-card"
+            shadow="hover"
+          >
+            <div class="metric-label">
+              <el-icon><Warning /></el-icon> 错误总数
+            </div>
+            <div
+              class="metric-value"
+              :class="{ danger: (status.errTotal ?? 0) > 0 }"
+            >
               {{ status.errTotal ?? 0 }}
             </div>
           </el-card>
 
-          <el-card class="metric-card" shadow="hover">
-            <div class="metric-label"><el-icon><Lightning /></el-icon> RX TPS</div>
-            <div class="metric-value primary">{{ status.rxTps ?? 0 }}</div>
+          <el-card
+            class="metric-card"
+            shadow="hover"
+          >
+            <div class="metric-label">
+              <el-icon><Lightning /></el-icon> RX TPS
+            </div>
+            <div class="metric-value primary">
+              {{ status.rxTps ?? 0 }}
+            </div>
           </el-card>
 
-          <el-card class="metric-card" shadow="hover">
-            <div class="metric-label"><el-icon><Lightning /></el-icon> TX TPS</div>
-            <div class="metric-value success">{{ status.txTps ?? 0 }}</div>
+          <el-card
+            class="metric-card"
+            shadow="hover"
+          >
+            <div class="metric-label">
+              <el-icon><Lightning /></el-icon> TX TPS
+            </div>
+            <div class="metric-value success">
+              {{ status.txTps ?? 0 }}
+            </div>
           </el-card>
 
-          <el-card class="metric-card" shadow="hover">
-            <div class="metric-label"><el-icon><DataLine /></el-icon> 抓包缓冲</div>
-            <div class="metric-value">{{ status.spyBufferSize ?? 0 }} / 1000</div>
+          <el-card
+            class="metric-card"
+            shadow="hover"
+          >
+            <div class="metric-label">
+              <el-icon><DataLine /></el-icon> 抓包缓冲
+            </div>
+            <div class="metric-value">
+              {{ status.spyBufferSize ?? 0 }} / 1000
+            </div>
           </el-card>
 
-          <el-card class="metric-card" shadow="hover">
-            <div class="metric-label"><el-icon><Cpu /></el-icon> 运行时长</div>
-            <div class="metric-value small">{{ durationText(status.ts ? status.ts - 1000 : undefined) }}</div>
+          <el-card
+            class="metric-card"
+            shadow="hover"
+          >
+            <div class="metric-label">
+              <el-icon><Cpu /></el-icon> 运行时长
+            </div>
+            <div class="metric-value small">
+              {{ durationText(status.ts ? status.ts - 1000 : undefined) }}
+            </div>
           </el-card>
         </div>
       </el-tab-pane>
@@ -252,30 +336,68 @@ onBeforeUnmount(() => {
         <template #label>
           <span><el-icon><Monitor /></el-icon> 设备 ({{ devices.length }})</span>
         </template>
-        <el-table :data="devices" stripe empty-text="暂无在线设备">
-          <el-table-column prop="deviceKey" label="设备 Key" min-width="200" />
-          <el-table-column prop="productKey" label="产品 Key" min-width="180" />
-          <el-table-column prop="protocol" label="协议" width="100">
+        <el-table
+          :data="devices"
+          stripe
+          empty-text="暂无在线设备"
+        >
+          <el-table-column
+            prop="deviceKey"
+            label="设备 Key"
+            min-width="200"
+          />
+          <el-table-column
+            prop="productKey"
+            label="产品 Key"
+            min-width="180"
+          />
+          <el-table-column
+            prop="protocol"
+            label="协议"
+            width="100"
+          >
             <template #default="{ row }">
-              <el-tag size="small" :type="row.protocol === 'mqtt' ? 'success' : 'primary'">
+              <el-tag
+                size="small"
+                :type="row.protocol === 'mqtt' ? 'success' : 'primary'"
+              >
                 {{ row.protocol }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="remoteAddress" label="IP 地址" min-width="150" />
-          <el-table-column label="连接时长" min-width="120">
+          <el-table-column
+            prop="remoteAddress"
+            label="IP 地址"
+            min-width="150"
+          />
+          <el-table-column
+            label="连接时长"
+            min-width="120"
+          >
             <template #default="{ row }">
               {{ durationText(row.connectTime) }}
             </template>
           </el-table-column>
-          <el-table-column label="最后活跃" min-width="120">
+          <el-table-column
+            label="最后活跃"
+            min-width="120"
+          >
             <template #default="{ row }">
               {{ fmtTime(row.lastActiveTime) }}
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="120" fixed="right">
+          <el-table-column
+            label="操作"
+            width="120"
+            fixed="right"
+          >
             <template #default="{ row }">
-              <el-button type="danger" size="small" :icon="CircleClose" @click="onKick(row)">
+              <el-button
+                type="danger"
+                size="small"
+                :icon="CircleClose"
+                @click="onKick(row)"
+              >
                 踢下线
               </el-button>
             </template>
@@ -289,21 +411,43 @@ onBeforeUnmount(() => {
           <span><el-icon><ChatLineRound /></el-icon> 实时消息 ({{ messages.length }})</span>
         </template>
         <div class="message-list">
-          <div v-for="m in messages.slice().reverse()" :key="m.id" class="message-row">
+          <div
+            v-for="m in messages.slice().reverse()"
+            :key="m.id"
+            class="message-row"
+          >
             <span class="msg-time">{{ fmtTime(m.receivedAt) }}</span>
-            <el-tag size="small" :type="typeTag(m.type)" effect="dark">{{ m.type }}</el-tag>
-            <el-tag size="small" :type="m.protocol === 'mqtt' ? 'success' : 'primary'">
+            <el-tag
+              size="small"
+              :type="typeTag(m.type)"
+              effect="dark"
+            >
+              {{ m.type }}
+            </el-tag>
+            <el-tag
+              size="small"
+              :type="m.protocol === 'mqtt' ? 'success' : 'primary'"
+            >
               {{ m.protocol }}
             </el-tag>
             <span class="msg-device">{{ m.deviceKey }}</span>
             <span class="msg-product">[{{ m.productKey }}]</span>
-            <span v-if="m.remoteAddress" class="msg-ip">{{ m.remoteAddress }}</span>
-            <details v-if="m.payload" class="msg-payload">
+            <span
+              v-if="m.remoteAddress"
+              class="msg-ip"
+            >{{ m.remoteAddress }}</span>
+            <details
+              v-if="m.payload"
+              class="msg-payload"
+            >
               <summary>payload</summary>
               <pre>{{ JSON.stringify(tryParsePayload(m.payload), null, 2) }}</pre>
             </details>
           </div>
-          <el-empty v-if="messages.length === 0" description="暂无消息" />
+          <el-empty
+            v-if="messages.length === 0"
+            description="暂无消息"
+          />
         </div>
       </el-tab-pane>
 
@@ -312,20 +456,46 @@ onBeforeUnmount(() => {
         <template #label>
           <span><el-icon><Cpu /></el-icon> 协议控制</span>
         </template>
-        <el-table :data="protocols" stripe empty-text="当前无在线设备,无协议活动">
-          <el-table-column prop="value" label="协议" min-width="120">
+        <el-table
+          :data="protocols"
+          stripe
+          empty-text="当前无在线设备,无协议活动"
+        >
+          <el-table-column
+            prop="value"
+            label="协议"
+            min-width="120"
+          >
             <template #default="{ row }">
-              <el-tag size="small" :type="row === 'mqtt' ? 'success' : 'primary'">{{ row }}</el-tag>
+              <el-tag
+                size="small"
+                :type="row === 'mqtt' ? 'success' : 'primary'"
+              >
+                {{ row }}
+              </el-tag>
             </template>
           </el-table-column>
           <el-table-column label="状态">
             <template #default="{ row }">
-              <el-tag type="success" size="small">运行中</el-tag>
+              <el-tag
+                type="success"
+                size="small"
+              >
+                运行中
+              </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="200">
+          <el-table-column
+            label="操作"
+            width="200"
+          >
             <template #default="{ row }">
-              <el-button type="warning" size="small" :icon="Refresh" @click="onRestartProtocol(row)">
+              <el-button
+                type="warning"
+                size="small"
+                :icon="Refresh"
+                @click="onRestartProtocol(row)"
+              >
                 重启适配器
               </el-button>
             </template>

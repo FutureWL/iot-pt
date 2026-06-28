@@ -113,83 +113,210 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="page-container overview-page" v-loading="loading">
+  <div
+    v-loading="loading"
+    class="page-container overview-page"
+  >
     <div class="page-header">
-      <h2 class="page-title">设备总览</h2>
-      <el-button :icon="Refresh" @click="load">刷新</el-button>
+      <h2 class="page-title">
+        设备总览
+      </h2>
+      <el-button
+        :icon="Refresh"
+        @click="load"
+      >
+        刷新
+      </el-button>
     </div>
 
     <!-- 顶部 4 卡片(原 5 卡片中"产品"并入图表,加健康度评分) -->
-    <el-row :gutter="16" class="mb-16">
-      <el-col :xs="12" :sm="6">
-        <div class="stat-card stat-blue clickable" @click="goList">
-          <el-icon :size="28"><Monitor /></el-icon>
-          <div class="stat-num">{{ stats.total }}</div>
-          <div class="stat-label">设备总数</div>
+    <el-row
+      :gutter="16"
+      class="mb-16"
+    >
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
+        <div
+          class="stat-card stat-blue clickable"
+          @click="goList"
+        >
+          <el-icon :size="28">
+            <Monitor />
+          </el-icon>
+          <div class="stat-num">
+            {{ stats.total }}
+          </div>
+          <div class="stat-label">
+            设备总数
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
-        <div class="stat-card stat-green clickable" @click="goList">
-          <el-icon :size="28"><Connection /></el-icon>
-          <div class="stat-num">{{ stats.online }}</div>
-          <div class="stat-label">在线设备</div>
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
+        <div
+          class="stat-card stat-green clickable"
+          @click="goList"
+        >
+          <el-icon :size="28">
+            <Connection />
+          </el-icon>
+          <div class="stat-num">
+            {{ stats.online }}
+          </div>
+          <div class="stat-label">
+            在线设备
+          </div>
           <div class="stat-rate">
             在线率 {{ stats.total ? Math.round(stats.online / stats.total * 100) : 0 }}%
           </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
-        <div class="stat-card stat-red clickable" @click="router.push('/alert/center')">
-          <el-icon :size="28"><Warning /></el-icon>
-          <div class="stat-num">{{ stats.fault }}</div>
-          <div class="stat-label">故障设备</div>
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
+        <div
+          class="stat-card stat-red clickable"
+          @click="router.push('/alert/center')"
+        >
+          <el-icon :size="28">
+            <Warning />
+          </el-icon>
+          <div class="stat-num">
+            {{ stats.fault }}
+          </div>
+          <div class="stat-label">
+            故障设备
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
-        <div class="stat-card" :style="{ background: `linear-gradient(135deg, ${healthScoreColor}15 0%, #fff 100%)`, color: healthScoreColor }">
-          <el-icon :size="28"><Box /></el-icon>
-          <div class="stat-num" :style="{ color: healthScoreColor }">{{ stats.healthScore }}</div>
-          <div class="stat-label">健康度评分 · {{ healthScoreLabel }}</div>
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
+        <div
+          class="stat-card"
+          :style="{ background: `linear-gradient(135deg, ${healthScoreColor}15 0%, #fff 100%)`, color: healthScoreColor }"
+        >
+          <el-icon :size="28">
+            <Box />
+          </el-icon>
+          <div
+            class="stat-num"
+            :style="{ color: healthScoreColor }"
+          >
+            {{ stats.healthScore }}
+          </div>
+          <div class="stat-label">
+            健康度评分 · {{ healthScoreLabel }}
+          </div>
         </div>
       </el-col>
     </el-row>
 
     <el-row :gutter="16">
-      <el-col :xs="24" :md="14">
+      <el-col
+        :xs="24"
+        :md="14"
+      >
         <div class="page-card">
-          <h3 class="card-title">产品 / 设备分布</h3>
-          <div ref="chartRef" class="chart-area"></div>
-          <el-empty v-if="distribution.length === 0" description="暂无产品数据" />
+          <h3 class="card-title">
+            产品 / 设备分布
+          </h3>
+          <div
+            ref="chartRef"
+            class="chart-area"
+          />
+          <el-empty
+            v-if="distribution.length === 0"
+            description="暂无产品数据"
+          />
         </div>
       </el-col>
-      <el-col :xs="24" :md="10">
+      <el-col
+        :xs="24"
+        :md="10"
+      >
         <div class="page-card">
-          <h3 class="card-title">终端列表</h3>
+          <h3 class="card-title">
+            终端列表
+          </h3>
           <div class="page-toolbar">
-            <el-input v-model="keyword" placeholder="设备名 / Key" clearable style="width: 200px"
-              :prefix-icon="Search" @keyup.enter="onSearch" />
-            <el-button type="primary" @click="onSearch">查询</el-button>
-            <el-button @click="onReset">重置</el-button>
+            <el-input
+              v-model="keyword"
+              placeholder="设备名 / Key"
+              clearable
+              style="width: 200px"
+              :prefix-icon="Search"
+              @keyup.enter="onSearch"
+            />
+            <el-button
+              type="primary"
+              @click="onSearch"
+            >
+              查询
+            </el-button>
+            <el-button @click="onReset">
+              重置
+            </el-button>
           </div>
-          <el-table :data="devices" stripe max-height="380" empty-text="暂无设备">
-            <el-table-column prop="deviceName" label="名称" min-width="120" show-overflow-tooltip />
-            <el-table-column label="状态" width="80">
+          <el-table
+            :data="devices"
+            stripe
+            max-height="380"
+            empty-text="暂无设备"
+          >
+            <el-table-column
+              prop="deviceName"
+              label="名称"
+              min-width="120"
+              show-overflow-tooltip
+            />
+            <el-table-column
+              label="状态"
+              width="80"
+            >
               <template #default="{ row }">
-                <el-tag :type="row.status === 1 ? 'success' : row.status === 2 ? 'danger' : 'info'" size="small">
+                <el-tag
+                  :type="row.status === 1 ? 'success' : row.status === 2 ? 'danger' : 'info'"
+                  size="small"
+                >
                   {{ row.status === 1 ? '在线' : row.status === 2 ? '禁用' : '离线' }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="健康度" width="100">
+            <el-table-column
+              label="健康度"
+              width="100"
+            >
               <template #default="{ row }">
-                <el-progress :percentage="row.healthScore ?? 0" :stroke-width="6" :show-text="false"
-                  :color="(row.healthScore ?? 0) >= 75 ? '#67c23a' : (row.healthScore ?? 0) >= 60 ? '#e6a23c' : '#f56c6c'" />
+                <el-progress
+                  :percentage="row.healthScore ?? 0"
+                  :stroke-width="6"
+                  :show-text="false"
+                  :color="(row.healthScore ?? 0) >= 75 ? '#67c23a' : (row.healthScore ?? 0) >= 60 ? '#e6a23c' : '#f56c6c'"
+                />
                 <span class="text-secondary text-xs">{{ row.healthScore ?? 0 }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="80" fixed="right">
+            <el-table-column
+              label="操作"
+              width="80"
+              fixed="right"
+            >
               <template #default="{ row }">
-                <el-button link type="primary" size="small" @click="goDetail(row.id)">查看</el-button>
+                <el-button
+                  link
+                  type="primary"
+                  size="small"
+                  @click="goDetail(row.id)"
+                >
+                  查看
+                </el-button>
               </template>
             </el-table-column>
           </el-table>

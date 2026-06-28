@@ -194,10 +194,22 @@ onBeforeUnmount(() => {
 <template>
   <el-container class="layout">
     <!-- 桌面端侧边栏 -->
-    <el-aside v-if="!isMobile" :width="asideWidth" class="layout-aside">
+    <el-aside
+      v-if="!isMobile"
+      :width="asideWidth"
+      class="layout-aside"
+    >
       <div class="layout-logo">
-        <el-icon :size="22" class="layout-logo-icon"><Connection /></el-icon>
-        <span v-show="!collapsed" class="layout-logo-text">IoT 平台</span>
+        <el-icon
+          :size="22"
+          class="layout-logo-icon"
+        >
+          <Connection />
+        </el-icon>
+        <span
+          v-show="!collapsed"
+          class="layout-logo-text"
+        >IoT 平台</span>
       </div>
 
       <el-menu
@@ -214,7 +226,9 @@ onBeforeUnmount(() => {
           :index="m.path!"
         >
           <el-icon><component :is="m.icon" /></el-icon>
-          <template #title>{{ m.title }}</template>
+          <template #title>
+            {{ m.title }}
+          </template>
         </el-menu-item>
 
         <el-sub-menu
@@ -232,13 +246,18 @@ onBeforeUnmount(() => {
             :index="c.path!"
           >
             <el-icon><component :is="c.icon || 'Minus'" /></el-icon>
-            <template #title>{{ c.title }}</template>
+            <template #title>
+              {{ c.title }}
+            </template>
           </el-menu-item>
         </el-sub-menu>
       </el-menu>
 
       <!-- 折叠切换按钮(底部) -->
-      <div class="layout-collapse-btn" @click="toggleCollapsed">
+      <div
+        class="layout-collapse-btn"
+        @click="toggleCollapsed"
+      >
         <el-icon :size="18">
           <component :is="collapsed ? 'Expand' : 'Fold'" />
         </el-icon>
@@ -255,7 +274,12 @@ onBeforeUnmount(() => {
       :with-header="false"
     >
       <div class="layout-logo layout-logo-mobile">
-        <el-icon :size="22" class="layout-logo-icon"><Connection /></el-icon>
+        <el-icon
+          :size="22"
+          class="layout-logo-icon"
+        >
+          <Connection />
+        </el-icon>
         <span class="layout-logo-text">IoT 平台</span>
       </div>
       <el-menu
@@ -302,19 +326,30 @@ onBeforeUnmount(() => {
             class="layout-menu-btn"
             @click="drawerVisible = true"
           >
-            <el-icon :size="22"><Expand /></el-icon>
+            <el-icon :size="22">
+              <Expand />
+            </el-icon>
           </el-button>
           <el-breadcrumb separator="/">
-            <el-breadcrumb-item v-for="(b, i) in breadcrumb" :key="i">
+            <el-breadcrumb-item
+              v-for="(b, i) in breadcrumb"
+              :key="i"
+            >
               {{ b }}
             </el-breadcrumb-item>
           </el-breadcrumb>
         </div>
         <div class="layout-header-right">
           <!-- 主题切换(用原生 title 避免 el-tooltip 拦截 el-dropdown 触发) -->
-          <el-dropdown trigger="click" @command="onThemeSelect">
-            <el-button link class="header-icon-btn"
-              :title="`当前主题:${themeStore.mode === 'system' ? '跟随系统' : themeStore.mode === 'dark' ? '暗色' : '亮色'} · 点击切换`">
+          <el-dropdown
+            trigger="click"
+            @command="onThemeSelect"
+          >
+            <el-button
+              link
+              class="header-icon-btn"
+              :title="`当前主题:${themeStore.mode === 'system' ? '跟随系统' : themeStore.mode === 'dark' ? '暗色' : '亮色'} · 点击切换`"
+            >
               <el-icon :size="18">
                 <component :is="themeStore.mode === 'light' ? 'Sunny' : themeStore.mode === 'dark' ? 'MoonNight' : 'Monitor'" />
               </el-icon>
@@ -324,26 +359,47 @@ onBeforeUnmount(() => {
                 <el-dropdown-item command="light">
                   <el-icon><Sunny /></el-icon>
                   <span class="theme-label">浅色</span>
-                  <el-icon v-if="themeStore.mode === 'light'" class="theme-check"><Check /></el-icon>
+                  <el-icon
+                    v-if="themeStore.mode === 'light'"
+                    class="theme-check"
+                  >
+                    <Check />
+                  </el-icon>
                 </el-dropdown-item>
                 <el-dropdown-item command="dark">
                   <el-icon><MoonNight /></el-icon>
                   <span class="theme-label">暗色</span>
-                  <el-icon v-if="themeStore.mode === 'dark'" class="theme-check"><Check /></el-icon>
+                  <el-icon
+                    v-if="themeStore.mode === 'dark'"
+                    class="theme-check"
+                  >
+                    <Check />
+                  </el-icon>
                 </el-dropdown-item>
                 <el-dropdown-item command="system">
                   <el-icon><Monitor /></el-icon>
                   <span class="theme-label">跟随系统</span>
-                  <el-icon v-if="themeStore.mode === 'system'" class="theme-check"><Check /></el-icon>
+                  <el-icon
+                    v-if="themeStore.mode === 'system'"
+                    class="theme-check"
+                  >
+                    <Check />
+                  </el-icon>
                 </el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
 
           <!-- 用户菜单 -->
-          <el-dropdown trigger="click" @command="(c: string) => c === 'logout' && onLogout()">
+          <el-dropdown
+            trigger="click"
+            @command="(c: string) => c === 'logout' && onLogout()"
+          >
             <span class="layout-user">
-              <el-avatar :size="32" :icon="UserFilled" />
+              <el-avatar
+                :size="32"
+                :icon="UserFilled"
+              />
               <span class="layout-user-name">
                 {{ userStore.userInfo?.nickname || userStore.userInfo?.username || '未登录' }}
               </span>
@@ -351,8 +407,12 @@ onBeforeUnmount(() => {
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item disabled>{{ userStore.userInfo?.tenantCode }}</el-dropdown-item>
-                <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+                <el-dropdown-item disabled>
+                  {{ userStore.userInfo?.tenantCode }}
+                </el-dropdown-item>
+                <el-dropdown-item command="logout">
+                  退出登录
+                </el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -362,8 +422,14 @@ onBeforeUnmount(() => {
       <!-- 内容区 -->
       <el-main class="layout-main">
         <router-view v-slot="{ Component, route }">
-          <transition name="fade" mode="out-in">
-            <component :is="Component" :key="route.path" />
+          <transition
+            name="fade"
+            mode="out-in"
+          >
+            <component
+              :is="Component"
+              :key="route.path"
+            />
           </transition>
         </router-view>
       </el-main>

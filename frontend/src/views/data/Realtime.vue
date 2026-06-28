@@ -167,17 +167,34 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="page-container" v-loading="loading">
+  <div
+    v-loading="loading"
+    class="page-container"
+  >
     <div class="page-header">
-      <h2 class="page-title">实时数据</h2>
+      <h2 class="page-title">
+        实时数据
+      </h2>
       <div class="actions">
         <el-tag>设备 {{ totalCount }} 台</el-tag>
-        <el-tag type="success">在线 {{ onlineCount }} 台</el-tag>
-        <el-tag type="info">属性 {{ reportedCount }} / {{ propCount }} 已上报</el-tag>
-        <el-tag :type="wsStatus === 'connected' ? 'success' : wsStatus === 'connecting' ? 'warning' : 'danger'" size="default">
+        <el-tag type="success">
+          在线 {{ onlineCount }} 台
+        </el-tag>
+        <el-tag type="info">
+          属性 {{ reportedCount }} / {{ propCount }} 已上报
+        </el-tag>
+        <el-tag
+          :type="wsStatus === 'connected' ? 'success' : wsStatus === 'connecting' ? 'warning' : 'danger'"
+          size="default"
+        >
           WS: {{ wsStatus }}
         </el-tag>
-        <el-button :icon="Refresh" @click="load">刷新</el-button>
+        <el-button
+          :icon="Refresh"
+          @click="load"
+        >
+          刷新
+        </el-button>
       </div>
     </div>
 
@@ -185,7 +202,8 @@ onBeforeUnmount(() => {
       :type="wsStatus === 'connected' ? 'success' : wsStatus === 'connecting' ? 'warning' : 'danger'"
       :closable="false"
       show-icon
-      style="margin-bottom: 12px">
+      style="margin-bottom: 12px"
+    >
       <template v-if="wsStatus === 'connected'">
         实时推送已连接:属性变化通过 WebSocket 增量更新。
       </template>
@@ -195,57 +213,113 @@ onBeforeUnmount(() => {
       <template v-else>
         <strong>实时通道断开,数据不会自动刷新。</strong>
         当前显示的可能是过期数据,请点击右上角「刷新」按钮手动拉取。
-        <div v-if="wsLastError" style="margin-top: 4px; font-size: 12px; opacity: 0.85">
+        <div
+          v-if="wsLastError"
+          style="margin-top: 4px; font-size: 12px; opacity: 0.85"
+        >
           原因: {{ wsLastError }}
         </div>
       </template>
     </el-alert>
 
-    <div v-for="d in data" :key="d.deviceId" class="device-card page-card">
-      <div class="device-row" @click="toggleDevice(d)">
-        <el-icon class="caret"><Position v-if="expanded[d.deviceId]" /><Position v-else /></el-icon>
+    <div
+      v-for="d in data"
+      :key="d.deviceId"
+      class="device-card page-card"
+    >
+      <div
+        class="device-row"
+        @click="toggleDevice(d)"
+      >
+        <el-icon class="caret">
+          <Position v-if="expanded[d.deviceId]" /><Position v-else />
+        </el-icon>
         <span class="device-key">
           <el-icon><Connection /></el-icon>
           {{ d.deviceName }}
-          <el-tag size="small" type="info" style="margin-left: 6px">{{ d.deviceKey }}</el-tag>
+          <el-tag
+            size="small"
+            type="info"
+            style="margin-left: 6px"
+          >{{ d.deviceKey }}</el-tag>
         </span>
-        <el-tag size="small">{{ d.productName }}</el-tag>
-        <el-tag :type="d.status === 1 ? 'success' : 'info'" size="small">
+        <el-tag size="small">
+          {{ d.productName }}
+        </el-tag>
+        <el-tag
+          :type="d.status === 1 ? 'success' : 'info'"
+          size="small"
+        >
           {{ d.status === 1 ? '在线' : '离线' }}
         </el-tag>
         <span class="last-online">最近上报: {{ formatTime(d.lastOnlineTime) }}</span>
-        <el-tag v-if="d.location" size="small" type="info">{{ d.location }}</el-tag>
+        <el-tag
+          v-if="d.location"
+          size="small"
+          type="info"
+        >
+          {{ d.location }}
+        </el-tag>
         <span class="property-summary">
           {{ d.properties.filter(p => p.value != null).length }} / {{ d.properties.length }} 个属性已上报
         </span>
       </div>
 
-      <div v-show="expanded[d.deviceId]" class="property-grid">
-        <div v-for="p in d.properties" :key="p.identifier" class="property-cell">
+      <div
+        v-show="expanded[d.deviceId]"
+        class="property-grid"
+      >
+        <div
+          v-for="p in d.properties"
+          :key="p.identifier"
+          class="property-cell"
+        >
           <div class="prop-name">
             {{ p.name || p.identifier }}
             <span class="prop-identifier">{{ p.identifier }}</span>
           </div>
-          <div class="prop-value" :style="{ color: valColor(p.value) }">
+          <div
+            class="prop-value"
+            :style="{ color: valColor(p.value) }"
+          >
             <span v-if="p.value != null">{{ p.value }}</span>
-            <span v-else class="not-reported">— 未上报</span>
-            <span v-if="p.unit" class="prop-unit">{{ p.unit }}</span>
+            <span
+              v-else
+              class="not-reported"
+            >— 未上报</span>
+            <span
+              v-if="p.unit"
+              class="prop-unit"
+            >{{ p.unit }}</span>
           </div>
           <div class="prop-meta">
-            <el-tag size="small" :type="p.accessMode === 'ro' ? 'info' : 'success'">
+            <el-tag
+              size="small"
+              :type="p.accessMode === 'ro' ? 'info' : 'success'"
+            >
               {{ p.accessMode }}
             </el-tag>
             <span class="prop-type">{{ p.type }}</span>
-            <span v-if="p.recentTs" class="prop-time" :title="new Date(p.recentTs).toLocaleString('zh-CN')">
+            <span
+              v-if="p.recentTs"
+              class="prop-time"
+              :title="new Date(p.recentTs).toLocaleString('zh-CN')"
+            >
               {{ timeAgo(p.recentTs) }}
             </span>
-            <span v-else-if="p.updatedAt" class="prop-time">{{ p.updatedAt }}</span>
+            <span
+              v-else-if="p.updatedAt"
+              class="prop-time"
+            >{{ p.updatedAt }}</span>
           </div>
         </div>
       </div>
     </div>
 
-    <el-empty v-if="!loading && data.length === 0" description="暂无设备" />
+    <el-empty
+      v-if="!loading && data.length === 0"
+      description="暂无设备"
+    />
   </div>
 </template>
 

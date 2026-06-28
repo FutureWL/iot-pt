@@ -96,61 +96,147 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="page-container temp-page" v-loading="loading">
+  <div
+    v-loading="loading"
+    class="page-container temp-page"
+  >
     <div class="page-header">
-      <h2 class="page-title">温度监测</h2>
-      <el-select v-model="locationFilter" placeholder="全部位置" clearable style="width: 160px"
-        @change="onLocationChange">
-        <el-option label="母排" value="母排" />
-        <el-option label="触头" value="触头" />
-        <el-option label="电缆接头" value="电缆接头" />
+      <h2 class="page-title">
+        温度监测
+      </h2>
+      <el-select
+        v-model="locationFilter"
+        placeholder="全部位置"
+        clearable
+        style="width: 160px"
+        @change="onLocationChange"
+      >
+        <el-option
+          label="母排"
+          value="母排"
+        />
+        <el-option
+          label="触头"
+          value="触头"
+        />
+        <el-option
+          label="电缆接头"
+          value="电缆接头"
+        />
       </el-select>
-      <el-button :icon="Refresh" @click="load">刷新</el-button>
+      <el-button
+        :icon="Refresh"
+        @click="load"
+      >
+        刷新
+      </el-button>
     </div>
 
     <!-- 4 卡统计 -->
-    <el-row :gutter="16" class="mb-16">
-      <el-col :xs="12" :sm="6">
+    <el-row
+      :gutter="16"
+      class="mb-16"
+    >
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="temp-card temp-max">
-          <div class="temp-label">最高温度</div>
-          <div class="temp-num">{{ stats.max.toFixed(1) }} <span class="temp-unit">℃</span></div>
+          <div class="temp-label">
+            最高温度
+          </div>
+          <div class="temp-num">
+            {{ stats.max.toFixed(1) }} <span class="temp-unit">℃</span>
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="temp-card temp-avg">
-          <div class="temp-label">平均温度</div>
-          <div class="temp-num">{{ stats.avg.toFixed(1) }} <span class="temp-unit">℃</span></div>
+          <div class="temp-label">
+            平均温度
+          </div>
+          <div class="temp-num">
+            {{ stats.avg.toFixed(1) }} <span class="temp-unit">℃</span>
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="temp-card temp-min">
-          <div class="temp-label">最低温度</div>
-          <div class="temp-num">{{ stats.min.toFixed(1) }} <span class="temp-unit">℃</span></div>
+          <div class="temp-label">
+            最低温度
+          </div>
+          <div class="temp-num">
+            {{ stats.min.toFixed(1) }} <span class="temp-unit">℃</span>
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="temp-card temp-alert">
-          <div class="temp-label">超温点</div>
-          <div class="temp-num">{{ stats.alertCount }}</div>
+          <div class="temp-label">
+            超温点
+          </div>
+          <div class="temp-num">
+            {{ stats.alertCount }}
+          </div>
         </div>
       </el-col>
     </el-row>
 
     <el-row :gutter="16">
-      <el-col :xs="24" :md="16">
+      <el-col
+        :xs="24"
+        :md="16"
+      >
         <div class="page-card">
-          <h3 class="card-title">温度趋势(最近 1 小时)</h3>
-          <div ref="chartRef" class="chart-area"></div>
-          <el-empty v-if="points.length === 0" description="暂无温度传感器数据" />
+          <h3 class="card-title">
+            温度趋势(最近 1 小时)
+          </h3>
+          <div
+            ref="chartRef"
+            class="chart-area"
+          />
+          <el-empty
+            v-if="points.length === 0"
+            description="暂无温度传感器数据"
+          />
         </div>
       </el-col>
-      <el-col :xs="24" :md="8">
+      <el-col
+        :xs="24"
+        :md="8"
+      >
         <div class="page-card">
-          <h3 class="card-title">超温点列表</h3>
-          <el-table :data="points.filter(p => p.temperature >= ALERT_TEMP)" stripe empty-text="无超温点">
-            <el-table-column prop="sensorId" label="传感器" width="100" />
-            <el-table-column prop="location" label="位置" width="100" />
-            <el-table-column label="温度" width="100">
+          <h3 class="card-title">
+            超温点列表
+          </h3>
+          <el-table
+            :data="points.filter(p => p.temperature >= ALERT_TEMP)"
+            stripe
+            empty-text="无超温点"
+          >
+            <el-table-column
+              prop="sensorId"
+              label="传感器"
+              width="100"
+            />
+            <el-table-column
+              prop="location"
+              label="位置"
+              width="100"
+            />
+            <el-table-column
+              label="温度"
+              width="100"
+            >
               <template #default="{ row }">
                 <span class="text-danger font-semibold">{{ row.temperature.toFixed(1) }} ℃</span>
               </template>
@@ -161,20 +247,49 @@ onBeforeUnmount(() => {
     </el-row>
 
     <div class="page-card mt-16">
-      <h3 class="card-title">测点列表</h3>
-      <el-table :data="points" stripe empty-text="暂无测点">
-        <el-table-column prop="sensorId" label="传感器 ID" width="140" />
-        <el-table-column prop="deviceKey" label="设备 Key" width="140" />
-        <el-table-column prop="location" label="位置" width="100" />
-        <el-table-column label="温度(℃)" width="110">
+      <h3 class="card-title">
+        测点列表
+      </h3>
+      <el-table
+        :data="points"
+        stripe
+        empty-text="暂无测点"
+      >
+        <el-table-column
+          prop="sensorId"
+          label="传感器 ID"
+          width="140"
+        />
+        <el-table-column
+          prop="deviceKey"
+          label="设备 Key"
+          width="140"
+        />
+        <el-table-column
+          prop="location"
+          label="位置"
+          width="100"
+        />
+        <el-table-column
+          label="温度(℃)"
+          width="110"
+        >
           <template #default="{ row }">
             <span :class="{ 'text-danger': row.temperature >= ALERT_TEMP }">
               {{ row.temperature.toFixed(1) }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="batteryLevel" label="电量(%)" width="100" />
-        <el-table-column prop="ts" label="采集时间" min-width="170" />
+        <el-table-column
+          prop="batteryLevel"
+          label="电量(%)"
+          width="100"
+        />
+        <el-table-column
+          prop="ts"
+          label="采集时间"
+          min-width="170"
+        />
       </el-table>
     </div>
   </div>

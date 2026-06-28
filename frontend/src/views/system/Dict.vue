@@ -134,61 +134,163 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="page-container dict-page" v-loading="loading">
+  <div
+    v-loading="loading"
+    class="page-container dict-page"
+  >
     <div class="page-header">
-      <h2 class="page-title">字典管理</h2>
-      <el-button type="primary" :icon="Plus" @click="typeDialogVisible = true">新建字典类型</el-button>
+      <h2 class="page-title">
+        字典管理
+      </h2>
+      <el-button
+        type="primary"
+        :icon="Plus"
+        @click="typeDialogVisible = true"
+      >
+        新建字典类型
+      </el-button>
     </div>
 
     <el-row :gutter="16">
-      <el-col :xs="24" :md="8">
+      <el-col
+        :xs="24"
+        :md="8"
+      >
         <div class="page-card">
-          <h3 class="card-title"><el-icon><Collection /></el-icon> 字典类型</h3>
+          <h3 class="card-title">
+            <el-icon><Collection /></el-icon> 字典类型
+          </h3>
           <div class="type-list">
-            <div v-for="t in types" :key="t.id"
-              class="type-item" :class="{ active: activeType?.id === t.id }"
-              @click="onSelectType(t)">
+            <div
+              v-for="t in types"
+              :key="t.id"
+              class="type-item"
+              :class="{ active: activeType?.id === t.id }"
+              @click="onSelectType(t)"
+            >
               <div class="type-info">
-                <div class="type-name">{{ t.typeName }}</div>
-                <div class="type-code text-secondary text-xs">{{ t.type }}</div>
+                <div class="type-name">
+                  {{ t.typeName }}
+                </div>
+                <div class="type-code text-secondary text-xs">
+                  {{ t.type }}
+                </div>
               </div>
-              <el-button link type="danger" size="small" :icon="Delete" @click.stop="onDeleteType(t)" />
+              <el-button
+                link
+                type="danger"
+                size="small"
+                :icon="Delete"
+                @click.stop="onDeleteType(t)"
+              />
             </div>
-            <el-empty v-if="types.length === 0" description="暂无字典类型" />
+            <el-empty
+              v-if="types.length === 0"
+              description="暂无字典类型"
+            />
           </div>
         </div>
       </el-col>
 
-      <el-col :xs="24" :md="16">
+      <el-col
+        :xs="24"
+        :md="16"
+      >
         <div class="page-card">
           <div class="page-toolbar">
             <h3 class="card-title-inline">
               {{ activeType?.typeName ?? '字典项' }}
-              <span v-if="activeType" class="text-secondary text-xs ml-8">({{ activeType.type }})</span>
+              <span
+                v-if="activeType"
+                class="text-secondary text-xs ml-8"
+              >({{ activeType.type }})</span>
             </h3>
-            <el-button type="primary" size="small" :icon="Plus" @click="openCreateItem">新增字典项</el-button>
+            <el-button
+              type="primary"
+              size="small"
+              :icon="Plus"
+              @click="openCreateItem"
+            >
+              新增字典项
+            </el-button>
           </div>
-          <el-table :data="items" stripe empty-text="暂无字典项">
-            <el-table-column prop="code" label="编码" width="180">
+          <el-table
+            :data="items"
+            stripe
+            empty-text="暂无字典项"
+          >
+            <el-table-column
+              prop="code"
+              label="编码"
+              width="180"
+            >
               <template #default="{ row }">
-                <el-tag size="small" type="info">{{ row.code }}</el-tag>
+                <el-tag
+                  size="small"
+                  type="info"
+                >
+                  {{ row.code }}
+                </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="label" label="显示名" min-width="180" />
-            <el-table-column prop="value" label="值" min-width="180" />
-            <el-table-column prop="sort" label="排序" width="80" />
-            <el-table-column label="状态" width="100">
+            <el-table-column
+              prop="label"
+              label="显示名"
+              min-width="180"
+            />
+            <el-table-column
+              prop="value"
+              label="值"
+              min-width="180"
+            />
+            <el-table-column
+              prop="sort"
+              label="排序"
+              width="80"
+            />
+            <el-table-column
+              label="状态"
+              width="100"
+            >
               <template #default="{ row }">
-                <el-tag :type="row.status === 1 ? 'success' : 'info'" size="small">
+                <el-tag
+                  :type="row.status === 1 ? 'success' : 'info'"
+                  size="small"
+                >
                   {{ row.status === 1 ? '启用' : '禁用' }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="description" label="说明" min-width="160" show-overflow-tooltip />
-            <el-table-column label="操作" width="160" fixed="right">
+            <el-table-column
+              prop="description"
+              label="说明"
+              min-width="160"
+              show-overflow-tooltip
+            />
+            <el-table-column
+              label="操作"
+              width="160"
+              fixed="right"
+            >
               <template #default="{ row }">
-                <el-button link type="primary" size="small" :icon="Edit" @click="openEditItem(row)">编辑</el-button>
-                <el-button link type="danger" size="small" :icon="Delete" @click="onDeleteItem(row)">删除</el-button>
+                <el-button
+                  link
+                  type="primary"
+                  size="small"
+                  :icon="Edit"
+                  @click="openEditItem(row)"
+                >
+                  编辑
+                </el-button>
+                <el-button
+                  link
+                  type="danger"
+                  size="small"
+                  :icon="Delete"
+                  @click="onDeleteItem(row)"
+                >
+                  删除
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -200,60 +302,133 @@ onMounted(load)
               :total="total"
               layout="total, sizes, prev, pager, next"
               @current-change="onPageChange"
-              @size-change="onSizeChange" />
+              @size-change="onSizeChange"
+            />
           </div>
         </div>
       </el-col>
     </el-row>
 
     <!-- 新建类型 -->
-    <el-dialog v-model="typeDialogVisible" title="新建字典类型" width="500px" destroy-on-close>
-      <el-form :model="typeForm" label-width="100px">
-        <el-form-item label="类型编码" required>
-          <el-input v-model="typeForm.type" placeholder="如 alert_level" />
+    <el-dialog
+      v-model="typeDialogVisible"
+      title="新建字典类型"
+      width="500px"
+      destroy-on-close
+    >
+      <el-form
+        :model="typeForm"
+        label-width="100px"
+      >
+        <el-form-item
+          label="类型编码"
+          required
+        >
+          <el-input
+            v-model="typeForm.type"
+            placeholder="如 alert_level"
+          />
         </el-form-item>
-        <el-form-item label="类型名称" required>
-          <el-input v-model="typeForm.typeName" placeholder="如 告警级别" />
+        <el-form-item
+          label="类型名称"
+          required
+        >
+          <el-input
+            v-model="typeForm.typeName"
+            placeholder="如 告警级别"
+          />
         </el-form-item>
         <el-form-item label="描述">
-          <el-input v-model="typeForm.description" type="textarea" :rows="2" />
+          <el-input
+            v-model="typeForm.description"
+            type="textarea"
+            :rows="2"
+          />
         </el-form-item>
         <el-form-item label="状态">
-          <el-switch v-model="typeForm.status" :active-value="1" :inactive-value="0" />
+          <el-switch
+            v-model="typeForm.status"
+            :active-value="1"
+            :inactive-value="0"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="typeDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="onCreateType">创建</el-button>
+        <el-button @click="typeDialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="onCreateType"
+        >
+          创建
+        </el-button>
       </template>
     </el-dialog>
 
     <!-- 新建/编辑字典项 -->
-    <el-dialog v-model="itemDialogVisible" :title="itemDialogMode === 'edit' ? '编辑字典项' : '新增字典项'"
-      width="500px" destroy-on-close>
-      <el-form ref="itemFormRef" :model="itemForm" :rules="itemRules" label-width="100px">
-        <el-form-item label="编码" prop="code">
+    <el-dialog
+      v-model="itemDialogVisible"
+      :title="itemDialogMode === 'edit' ? '编辑字典项' : '新增字典项'"
+      width="500px"
+      destroy-on-close
+    >
+      <el-form
+        ref="itemFormRef"
+        :model="itemForm"
+        :rules="itemRules"
+        label-width="100px"
+      >
+        <el-form-item
+          label="编码"
+          prop="code"
+        >
           <el-input v-model="itemForm.code" />
         </el-form-item>
-        <el-form-item label="显示名" prop="label">
+        <el-form-item
+          label="显示名"
+          prop="label"
+        >
           <el-input v-model="itemForm.label" />
         </el-form-item>
-        <el-form-item label="值" prop="value">
+        <el-form-item
+          label="值"
+          prop="value"
+        >
           <el-input v-model="itemForm.value" />
         </el-form-item>
         <el-form-item label="排序">
-          <el-input-number v-model="itemForm.sort" :min="0" controls-position="right" />
+          <el-input-number
+            v-model="itemForm.sort"
+            :min="0"
+            controls-position="right"
+          />
         </el-form-item>
         <el-form-item label="状态">
-          <el-switch v-model="itemForm.status" :active-value="1" :inactive-value="0" />
+          <el-switch
+            v-model="itemForm.status"
+            :active-value="1"
+            :inactive-value="0"
+          />
         </el-form-item>
         <el-form-item label="说明">
-          <el-input v-model="itemForm.description" type="textarea" :rows="2" />
+          <el-input
+            v-model="itemForm.description"
+            type="textarea"
+            :rows="2"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="itemDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="onSaveItem">保存</el-button>
+        <el-button @click="itemDialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="onSaveItem"
+        >
+          保存
+        </el-button>
       </template>
     </el-dialog>
   </div>

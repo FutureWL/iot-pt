@@ -65,9 +65,9 @@ export default [
       // 空行规则宽松化
       'no-multiple-empty-lines': ['warn', { max: 2, maxEOF: 1, maxBOF: 0 }],
       // 字符串优先用单引号
-      'quotes': ['warn', 'single', { avoidEscape: true, allowTemplateLiterals: true }],
+      quotes: ['warn', 'single', { avoidEscape: true, allowTemplateLiterals: true }],
       // 分号警告
-      'semi': ['warn', 'never'],
+      semi: ['warn', 'never'],
       // 尾逗号 none
       'comma-dangle': 'off',
       // TS 严格模式对项目友好,但允许 escape hatch

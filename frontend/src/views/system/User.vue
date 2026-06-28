@@ -327,11 +327,16 @@ onMounted(load)
 
 <template>
   <div class="page-container">
-    <h2 class="page-title">用户管理</h2>
+    <h2 class="page-title">
+      用户管理
+    </h2>
 
     <!-- 搜索栏 -->
     <div class="page-card search-bar">
-      <el-form :inline="true" @submit.prevent>
+      <el-form
+        :inline="true"
+        @submit.prevent
+      >
         <el-form-item label="关键字">
           <el-input
             v-model="query.keyword"
@@ -342,42 +347,140 @@ onMounted(load)
           />
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="query.status" placeholder="全部" clearable style="width: 120px">
-            <el-option label="启用" :value="1" />
-            <el-option label="禁用" :value="0" />
+          <el-select
+            v-model="query.status"
+            placeholder="全部"
+            clearable
+            style="width: 120px"
+          >
+            <el-option
+              label="启用"
+              :value="1"
+            />
+            <el-option
+              label="禁用"
+              :value="0"
+            />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :icon="Search" @click="onSearch">查询</el-button>
-          <el-button :icon="Refresh" @click="onResetSearch">重置</el-button>
-          <el-button type="success" :icon="Plus" @click="openCreate">新建用户</el-button>
-          <el-button :icon="Refresh" plain @click="hardReload">强制刷新页面</el-button>
+          <el-button
+            type="primary"
+            :icon="Search"
+            @click="onSearch"
+          >
+            查询
+          </el-button>
+          <el-button
+            :icon="Refresh"
+            @click="onResetSearch"
+          >
+            重置
+          </el-button>
+          <el-button
+            type="success"
+            :icon="Plus"
+            @click="openCreate"
+          >
+            新建用户
+          </el-button>
+          <el-button
+            :icon="Refresh"
+            plain
+            @click="hardReload"
+          >
+            强制刷新页面
+          </el-button>
         </el-form-item>
       </el-form>
     </div>
 
     <!-- 表格 -->
     <div class="page-card">
-      <el-table v-loading="loading" :data="list" stripe border>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="username" label="用户名" min-width="120" />
-        <el-table-column prop="nickname" label="昵称" min-width="120" />
-        <el-table-column prop="email" label="邮箱" min-width="180" />
-        <el-table-column prop="phone" label="手机" min-width="120" />
-        <el-table-column label="状态" width="100">
+      <el-table
+        v-loading="loading"
+        :data="list"
+        stripe
+        border
+      >
+        <el-table-column
+          prop="id"
+          label="ID"
+          width="80"
+        />
+        <el-table-column
+          prop="username"
+          label="用户名"
+          min-width="120"
+        />
+        <el-table-column
+          prop="nickname"
+          label="昵称"
+          min-width="120"
+        />
+        <el-table-column
+          prop="email"
+          label="邮箱"
+          min-width="180"
+        />
+        <el-table-column
+          prop="phone"
+          label="手机"
+          min-width="120"
+        />
+        <el-table-column
+          label="状态"
+          width="100"
+        >
           <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'info'" size="small">
+            <el-tag
+              :type="row.status === 1 ? 'success' : 'info'"
+              size="small"
+            >
               {{ row.status === 1 ? '启用' : '禁用' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="lastLoginAt" label="最后登录" width="170" />
-        <el-table-column prop="createdAt" label="创建时间" width="170" />
-        <el-table-column label="操作" width="320" fixed="right">
+        <el-table-column
+          prop="lastLoginAt"
+          label="最后登录"
+          width="170"
+        />
+        <el-table-column
+          prop="createdAt"
+          label="创建时间"
+          width="170"
+        />
+        <el-table-column
+          label="操作"
+          width="320"
+          fixed="right"
+        >
           <template #default="{ row }">
-            <el-button link type="primary" :icon="Edit" @click="openEdit(row)">编辑</el-button>
-            <el-button link type="warning" :icon="Key" @click="openResetPwd(row)">重置密码</el-button>
-            <el-button link type="success" :icon="UserFilled" @click="openAssignRole(row)">分配角色</el-button>
+            <el-button
+              link
+              type="primary"
+              :icon="Edit"
+              @click="openEdit(row)"
+            >
+              编辑
+            </el-button>
+            <el-button
+              link
+              type="warning"
+              :icon="Key"
+              @click="openResetPwd(row)"
+            >
+              重置密码
+            </el-button>
+            <el-button
+              link
+              type="success"
+              :icon="UserFilled"
+              @click="openAssignRole(row)"
+            >
+              分配角色
+            </el-button>
             <el-button
               link
               :type="row.status === 1 ? 'info' : 'success'"
@@ -391,7 +494,9 @@ onMounted(load)
               :icon="Delete"
               :disabled="row.id === 1"
               @click="onDelete(row)"
-            >删除</el-button>
+            >
+              删除
+            </el-button>
           </template>
         </el-table-column>
         <template #empty>
@@ -419,11 +524,26 @@ onMounted(load)
       width="520px"
       destroy-on-close
     >
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model="form.username" placeholder="登录用户名" :disabled="dialogMode === 'edit'" />
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="80px"
+      >
+        <el-form-item
+          label="用户名"
+          prop="username"
+        >
+          <el-input
+            v-model="form.username"
+            placeholder="登录用户名"
+            :disabled="dialogMode === 'edit'"
+          />
         </el-form-item>
-        <el-form-item label="密码" prop="password">
+        <el-form-item
+          label="密码"
+          prop="password"
+        >
           <el-input
             v-model="form.password"
             type="password"
@@ -431,37 +551,73 @@ onMounted(load)
             :placeholder="dialogMode === 'create' ? '必填,6-64 位' : '留空表示不修改'"
           />
         </el-form-item>
-        <el-form-item label="昵称" prop="nickname">
+        <el-form-item
+          label="昵称"
+          prop="nickname"
+        >
           <el-input v-model="form.nickname" />
         </el-form-item>
-        <el-form-item label="邮箱" prop="email">
+        <el-form-item
+          label="邮箱"
+          prop="email"
+        >
           <el-input v-model="form.email" />
         </el-form-item>
-        <el-form-item label="手机" prop="phone">
+        <el-form-item
+          label="手机"
+          prop="phone"
+        >
           <el-input v-model="form.phone" />
         </el-form-item>
         <el-form-item label="状态">
           <el-radio-group v-model="form.status">
-            <el-radio :value="1">启用</el-radio>
-            <el-radio :value="0">禁用</el-radio>
+            <el-radio :value="1">
+              启用
+            </el-radio>
+            <el-radio :value="0">
+              禁用
+            </el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="onSubmit">
+        <el-button @click="dialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="submitting"
+          @click="onSubmit"
+        >
           {{ dialogMode === 'create' ? '创建' : '保存' }}
         </el-button>
       </template>
     </el-dialog>
 
     <!-- 重置密码对话框 -->
-    <el-dialog v-model="pwdDialog" title="重置密码" width="420px" destroy-on-close>
-      <el-form ref="pwdFormRef" :model="pwdForm" :rules="pwdRules" label-width="80px" @submit.prevent>
+    <el-dialog
+      v-model="pwdDialog"
+      title="重置密码"
+      width="420px"
+      destroy-on-close
+    >
+      <el-form
+        ref="pwdFormRef"
+        :model="pwdForm"
+        :rules="pwdRules"
+        label-width="80px"
+        @submit.prevent
+      >
         <el-form-item label="用户">
-          <el-input :model-value="pwdTarget?.username || ''" disabled />
+          <el-input
+            :model-value="pwdTarget?.username || ''"
+            disabled
+          />
         </el-form-item>
-        <el-form-item label="新密码" prop="newPassword">
+        <el-form-item
+          label="新密码"
+          prop="newPassword"
+        >
           <el-input
             v-model="pwdForm.newPassword"
             type="password"
@@ -472,28 +628,57 @@ onMounted(load)
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="pwdDialog = false">取消</el-button>
-        <el-button type="warning" :loading="pwdSubmitting" @click="onResetPwdSubmit">
+        <el-button @click="pwdDialog = false">
+          取消
+        </el-button>
+        <el-button
+          type="warning"
+          :loading="pwdSubmitting"
+          @click="onResetPwdSubmit"
+        >
           确认重置
         </el-button>
       </template>
     </el-dialog>
 
     <!-- 分配角色对话框 -->
-    <el-dialog v-model="roleDialog" width="520px" destroy-on-close
-      :title="`分配角色 - ${roleTarget?.username ?? ''}`">
+    <el-dialog
+      v-model="roleDialog"
+      width="520px"
+      destroy-on-close
+      :title="`分配角色 - ${roleTarget?.username ?? ''}`"
+    >
       <el-checkbox-group v-model="checkedRoleIds">
-        <div v-for="r in allRoleList" :key="r.id" class="role-item">
+        <div
+          v-for="r in allRoleList"
+          :key="r.id"
+          class="role-item"
+        >
           <el-checkbox :value="r.id">
             <span class="role-name">{{ r.roleName }}</span>
-            <el-tag v-if="r.builtIn === 1" type="warning" size="small" style="margin-left:6px">内置</el-tag>
+            <el-tag
+              v-if="r.builtIn === 1"
+              type="warning"
+              size="small"
+              style="margin-left:6px"
+            >
+              内置
+            </el-tag>
             <span class="role-desc">{{ r.description || r.roleCode }}</span>
           </el-checkbox>
         </div>
       </el-checkbox-group>
       <template #footer>
-        <el-button @click="roleDialog = false">取消</el-button>
-        <el-button type="primary" :loading="roleSubmitting" @click="onAssignRoleSubmit">保存</el-button>
+        <el-button @click="roleDialog = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="roleSubmitting"
+          @click="onAssignRoleSubmit"
+        >
+          保存
+        </el-button>
       </template>
     </el-dialog>
   </div>

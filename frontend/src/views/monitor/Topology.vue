@@ -166,39 +166,113 @@ onMounted(loadRegions)
 </script>
 
 <template>
-  <div class="page-container topo-page" v-loading="loading">
+  <div
+    v-loading="loading"
+    class="page-container topo-page"
+  >
     <div class="page-header">
-      <h2 class="page-title">电网拓扑 · 维护</h2>
+      <h2 class="page-title">
+        电网拓扑 · 维护
+      </h2>
       <div class="header-tools">
-        <el-select v-model="activeRegionId" placeholder="选择区域" style="width: 200px">
-          <el-option v-for="r in regions" :key="r.id" :label="`${r.name} (${r.nodeCount})`" :value="r.id" />
+        <el-select
+          v-model="activeRegionId"
+          placeholder="选择区域"
+          style="width: 200px"
+        >
+          <el-option
+            v-for="r in regions"
+            :key="r.id"
+            :label="`${r.name} (${r.nodeCount})`"
+            :value="r.id"
+          />
         </el-select>
-        <el-radio-group v-model="layoutType" size="default">
-          <el-radio-button value="dagre">层级</el-radio-button>
-          <el-radio-button value="force">力导向</el-radio-button>
-          <el-radio-button value="circular">环形</el-radio-button>
+        <el-radio-group
+          v-model="layoutType"
+          size="default"
+        >
+          <el-radio-button value="dagre">
+            层级
+          </el-radio-button>
+          <el-radio-button value="force">
+            力导向
+          </el-radio-button>
+          <el-radio-button value="circular">
+            环形
+          </el-radio-button>
         </el-radio-group>
-        <el-button :icon="Refresh" @click="loadTopology">刷新</el-button>
-        <el-button type="primary" :icon="SetUp">编辑模式</el-button>
+        <el-button
+          :icon="Refresh"
+          @click="loadTopology"
+        >
+          刷新
+        </el-button>
+        <el-button
+          type="primary"
+          :icon="SetUp"
+        >
+          编辑模式
+        </el-button>
       </div>
     </div>
 
     <!-- 统计卡 -->
-    <el-row :gutter="12" class="mb-12">
-      <el-col :xs="6" :sm="6">
-        <div class="stat-mini"><div class="stat-mini-num">{{ stats.nodeCount }}</div><div class="stat-mini-label">节点数</div></div>
-      </el-col>
-      <el-col :xs="6" :sm="6">
-        <div class="stat-mini"><div class="stat-mini-num">{{ stats.edgeCount }}</div><div class="stat-mini-label">连接数</div></div>
-      </el-col>
-      <el-col :xs="6" :sm="6">
-        <div class="stat-mini" :class="{ alert: stats.warningCount > 0 }">
-          <div class="stat-mini-num">{{ stats.warningCount }}</div><div class="stat-mini-label">告警</div>
+    <el-row
+      :gutter="12"
+      class="mb-12"
+    >
+      <el-col
+        :xs="6"
+        :sm="6"
+      >
+        <div class="stat-mini">
+          <div class="stat-mini-num">
+            {{ stats.nodeCount }}
+          </div><div class="stat-mini-label">
+            节点数
+          </div>
         </div>
       </el-col>
-      <el-col :xs="6" :sm="6">
-        <div class="stat-mini" :class="{ danger: stats.faultCount > 0 }">
-          <div class="stat-mini-num">{{ stats.faultCount }}</div><div class="stat-mini-label">故障</div>
+      <el-col
+        :xs="6"
+        :sm="6"
+      >
+        <div class="stat-mini">
+          <div class="stat-mini-num">
+            {{ stats.edgeCount }}
+          </div><div class="stat-mini-label">
+            连接数
+          </div>
+        </div>
+      </el-col>
+      <el-col
+        :xs="6"
+        :sm="6"
+      >
+        <div
+          class="stat-mini"
+          :class="{ alert: stats.warningCount > 0 }"
+        >
+          <div class="stat-mini-num">
+            {{ stats.warningCount }}
+          </div><div class="stat-mini-label">
+            告警
+          </div>
+        </div>
+      </el-col>
+      <el-col
+        :xs="6"
+        :sm="6"
+      >
+        <div
+          class="stat-mini"
+          :class="{ danger: stats.faultCount > 0 }"
+        >
+          <div class="stat-mini-num">
+            {{ stats.faultCount }}
+          </div><div class="stat-mini-label">
+            故障
+          </div>
         </div>
       </el-col>
     </el-row>
@@ -206,24 +280,50 @@ onMounted(loadRegions)
     <div class="topo-layout">
       <!-- 左:图例 + 节点列表 -->
       <div class="page-card left-panel">
-        <h3 class="card-title">设备类型</h3>
+        <h3 class="card-title">
+          设备类型
+        </h3>
         <div class="legend-list">
-          <div v-for="(m, t) in nodeTypeMeta" :key="t" class="legend-item">
-            <span class="legend-shape" :class="`shape-${m.shape}`" :style="{ background: m.color }">{{ m.symbol }}</span>
+          <div
+            v-for="(m, t) in nodeTypeMeta"
+            :key="t"
+            class="legend-item"
+          >
+            <span
+              class="legend-shape"
+              :class="`shape-${m.shape}`"
+              :style="{ background: m.color }"
+            >{{ m.symbol }}</span>
             <span class="legend-label">{{ m.label }}</span>
           </div>
         </div>
 
-        <h3 class="card-title mt-16">节点列表 ({{ graphData?.nodes.length ?? 0 }})</h3>
+        <h3 class="card-title mt-16">
+          节点列表 ({{ graphData?.nodes.length ?? 0 }})
+        </h3>
         <div class="node-list">
-          <div v-for="n in graphData?.nodes" :key="n.id"
-               class="node-item" :class="{ active: selectedNode?.id === n.id }"
-               @click="onNodeClick(n)">
-            <span class="status-dot" :style="{ background: statusColor[n.status].fill }"></span>
+          <div
+            v-for="n in graphData?.nodes"
+            :key="n.id"
+            class="node-item"
+            :class="{ active: selectedNode?.id === n.id }"
+            @click="onNodeClick(n)"
+          >
+            <span
+              class="status-dot"
+              :style="{ background: statusColor[n.status].fill }"
+            />
             <div class="node-info">
-              <div class="node-name">{{ n.name }}</div>
+              <div class="node-name">
+                {{ n.name }}
+              </div>
               <div class="node-meta">
-                <el-tag size="small" effect="plain">{{ nodeTypeMeta[n.type].label }}</el-tag>
+                <el-tag
+                  size="small"
+                  effect="plain"
+                >
+                  {{ nodeTypeMeta[n.type].label }}
+                </el-tag>
                 <span class="voltage">{{ n.voltageLevel }}</span>
               </div>
             </div>
@@ -245,22 +345,46 @@ onMounted(loadRegions)
         />
 
         <div class="canvas-tools">
-          <el-button :icon="Plus"   size="small" circle @click="onZoomIn"  title="放大" />
-          <el-button :icon="Minus"  size="small" circle @click="onZoomOut" title="缩小" />
-          <el-button :icon="Aim"    size="small" circle @click="onFitView" title="自适应" />
-          <el-button :icon="FullScreen" size="small" circle @click="onFullScreen" title="全屏" />
+          <el-button
+            :icon="Plus"
+            size="small"
+            circle
+            title="放大"
+            @click="onZoomIn"
+          />
+          <el-button
+            :icon="Minus"
+            size="small"
+            circle
+            title="缩小"
+            @click="onZoomOut"
+          />
+          <el-button
+            :icon="Aim"
+            size="small"
+            circle
+            title="自适应"
+            @click="onFitView"
+          />
+          <el-button
+            :icon="FullScreen"
+            size="small"
+            circle
+            title="全屏"
+            @click="onFullScreen"
+          />
         </div>
 
         <div class="status-legend">
           <div class="legend-row">
-            <span class="legend-item-mini"><span class="dot normal"></span>正常</span>
-            <span class="legend-item-mini"><span class="dot warning"></span>警告</span>
-            <span class="legend-item-mini"><span class="dot fault"></span>故障</span>
-            <span class="legend-item-mini"><span class="dot offline"></span>离线</span>
+            <span class="legend-item-mini"><span class="dot normal" />正常</span>
+            <span class="legend-item-mini"><span class="dot warning" />警告</span>
+            <span class="legend-item-mini"><span class="dot fault" />故障</span>
+            <span class="legend-item-mini"><span class="dot offline" />离线</span>
           </div>
           <div class="legend-row">
-            <span class="legend-item-mini"><span class="line-solid"></span>实线:馈线/母线</span>
-            <span class="legend-item-mini"><span class="line-dashed"></span>虚线:联络线</span>
+            <span class="legend-item-mini"><span class="line-solid" />实线:馈线/母线</span>
+            <span class="legend-item-mini"><span class="line-dashed" />虚线:联络线</span>
             <span class="legend-item-mini legend-tip">双击节点 → 关联设备</span>
           </div>
         </div>
@@ -269,40 +393,88 @@ onMounted(loadRegions)
       <!-- 右:详情 -->
       <div class="page-card right-panel">
         <template v-if="selectedNode">
-          <h3 class="card-title">{{ selectedNode.name }}</h3>
-          <el-descriptions :column="1" border size="small">
-            <el-descriptions-item label="节点 ID"><code>{{ selectedNode.id }}</code></el-descriptions-item>
+          <h3 class="card-title">
+            {{ selectedNode.name }}
+          </h3>
+          <el-descriptions
+            :column="1"
+            border
+            size="small"
+          >
+            <el-descriptions-item label="节点 ID">
+              <code>{{ selectedNode.id }}</code>
+            </el-descriptions-item>
             <el-descriptions-item label="设备类型">
-              <el-tag size="small">{{ nodeTypeMeta[selectedNode.type].label }}</el-tag>
+              <el-tag size="small">
+                {{ nodeTypeMeta[selectedNode.type].label }}
+              </el-tag>
             </el-descriptions-item>
             <el-descriptions-item label="电压等级">
-              <el-tag size="small" type="warning">{{ selectedNode.voltageLevel }}</el-tag>
+              <el-tag
+                size="small"
+                type="warning"
+              >
+                {{ selectedNode.voltageLevel }}
+              </el-tag>
             </el-descriptions-item>
             <el-descriptions-item label="运行状态">
-              <el-tag :type="statusColor[selectedNode.status].tag as any" size="small">
+              <el-tag
+                :type="statusColor[selectedNode.status].tag as any"
+                size="small"
+              >
                 {{ statusColor[selectedNode.status].label }}
               </el-tag>
             </el-descriptions-item>
-            <el-descriptions-item label="所在区域">{{ selectedNode.region || '—' }}</el-descriptions-item>
-            <el-descriptions-item v-if="selectedNode.deviceId" label="关联设备">
-              <el-link type="primary" :underline="false" @click="goDeviceDetail(selectedNode)">
+            <el-descriptions-item label="所在区域">
+              {{ selectedNode.region || '—' }}
+            </el-descriptions-item>
+            <el-descriptions-item
+              v-if="selectedNode.deviceId"
+              label="关联设备"
+            >
+              <el-link
+                type="primary"
+                :underline="false"
+                @click="goDeviceDetail(selectedNode)"
+              >
                 设备 #{{ selectedNode.deviceId }} →
               </el-link>
             </el-descriptions-item>
           </el-descriptions>
 
           <div class="alert-zone">
-            <h4 class="sub-title">维护操作</h4>
+            <h4 class="sub-title">
+              维护操作
+            </h4>
             <el-button-group>
-              <el-button :icon="SetUp" size="small">编辑属性</el-button>
-              <el-button :icon="Plus" size="small">新增连接</el-button>
+              <el-button
+                :icon="SetUp"
+                size="small"
+              >
+                编辑属性
+              </el-button>
+              <el-button
+                :icon="Plus"
+                size="small"
+              >
+                新增连接
+              </el-button>
             </el-button-group>
-            <el-alert type="info" :closable="false" show-icon class="mt-8">
+            <el-alert
+              type="info"
+              :closable="false"
+              show-icon
+              class="mt-8"
+            >
               双击节点可跳转到关联设备;后续将支持拖拽节点重新布局 / 拖拽创建新连线。
             </el-alert>
           </div>
         </template>
-        <el-empty v-else description="点击节点查看详情 / 双击进入编辑" :image-size="80" />
+        <el-empty
+          v-else
+          description="点击节点查看详情 / 双击进入编辑"
+          :image-size="80"
+        />
       </div>
     </div>
   </div>

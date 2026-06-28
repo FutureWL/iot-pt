@@ -59,64 +59,179 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="page-container log-page" v-loading="loading">
+  <div
+    v-loading="loading"
+    class="page-container log-page"
+  >
     <div class="page-header">
-      <h2 class="page-title">操作日志</h2>
-      <el-button :icon="Refresh" @click="load">刷新</el-button>
+      <h2 class="page-title">
+        操作日志
+      </h2>
+      <el-button
+        :icon="Refresh"
+        @click="load"
+      >
+        刷新
+      </el-button>
     </div>
 
     <div class="page-card search-bar">
-      <el-form :inline="true" @submit.prevent>
+      <el-form
+        :inline="true"
+        @submit.prevent
+      >
         <el-form-item label="用户名">
-          <el-input v-model="query.username" placeholder="操作人" clearable style="width: 140px" @keyup.enter="onSearch" />
+          <el-input
+            v-model="query.username"
+            placeholder="操作人"
+            clearable
+            style="width: 140px"
+            @keyup.enter="onSearch"
+          />
         </el-form-item>
         <el-form-item label="模块">
-          <el-select v-model="query.module" placeholder="全部" clearable filterable style="width: 140px">
-            <el-option v-for="m in commonModules" :key="m" :label="m" :value="m" />
+          <el-select
+            v-model="query.module"
+            placeholder="全部"
+            clearable
+            filterable
+            style="width: 140px"
+          >
+            <el-option
+              v-for="m in commonModules"
+              :key="m"
+              :label="m"
+              :value="m"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="操作类型">
-          <el-select v-model="query.action" placeholder="全部" clearable filterable style="width: 120px">
-            <el-option v-for="a in commonActions" :key="a" :label="a" :value="a" />
+          <el-select
+            v-model="query.action"
+            placeholder="全部"
+            clearable
+            filterable
+            style="width: 120px"
+          >
+            <el-option
+              v-for="a in commonActions"
+              :key="a"
+              :label="a"
+              :value="a"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="query.status" placeholder="全部" clearable style="width: 100px">
-            <el-option label="成功" :value="1" />
-            <el-option label="失败" :value="0" />
+          <el-select
+            v-model="query.status"
+            placeholder="全部"
+            clearable
+            style="width: 100px"
+          >
+            <el-option
+              label="成功"
+              :value="1"
+            />
+            <el-option
+              label="失败"
+              :value="0"
+            />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :icon="Search" @click="onSearch">查询</el-button>
-          <el-button @click="onReset">重置</el-button>
+          <el-button
+            type="primary"
+            :icon="Search"
+            @click="onSearch"
+          >
+            查询
+          </el-button>
+          <el-button @click="onReset">
+            重置
+          </el-button>
         </el-form-item>
       </el-form>
     </div>
 
     <div class="page-card">
-      <el-table :data="list" stripe border empty-text="暂无日志">
-        <el-table-column prop="ts" label="时间" width="170" />
-        <el-table-column prop="username" label="操作人" width="100" />
-        <el-table-column prop="module" label="模块" width="120" />
-        <el-table-column prop="action" label="操作" width="100" />
-        <el-table-column prop="method" label="HTTP" width="80" />
-        <el-table-column prop="url" label="请求路径" min-width="220" show-overflow-tooltip />
-        <el-table-column prop="ip" label="IP" width="140" />
-        <el-table-column label="耗时" width="90">
+      <el-table
+        :data="list"
+        stripe
+        border
+        empty-text="暂无日志"
+      >
+        <el-table-column
+          prop="ts"
+          label="时间"
+          width="170"
+        />
+        <el-table-column
+          prop="username"
+          label="操作人"
+          width="100"
+        />
+        <el-table-column
+          prop="module"
+          label="模块"
+          width="120"
+        />
+        <el-table-column
+          prop="action"
+          label="操作"
+          width="100"
+        />
+        <el-table-column
+          prop="method"
+          label="HTTP"
+          width="80"
+        />
+        <el-table-column
+          prop="url"
+          label="请求路径"
+          min-width="220"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          prop="ip"
+          label="IP"
+          width="140"
+        />
+        <el-table-column
+          label="耗时"
+          width="90"
+        >
           <template #default="{ row }">
             <span :class="{ 'text-warning': (row.costMs ?? 0) > 1000 }">{{ row.costMs ?? 0 }} ms</span>
           </template>
         </el-table-column>
-        <el-table-column label="状态" width="80">
+        <el-table-column
+          label="状态"
+          width="80"
+        >
           <template #default="{ row }">
-            <el-tag :type="statusMap[row.status]?.type as any" size="small">
+            <el-tag
+              :type="statusMap[row.status]?.type as any"
+              size="small"
+            >
               {{ statusMap[row.status]?.label }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="80" fixed="right">
+        <el-table-column
+          label="操作"
+          width="80"
+          fixed="right"
+        >
           <template #default="{ row }">
-            <el-button link type="primary" size="small" :icon="View" @click="showDetail(row)">详情</el-button>
+            <el-button
+              link
+              type="primary"
+              size="small"
+              :icon="View"
+              @click="showDetail(row)"
+            >
+              详情
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -128,29 +243,71 @@ onMounted(load)
           :total="total"
           layout="total, sizes, prev, pager, next, jumper"
           @current-change="onPageChange"
-          @size-change="onSizeChange" />
+          @size-change="onSizeChange"
+        />
       </div>
     </div>
 
-    <el-dialog v-model="detailVisible" title="日志详情" width="720px">
-      <el-descriptions v-if="detail" :column="2" border>
-        <el-descriptions-item label="操作时间">{{ detail.ts }}</el-descriptions-item>
-        <el-descriptions-item label="操作人">{{ detail.username }} (#{{ detail.userId }})</el-descriptions-item>
-        <el-descriptions-item label="模块">{{ detail.module }}</el-descriptions-item>
-        <el-descriptions-item label="操作">{{ detail.action }}</el-descriptions-item>
+    <el-dialog
+      v-model="detailVisible"
+      title="日志详情"
+      width="720px"
+    >
+      <el-descriptions
+        v-if="detail"
+        :column="2"
+        border
+      >
+        <el-descriptions-item label="操作时间">
+          {{ detail.ts }}
+        </el-descriptions-item>
+        <el-descriptions-item label="操作人">
+          {{ detail.username }} (#{{ detail.userId }})
+        </el-descriptions-item>
+        <el-descriptions-item label="模块">
+          {{ detail.module }}
+        </el-descriptions-item>
+        <el-descriptions-item label="操作">
+          {{ detail.action }}
+        </el-descriptions-item>
         <el-descriptions-item label="HTTP 方法">
-          <el-tag size="small" :type="detail.method === 'GET' ? 'info' : 'primary'">{{ detail.method }}</el-tag>
+          <el-tag
+            size="small"
+            :type="detail.method === 'GET' ? 'info' : 'primary'"
+          >
+            {{ detail.method }}
+          </el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="状态">
-          <el-tag :type="statusMap[detail.status]?.type as any">{{ statusMap[detail.status]?.label }}</el-tag>
+          <el-tag :type="statusMap[detail.status]?.type as any">
+            {{ statusMap[detail.status]?.label }}
+          </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="请求路径" :span="2"><code>{{ detail.url }}</code></el-descriptions-item>
-        <el-descriptions-item label="IP">{{ detail.ip }}</el-descriptions-item>
-        <el-descriptions-item label="耗时">{{ detail.costMs }} ms</el-descriptions-item>
-        <el-descriptions-item label="UA" :span="2" v-if="detail.userAgent">
-          <div class="text-secondary text-xs">{{ detail.userAgent }}</div>
+        <el-descriptions-item
+          label="请求路径"
+          :span="2"
+        >
+          <code>{{ detail.url }}</code>
         </el-descriptions-item>
-        <el-descriptions-item label="请求参数" :span="2">
+        <el-descriptions-item label="IP">
+          {{ detail.ip }}
+        </el-descriptions-item>
+        <el-descriptions-item label="耗时">
+          {{ detail.costMs }} ms
+        </el-descriptions-item>
+        <el-descriptions-item
+          v-if="detail.userAgent"
+          label="UA"
+          :span="2"
+        >
+          <div class="text-secondary text-xs">
+            {{ detail.userAgent }}
+          </div>
+        </el-descriptions-item>
+        <el-descriptions-item
+          label="请求参数"
+          :span="2"
+        >
           <pre class="json-block">{{ detail.params || '—' }}</pre>
         </el-descriptions-item>
       </el-descriptions>

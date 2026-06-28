@@ -87,11 +87,25 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="page-container detail-page" v-loading="loading">
+  <div
+    v-loading="loading"
+    class="page-container detail-page"
+  >
     <div class="page-header">
-      <el-button :icon="ArrowLeft" link @click="goBack">返回列表</el-button>
-      <span class="page-title-spacer"></span>
-      <el-button :icon="Refresh" @click="load">刷新</el-button>
+      <el-button
+        :icon="ArrowLeft"
+        link
+        @click="goBack"
+      >
+        返回列表
+      </el-button>
+      <span class="page-title-spacer" />
+      <el-button
+        :icon="Refresh"
+        @click="load"
+      >
+        刷新
+      </el-button>
     </div>
 
     <template v-if="detail">
@@ -99,80 +113,180 @@ onMounted(load)
       <div class="page-card mb-16">
         <div class="header-row">
           <div>
-            <h2 class="detail-title">{{ detail.title }}</h2>
+            <h2 class="detail-title">
+              {{ detail.title }}
+            </h2>
             <div class="detail-meta">
-              <el-tag size="small" type="info">{{ detail.workOrderNo }}</el-tag>
-              <el-tag :type="statusTagMap[detail.status]?.type as any" size="small" class="ml-8">
+              <el-tag
+                size="small"
+                type="info"
+              >
+                {{ detail.workOrderNo }}
+              </el-tag>
+              <el-tag
+                :type="statusTagMap[detail.status]?.type as any"
+                size="small"
+                class="ml-8"
+              >
                 {{ statusTagMap[detail.status]?.label }}
               </el-tag>
               <span class="text-secondary ml-8">优先级 {{ detail.priority }}</span>
             </div>
           </div>
           <div class="header-actions">
-            <el-button v-if="detail.status === 'PENDING'" type="primary" :icon="User" :loading="submitting" @click="onAssign">派单</el-button>
-            <el-button v-if="detail.status === 'PROCESSING'" type="success" :icon="Check" :loading="submitting" @click="onComplete">完成</el-button>
-            <el-button v-if="detail.status === 'PROCESSING'" :icon="Bell" @click="onRemind">催办</el-button>
+            <el-button
+              v-if="detail.status === 'PENDING'"
+              type="primary"
+              :icon="User"
+              :loading="submitting"
+              @click="onAssign"
+            >
+              派单
+            </el-button>
+            <el-button
+              v-if="detail.status === 'PROCESSING'"
+              type="success"
+              :icon="Check"
+              :loading="submitting"
+              @click="onComplete"
+            >
+              完成
+            </el-button>
+            <el-button
+              v-if="detail.status === 'PROCESSING'"
+              :icon="Bell"
+              @click="onRemind"
+            >
+              催办
+            </el-button>
           </div>
         </div>
       </div>
 
       <el-row :gutter="16">
         <!-- 左:工单信息 + SOP 关联 -->
-        <el-col :xs="24" :md="16">
+        <el-col
+          :xs="24"
+          :md="16"
+        >
           <div class="page-card mb-16">
-            <h3 class="card-title">基本信息</h3>
-            <el-descriptions :column="2" border>
-              <el-descriptions-item label="工单号">{{ detail.workOrderNo }}</el-descriptions-item>
-              <el-descriptions-item label="状态">
-                <el-tag :type="statusTagMap[detail.status]?.type as any">{{ statusTagMap[detail.status]?.label }}</el-tag>
+            <h3 class="card-title">
+              基本信息
+            </h3>
+            <el-descriptions
+              :column="2"
+              border
+            >
+              <el-descriptions-item label="工单号">
+                {{ detail.workOrderNo }}
               </el-descriptions-item>
-              <el-descriptions-item label="创建人">{{ detail.creator }}</el-descriptions-item>
-              <el-descriptions-item label="处理人">{{ detail.assignee || '未派单' }}</el-descriptions-item>
-              <el-descriptions-item label="创建时间">{{ detail.createdAt }}</el-descriptions-item>
-              <el-descriptions-item label="完成时间">{{ detail.completedAt || '—' }}</el-descriptions-item>
+              <el-descriptions-item label="状态">
+                <el-tag :type="statusTagMap[detail.status]?.type as any">
+                  {{ statusTagMap[detail.status]?.label }}
+                </el-tag>
+              </el-descriptions-item>
+              <el-descriptions-item label="创建人">
+                {{ detail.creator }}
+              </el-descriptions-item>
+              <el-descriptions-item label="处理人">
+                {{ detail.assignee || '未派单' }}
+              </el-descriptions-item>
+              <el-descriptions-item label="创建时间">
+                {{ detail.createdAt }}
+              </el-descriptions-item>
+              <el-descriptions-item label="完成时间">
+                {{ detail.completedAt || '—' }}
+              </el-descriptions-item>
               <el-descriptions-item label="SLA 截止">
                 <span :class="{ 'text-danger': detail.slaDeadline && new Date(detail.slaDeadline).getTime() < Date.now() }">
                   {{ detail.slaDeadline || '—' }}
                 </span>
               </el-descriptions-item>
               <el-descriptions-item label="关联告警">
-                <el-link v-if="detail.alertId" type="primary" @click="router.push('/alert/center')">#{{ detail.alertId }}</el-link>
+                <el-link
+                  v-if="detail.alertId"
+                  type="primary"
+                  @click="router.push('/alert/center')"
+                >
+                  #{{ detail.alertId }}
+                </el-link>
                 <span v-else>—</span>
               </el-descriptions-item>
-              <el-descriptions-item label="设备 Key" :span="2">
-                <el-tag size="small" type="info">{{ detail.deviceKey }}</el-tag>
+              <el-descriptions-item
+                label="设备 Key"
+                :span="2"
+              >
+                <el-tag
+                  size="small"
+                  type="info"
+                >
+                  {{ detail.deviceKey }}
+                </el-tag>
                 <span class="text-secondary ml-8">{{ detail.deviceName }}</span>
               </el-descriptions-item>
-              <el-descriptions-item label="问题描述" :span="2">{{ detail.description || '—' }}</el-descriptions-item>
+              <el-descriptions-item
+                label="问题描述"
+                :span="2"
+              >
+                {{ detail.description || '—' }}
+              </el-descriptions-item>
             </el-descriptions>
           </div>
 
           <div class="page-card">
-            <h3 class="card-title">关联 SOP / 知识库</h3>
+            <h3 class="card-title">
+              关联 SOP / 知识库
+            </h3>
             <el-empty description="暂未关联标准作业指导书,请到知识库选择" />
-            <div class="text-secondary text-xs">知识库 API 已就绪,后端补全关联接口后此处将显示推荐 SOP。</div>
+            <div class="text-secondary text-xs">
+              知识库 API 已就绪,后端补全关联接口后此处将显示推荐 SOP。
+            </div>
           </div>
         </el-col>
 
         <!-- 右:处理时间轴 -->
-        <el-col :xs="24" :md="8">
+        <el-col
+          :xs="24"
+          :md="8"
+        >
           <div class="page-card">
-            <h3 class="card-title"><el-icon><Clock /></el-icon> 处理时间轴</h3>
+            <h3 class="card-title">
+              <el-icon><Clock /></el-icon> 处理时间轴
+            </h3>
             <el-timeline v-if="logs.length > 0">
               <el-timeline-item
-                v-for="log in logs" :key="log.id"
-                :timestamp="log.ts" placement="top">
-                <div class="log-action">{{ log.action }}</div>
-                <div class="log-operator text-secondary text-xs">操作人: {{ log.operator }}</div>
-                <div v-if="log.remark" class="log-remark">{{ log.remark }}</div>
+                v-for="log in logs"
+                :key="log.id"
+                :timestamp="log.ts"
+                placement="top"
+              >
+                <div class="log-action">
+                  {{ log.action }}
+                </div>
+                <div class="log-operator text-secondary text-xs">
+                  操作人: {{ log.operator }}
+                </div>
+                <div
+                  v-if="log.remark"
+                  class="log-remark"
+                >
+                  {{ log.remark }}
+                </div>
               </el-timeline-item>
             </el-timeline>
-            <el-empty v-else description="暂无处理记录" :image-size="80" />
+            <el-empty
+              v-else
+              description="暂无处理记录"
+              :image-size="80"
+            />
           </div>
         </el-col>
       </el-row>
     </template>
-    <el-empty v-else-if="!loading" description="工单不存在或加载失败,请返回列表重试" />
+    <el-empty
+      v-else-if="!loading"
+      description="工单不存在或加载失败,请返回列表重试"
+    />
   </div>
 </template>
 

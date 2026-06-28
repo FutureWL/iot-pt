@@ -179,99 +179,259 @@ onMounted(() => { loadOptions(); load() })
 
 <template>
   <div class="page-container">
-    <h2 class="page-title">设备列表</h2>
+    <h2 class="page-title">
+      设备列表
+    </h2>
 
     <div class="page-card search-bar">
-      <el-form :inline="true" @submit.prevent>
+      <el-form
+        :inline="true"
+        @submit.prevent
+      >
         <el-form-item label="关键字">
-          <el-input v-model="query.keyword" placeholder="Key / 名称 / 描述" clearable style="width: 220px"
-            @keyup.enter="onSearch" />
+          <el-input
+            v-model="query.keyword"
+            placeholder="Key / 名称 / 描述"
+            clearable
+            style="width: 220px"
+            @keyup.enter="onSearch"
+          />
         </el-form-item>
         <el-form-item label="产品">
-          <el-select v-model="query.productId" placeholder="全部" clearable style="width: 180px">
-            <el-option v-for="p in productOptions" :key="p.id" :label="`${p.productKey} - ${p.productName}`" :value="p.id" />
+          <el-select
+            v-model="query.productId"
+            placeholder="全部"
+            clearable
+            style="width: 180px"
+          >
+            <el-option
+              v-for="p in productOptions"
+              :key="p.id"
+              :label="`${p.productKey} - ${p.productName}`"
+              :value="p.id"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="分组">
-          <el-select v-model="query.groupId" placeholder="全部" clearable style="width: 140px">
-            <el-option v-for="g in groupOptions" :key="g.id" :label="g.groupName" :value="g.id" />
+          <el-select
+            v-model="query.groupId"
+            placeholder="全部"
+            clearable
+            style="width: 140px"
+          >
+            <el-option
+              v-for="g in groupOptions"
+              :key="g.id"
+              :label="g.groupName"
+              :value="g.id"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="query.status" placeholder="全部" clearable style="width: 120px">
-            <el-option label="离线" :value="0" />
-            <el-option label="在线" :value="1" />
-            <el-option label="禁用" :value="2" />
+          <el-select
+            v-model="query.status"
+            placeholder="全部"
+            clearable
+            style="width: 120px"
+          >
+            <el-option
+              label="离线"
+              :value="0"
+            />
+            <el-option
+              label="在线"
+              :value="1"
+            />
+            <el-option
+              label="禁用"
+              :value="2"
+            />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :icon="Search" @click="onSearch">查询</el-button>
-          <el-button :icon="Refresh" @click="onReset">重置</el-button>
-          <el-button type="success" :icon="Plus" @click="openCreate">新建设备</el-button>
+          <el-button
+            type="primary"
+            :icon="Search"
+            @click="onSearch"
+          >
+            查询
+          </el-button>
+          <el-button
+            :icon="Refresh"
+            @click="onReset"
+          >
+            重置
+          </el-button>
+          <el-button
+            type="success"
+            :icon="Plus"
+            @click="openCreate"
+          >
+            新建设备
+          </el-button>
         </el-form-item>
       </el-form>
     </div>
 
     <div class="page-card">
-      <el-table v-loading="loading" :data="list" stripe border>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="deviceKey" label="设备 Key" min-width="140">
+      <el-table
+        v-loading="loading"
+        :data="list"
+        stripe
+        border
+      >
+        <el-table-column
+          prop="id"
+          label="ID"
+          width="80"
+        />
+        <el-table-column
+          prop="deviceKey"
+          label="设备 Key"
+          min-width="140"
+        >
           <template #default="{ row }">
-            <el-tag size="small" type="info">{{ row.deviceKey }}</el-tag>
+            <el-tag
+              size="small"
+              type="info"
+            >
+              {{ row.deviceKey }}
+            </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="deviceName" label="设备名" min-width="180" />
-        <el-table-column label="所属产品" min-width="180">
+        <el-table-column
+          prop="deviceName"
+          label="设备名"
+          min-width="180"
+        />
+        <el-table-column
+          label="所属产品"
+          min-width="180"
+        >
           <template #default="{ row }">
-            <span class="link-like" @click="query.productId = row.productId; onSearch()">
+            <span
+              class="link-like"
+              @click="query.productId = row.productId; onSearch()"
+            >
               {{ row.productName }}
             </span>
             <span class="text-muted">({{ row.productKey }})</span>
           </template>
         </el-table-column>
-        <el-table-column label="分组" min-width="120">
+        <el-table-column
+          label="分组"
+          min-width="120"
+        >
           <template #default="{ row }">
             <span v-if="row.groupName">{{ row.groupName }}</span>
-            <span v-else class="text-muted">未分组</span>
+            <span
+              v-else
+              class="text-muted"
+            >未分组</span>
           </template>
         </el-table-column>
-        <el-table-column label="状态" width="80">
+        <el-table-column
+          label="状态"
+          width="80"
+        >
           <template #default="{ row }">
-            <el-tag :type="statusMap[row.status]?.type as any" size="small">
+            <el-tag
+              :type="statusMap[row.status]?.type as any"
+              size="small"
+            >
               {{ statusMap[row.status]?.label }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="健康度" width="110">
+        <el-table-column
+          label="健康度"
+          width="110"
+        >
           <template #default="{ row }">
             <template v-if="row.healthScore != null">
-              <el-progress :percentage="row.healthScore" :stroke-width="6" :show-text="false"
-                :color="row.healthScore >= 75 ? '#67c23a' : row.healthScore >= 60 ? '#e6a23c' : '#f56c6c'" />
+              <el-progress
+                :percentage="row.healthScore"
+                :stroke-width="6"
+                :show-text="false"
+                :color="row.healthScore >= 75 ? '#67c23a' : row.healthScore >= 60 ? '#e6a23c' : '#f56c6c'"
+              />
               <span class="text-secondary text-xs ml-4">{{ row.healthScore }}</span>
             </template>
-            <span v-else class="text-disabled">—</span>
+            <span
+              v-else
+              class="text-disabled"
+            >—</span>
           </template>
         </el-table-column>
-        <el-table-column prop="location" label="位置" min-width="140" show-overflow-tooltip />
-        <el-table-column label="密钥" width="160">
+        <el-table-column
+          prop="location"
+          label="位置"
+          min-width="140"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          label="密钥"
+          width="160"
+        >
           <template #default="{ row }">
             <code class="secret">{{ row.deviceSecret }}</code>
           </template>
         </el-table-column>
-        <el-table-column prop="lastOnlineTime" label="最近上线" width="170" />
-        <el-table-column label="操作" width="320" fixed="right">
+        <el-table-column
+          prop="lastOnlineTime"
+          label="最近上线"
+          width="170"
+        />
+        <el-table-column
+          label="操作"
+          width="320"
+          fixed="right"
+        >
           <template #default="{ row }">
-            <el-button link type="primary" :icon="Edit" @click="openEdit(row)">编辑</el-button>
-            <el-button link type="info" :icon="Connection" @click="openShadow(row)">影子</el-button>
-            <el-button link type="warning" :icon="Key" @click="onResetSecret(row)">密钥</el-button>
-            <el-button link :type="row.status === 2 ? 'success' : 'danger'"
-              @click="onToggleStatus(row)">
+            <el-button
+              link
+              type="primary"
+              :icon="Edit"
+              @click="openEdit(row)"
+            >
+              编辑
+            </el-button>
+            <el-button
+              link
+              type="info"
+              :icon="Connection"
+              @click="openShadow(row)"
+            >
+              影子
+            </el-button>
+            <el-button
+              link
+              type="warning"
+              :icon="Key"
+              @click="onResetSecret(row)"
+            >
+              密钥
+            </el-button>
+            <el-button
+              link
+              :type="row.status === 2 ? 'success' : 'danger'"
+              @click="onToggleStatus(row)"
+            >
               {{ row.status === 2 ? '启用' : '禁用' }}
             </el-button>
-            <el-button link type="danger" :icon="Delete" @click="onDelete(row)">删除</el-button>
+            <el-button
+              link
+              type="danger"
+              :icon="Delete"
+              @click="onDelete(row)"
+            >
+              删除
+            </el-button>
           </template>
         </el-table-column>
-        <template #empty><el-empty description="暂无设备" /></template>
+        <template #empty>
+          <el-empty description="暂无设备" />
+        </template>
       </el-table>
 
       <div class="pagination-wrap">
@@ -282,46 +442,107 @@ onMounted(() => { loadOptions(); load() })
           :total="total"
           layout="total, sizes, prev, pager, next, jumper"
           @current-change="onPageChange"
-          @size-change="onSizeChange" />
+          @size-change="onSizeChange"
+        />
       </div>
     </div>
 
     <!-- 新建/编辑对话框 -->
-    <el-dialog v-model="dialogVisible"
+    <el-dialog
+      v-model="dialogVisible"
       :title="dialogMode === 'create' ? '新建设备' : '编辑设备'"
-      width="600px" destroy-on-close>
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" @submit.prevent>
-        <el-form-item label="产品" prop="productId">
-          <el-select v-model="form.productId" :disabled="dialogMode === 'edit'" style="width: 100%">
-            <el-option v-for="p in productOptions" :key="p.id"
-              :label="`${p.productKey} - ${p.productName}`" :value="p.id" />
+      width="600px"
+      destroy-on-close
+    >
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="100px"
+        @submit.prevent
+      >
+        <el-form-item
+          label="产品"
+          prop="productId"
+        >
+          <el-select
+            v-model="form.productId"
+            :disabled="dialogMode === 'edit'"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="p in productOptions"
+              :key="p.id"
+              :label="`${p.productKey} - ${p.productName}`"
+              :value="p.id"
+            />
           </el-select>
         </el-form-item>
-        <el-form-item label="设备 Key" prop="deviceKey">
-          <el-input v-model="form.deviceKey" placeholder="如 TH-001 / SN-ABC123" :disabled="dialogMode === 'edit'" />
+        <el-form-item
+          label="设备 Key"
+          prop="deviceKey"
+        >
+          <el-input
+            v-model="form.deviceKey"
+            placeholder="如 TH-001 / SN-ABC123"
+            :disabled="dialogMode === 'edit'"
+          />
         </el-form-item>
-        <el-form-item label="设备名" prop="deviceName">
-          <el-input v-model="form.deviceName" placeholder="中文名,如 车间一-001" />
+        <el-form-item
+          label="设备名"
+          prop="deviceName"
+        >
+          <el-input
+            v-model="form.deviceName"
+            placeholder="中文名,如 车间一-001"
+          />
         </el-form-item>
         <el-form-item label="分组">
-          <el-select v-model="form.groupId" clearable style="width: 100%">
-            <el-option v-for="g in groupOptions" :key="g.id" :label="g.groupName" :value="g.id" />
+          <el-select
+            v-model="form.groupId"
+            clearable
+            style="width: 100%"
+          >
+            <el-option
+              v-for="g in groupOptions"
+              :key="g.id"
+              :label="g.groupName"
+              :value="g.id"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="设备密钥">
-          <el-input v-model="form.deviceSecret" placeholder="留空自动生成 / 自定义" />
-          <div class="hint">仅创建时可设置;之后请用"密钥"按钮重置</div>
+          <el-input
+            v-model="form.deviceSecret"
+            placeholder="留空自动生成 / 自定义"
+          />
+          <div class="hint">
+            仅创建时可设置;之后请用"密钥"按钮重置
+          </div>
         </el-form-item>
         <el-form-item label="位置">
-          <el-input v-model="form.location" placeholder="如 一号车间-A 区" />
+          <el-input
+            v-model="form.location"
+            placeholder="如 一号车间-A 区"
+          />
         </el-form-item>
         <el-form-item label="描述">
-          <el-input v-model="form.description" type="textarea" :rows="2" />
+          <el-input
+            v-model="form.description"
+            type="textarea"
+            :rows="2"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="onSubmit">
+        <el-button @click="dialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="submitting"
+          @click="onSubmit"
+        >
           {{ dialogMode === 'create' ? '创建' : '保存' }}
         </el-button>
       </template>

@@ -80,10 +80,21 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="page-container org-page" v-loading="loading">
+  <div
+    v-loading="loading"
+    class="page-container org-page"
+  >
     <div class="page-header">
-      <h2 class="page-title">组织架构</h2>
-      <el-button type="primary" :icon="Plus" @click="openCreate()">新建顶级组织</el-button>
+      <h2 class="page-title">
+        组织架构
+      </h2>
+      <el-button
+        type="primary"
+        :icon="Plus"
+        @click="openCreate()"
+      >
+        新建顶级组织
+      </el-button>
     </div>
 
     <div class="page-card">
@@ -97,47 +108,112 @@ onMounted(load)
         node-key="id"
         :props="{ label: 'name', children: 'children' }"
         default-expand-all
-        class="org-tree">
+        class="org-tree"
+      >
         <template #default="{ node, data }">
           <div class="tree-node">
             <span class="tree-name">{{ node.label }}</span>
-            <span v-if="data.leader" class="tree-leader text-secondary text-xs">负责人: {{ data.leader }}</span>
+            <span
+              v-if="data.leader"
+              class="tree-leader text-secondary text-xs"
+            >负责人: {{ data.leader }}</span>
             <span class="tree-actions">
-              <el-button link type="primary" size="small" :icon="Plus" @click.stop="openCreate(data)">下级</el-button>
-              <el-button link type="primary" size="small" :icon="Edit" @click.stop="openEdit(data)">编辑</el-button>
-              <el-button link type="danger" size="small" :icon="Delete" @click.stop="onDelete(data)">删除</el-button>
+              <el-button
+                link
+                type="primary"
+                size="small"
+                :icon="Plus"
+                @click.stop="openCreate(data)"
+              >下级</el-button>
+              <el-button
+                link
+                type="primary"
+                size="small"
+                :icon="Edit"
+                @click.stop="openEdit(data)"
+              >编辑</el-button>
+              <el-button
+                link
+                type="danger"
+                size="small"
+                :icon="Delete"
+                @click.stop="onDelete(data)"
+              >删除</el-button>
             </span>
           </div>
         </template>
       </el-tree>
-      <el-empty v-else description="暂无组织数据,请新建" />
+      <el-empty
+        v-else
+        description="暂无组织数据,请新建"
+      />
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="dialogMode === 'edit' ? '编辑组织' : '新建组织'"
-      width="540px" destroy-on-close>
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
+    <el-dialog
+      v-model="dialogVisible"
+      :title="dialogMode === 'edit' ? '编辑组织' : '新建组织'"
+      width="540px"
+      destroy-on-close
+    >
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="100px"
+      >
         <el-form-item label="父组织">
-          <el-input :model-value="form.parentId === 0 ? '(顶级)' : form.parentId" disabled />
+          <el-input
+            :model-value="form.parentId === 0 ? '(顶级)' : form.parentId"
+            disabled
+          />
         </el-form-item>
-        <el-form-item label="名称" prop="name">
-          <el-input v-model="form.name" placeholder="组织名称" />
+        <el-form-item
+          label="名称"
+          prop="name"
+        >
+          <el-input
+            v-model="form.name"
+            placeholder="组织名称"
+          />
         </el-form-item>
         <el-form-item label="排序">
-          <el-input-number v-model="form.sort" :min="0" :max="9999" controls-position="right" />
+          <el-input-number
+            v-model="form.sort"
+            :min="0"
+            :max="9999"
+            controls-position="right"
+          />
         </el-form-item>
         <el-form-item label="负责人">
-          <el-input v-model="form.leader" placeholder="负责人姓名" />
+          <el-input
+            v-model="form.leader"
+            placeholder="负责人姓名"
+          />
         </el-form-item>
         <el-form-item label="联系电话">
-          <el-input v-model="form.phone" placeholder="如 138-0000-0000" />
+          <el-input
+            v-model="form.phone"
+            placeholder="如 138-0000-0000"
+          />
         </el-form-item>
         <el-form-item label="描述">
-          <el-input v-model="form.description" type="textarea" :rows="2" />
+          <el-input
+            v-model="form.description"
+            type="textarea"
+            :rows="2"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="onSubmit">保存</el-button>
+        <el-button @click="dialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="onSubmit"
+        >
+          保存
+        </el-button>
       </template>
     </el-dialog>
   </div>

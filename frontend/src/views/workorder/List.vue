@@ -92,42 +92,84 @@ onMounted(load)
 <template>
   <div class="page-container workorder-page">
     <div class="page-header">
-      <h2 class="page-title">工单管理</h2>
-      <el-button type="primary" :icon="Plus" @click="ElMessage.info('新建工单:待实现(通常从告警自动生成)')">
+      <h2 class="page-title">
+        工单管理
+      </h2>
+      <el-button
+        type="primary"
+        :icon="Plus"
+        @click="ElMessage.info('新建工单:待实现(通常从告警自动生成)')"
+      >
         新建工单
       </el-button>
     </div>
 
-    <el-row :gutter="16" class="mb-16">
-      <el-col :xs="12" :sm="6">
+    <el-row
+      :gutter="16"
+      class="mb-16"
+    >
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="stat-card">
-          <el-icon :size="22"><Tickets /></el-icon>
-          <div class="stat-num">{{ stats.pending }}</div>
-          <div class="stat-label">待派单</div>
+          <el-icon :size="22">
+            <Tickets />
+          </el-icon>
+          <div class="stat-num">
+            {{ stats.pending }}
+          </div>
+          <div class="stat-label">
+            待派单
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="stat-card stat-blue">
-          <div class="stat-num">{{ stats.processing }}</div>
-          <div class="stat-label">处理中</div>
+          <div class="stat-num">
+            {{ stats.processing }}
+          </div>
+          <div class="stat-label">
+            处理中
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="stat-card stat-green">
-          <div class="stat-num">{{ stats.completed }}</div>
-          <div class="stat-label">已完成</div>
+          <div class="stat-num">
+            {{ stats.completed }}
+          </div>
+          <div class="stat-label">
+            已完成
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="stat-card stat-red">
-          <div class="stat-num">{{ stats.overdue }}</div>
-          <div class="stat-label">已超时 SLA</div>
+          <div class="stat-num">
+            {{ stats.overdue }}
+          </div>
+          <div class="stat-label">
+            已超时 SLA
+          </div>
         </div>
       </el-col>
     </el-row>
 
     <div class="page-card search-bar">
-      <el-form :inline="true" @submit.prevent>
+      <el-form
+        :inline="true"
+        @submit.prevent
+      >
         <el-form-item label="关键字">
           <el-input
             v-model="query.keyword"
@@ -139,64 +181,163 @@ onMounted(load)
           />
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="query.status" placeholder="全部" clearable style="width: 130px">
-            <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />
+          <el-select
+            v-model="query.status"
+            placeholder="全部"
+            clearable
+            style="width: 130px"
+          >
+            <el-option
+              v-for="(v, k) in statusMap"
+              :key="k"
+              :label="v.label"
+              :value="k"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="优先级">
-          <el-select v-model="query.priority" placeholder="全部" clearable style="width: 120px">
-            <el-option v-for="(v, k) in priorityMap" :key="k" :label="v.label" :value="k" />
+          <el-select
+            v-model="query.priority"
+            placeholder="全部"
+            clearable
+            style="width: 120px"
+          >
+            <el-option
+              v-for="(v, k) in priorityMap"
+              :key="k"
+              :label="v.label"
+              :value="k"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="处理人">
-          <el-input v-model="query.assignee" placeholder="用户名" clearable style="width: 140px" @keyup.enter="onSearch" />
+          <el-input
+            v-model="query.assignee"
+            placeholder="用户名"
+            clearable
+            style="width: 140px"
+            @keyup.enter="onSearch"
+          />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="onSearch">查询</el-button>
-          <el-button :icon="Refresh" @click="onReset">重置</el-button>
+          <el-button
+            type="primary"
+            @click="onSearch"
+          >
+            查询
+          </el-button>
+          <el-button
+            :icon="Refresh"
+            @click="onReset"
+          >
+            重置
+          </el-button>
         </el-form-item>
       </el-form>
     </div>
 
     <div class="page-card">
-      <el-table v-loading="loading" :data="list" stripe border empty-text="暂无工单">
-        <el-table-column prop="workOrderNo" label="工单号" width="180">
+      <el-table
+        v-loading="loading"
+        :data="list"
+        stripe
+        border
+        empty-text="暂无工单"
+      >
+        <el-table-column
+          prop="workOrderNo"
+          label="工单号"
+          width="180"
+        >
           <template #default="{ row }">
-            <el-link type="primary" :underline="false" @click="goDetail(row)">{{ row.workOrderNo }}</el-link>
+            <el-link
+              type="primary"
+              :underline="false"
+              @click="goDetail(row)"
+            >
+              {{ row.workOrderNo }}
+            </el-link>
           </template>
         </el-table-column>
-        <el-table-column prop="title" label="标题" min-width="220" show-overflow-tooltip />
-        <el-table-column label="设备" min-width="140">
+        <el-table-column
+          prop="title"
+          label="标题"
+          min-width="220"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          label="设备"
+          min-width="140"
+        >
           <template #default="{ row }">
-            <el-tag size="small" type="info">{{ row.deviceKey }}</el-tag>
+            <el-tag
+              size="small"
+              type="info"
+            >
+              {{ row.deviceKey }}
+            </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="优先级" width="90">
+        <el-table-column
+          label="优先级"
+          width="90"
+        >
           <template #default="{ row }">
-            <el-tag :type="priorityMap[row.priority as WorkOrderPriority]?.type as any" size="small">
+            <el-tag
+              :type="priorityMap[row.priority as WorkOrderPriority]?.type as any"
+              size="small"
+            >
               {{ priorityMap[row.priority as WorkOrderPriority]?.label || row.priority }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="状态" width="100">
+        <el-table-column
+          label="状态"
+          width="100"
+        >
           <template #default="{ row }">
-            <el-tag :type="statusMap[row.status as WorkOrderStatus]?.type as any" size="small">
+            <el-tag
+              :type="statusMap[row.status as WorkOrderStatus]?.type as any"
+              size="small"
+            >
               {{ statusMap[row.status as WorkOrderStatus]?.label }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="assignee" label="处理人" width="100" />
-        <el-table-column label="SLA 截止" width="170">
+        <el-table-column
+          prop="assignee"
+          label="处理人"
+          width="100"
+        />
+        <el-table-column
+          label="SLA 截止"
+          width="170"
+        >
           <template #default="{ row }">
             <span :class="{ 'text-danger': isOverdue(row.slaDeadline) }">
               {{ row.slaDeadline || '—' }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="createdAt" label="创建时间" width="170" />
-        <el-table-column label="操作" width="100" fixed="right">
+        <el-table-column
+          prop="createdAt"
+          label="创建时间"
+          width="170"
+        />
+        <el-table-column
+          label="操作"
+          width="100"
+          fixed="right"
+        >
           <template #default="{ row }">
-            <el-button link type="primary" :icon="View" @click="goDetail(row)">详情</el-button>
+            <el-button
+              link
+              type="primary"
+              :icon="View"
+              @click="goDetail(row)"
+            >
+              详情
+            </el-button>
           </template>
         </el-table-column>
       </el-table>

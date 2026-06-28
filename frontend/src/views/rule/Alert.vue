@@ -82,97 +82,254 @@ onMounted(load)
 
 <template>
   <div class="page-container">
-    <h2 class="page-title">告警记录</h2>
+    <h2 class="page-title">
+      告警记录
+    </h2>
 
     <!-- 统计卡片 -->
-    <el-row :gutter="12" class="mb-12">
-      <el-col :xs="12" :sm="6">
+    <el-row
+      :gutter="12"
+      class="mb-12"
+    >
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="stat-card stat-red">
-          <div class="stat-num">{{ stats['status_0'] ?? 0 }}</div>
-          <div class="stat-label">待处理</div>
+          <div class="stat-num">
+            {{ stats['status_0'] ?? 0 }}
+          </div>
+          <div class="stat-label">
+            待处理
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="stat-card stat-green">
-          <div class="stat-num">{{ stats['status_1'] ?? 0 }}</div>
-          <div class="stat-label">已处理</div>
+          <div class="stat-num">
+            {{ stats['status_1'] ?? 0 }}
+          </div>
+          <div class="stat-label">
+            已处理
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="stat-card stat-cyan">
-          <div class="stat-num">{{ (stats['level_WARN'] ?? 0) + (stats['level_ERROR'] ?? 0) + (stats['level_CRITICAL'] ?? 0) }}</div>
-          <div class="stat-label">今日告警</div>
+          <div class="stat-num">
+            {{ (stats['level_WARN'] ?? 0) + (stats['level_ERROR'] ?? 0) + (stats['level_CRITICAL'] ?? 0) }}
+          </div>
+          <div class="stat-label">
+            今日告警
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="stat-card stat-orange">
-          <div class="stat-num">{{ stats['level_CRITICAL'] ?? 0 }}</div>
-          <div class="stat-label">紧急</div>
+          <div class="stat-num">
+            {{ stats['level_CRITICAL'] ?? 0 }}
+          </div>
+          <div class="stat-label">
+            紧急
+          </div>
         </div>
       </el-col>
     </el-row>
 
     <div class="page-card search-bar">
-      <el-form :inline="true" @submit.prevent>
+      <el-form
+        :inline="true"
+        @submit.prevent
+      >
         <el-form-item label="关键字">
-          <el-input v-model="query.keyword" placeholder="标题 / 内容" clearable style="width: 220px" @keyup.enter="onSearch" />
+          <el-input
+            v-model="query.keyword"
+            placeholder="标题 / 内容"
+            clearable
+            style="width: 220px"
+            @keyup.enter="onSearch"
+          />
         </el-form-item>
         <el-form-item label="级别">
-          <el-select v-model="query.level" placeholder="全部" clearable style="width: 120px">
-            <el-option label="信息" value="INFO" />
-            <el-option label="警告" value="WARN" />
-            <el-option label="故障" value="ERROR" />
-            <el-option label="紧急" value="CRITICAL" />
+          <el-select
+            v-model="query.level"
+            placeholder="全部"
+            clearable
+            style="width: 120px"
+          >
+            <el-option
+              label="信息"
+              value="INFO"
+            />
+            <el-option
+              label="警告"
+              value="WARN"
+            />
+            <el-option
+              label="故障"
+              value="ERROR"
+            />
+            <el-option
+              label="紧急"
+              value="CRITICAL"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="query.status" placeholder="全部" clearable style="width: 120px">
-            <el-option label="未处理" :value="0" />
-            <el-option label="已处理" :value="1" />
-            <el-option label="已忽略" :value="2" />
+          <el-select
+            v-model="query.status"
+            placeholder="全部"
+            clearable
+            style="width: 120px"
+          >
+            <el-option
+              label="未处理"
+              :value="0"
+            />
+            <el-option
+              label="已处理"
+              :value="1"
+            />
+            <el-option
+              label="已忽略"
+              :value="2"
+            />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :icon="Search" @click="onSearch">查询</el-button>
-          <el-button :icon="Refresh" @click="onReset">重置</el-button>
+          <el-button
+            type="primary"
+            :icon="Search"
+            @click="onSearch"
+          >
+            查询
+          </el-button>
+          <el-button
+            :icon="Refresh"
+            @click="onReset"
+          >
+            重置
+          </el-button>
         </el-form-item>
       </el-form>
     </div>
 
     <div class="page-card">
-      <el-table v-loading="loading" :data="list" stripe border>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column label="级别" width="100">
+      <el-table
+        v-loading="loading"
+        :data="list"
+        stripe
+        border
+      >
+        <el-table-column
+          prop="id"
+          label="ID"
+          width="80"
+        />
+        <el-table-column
+          label="级别"
+          width="100"
+        >
           <template #default="{ row }">
             <el-tag :style="{ background: levelMap[row.level]?.color + '20', color: levelMap[row.level]?.color, border: 'none' }">
               {{ levelMap[row.level]?.label || row.level }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="title" label="标题" min-width="220" show-overflow-tooltip />
-        <el-table-column prop="deviceKey" label="设备" width="120">
+        <el-table-column
+          prop="title"
+          label="标题"
+          min-width="220"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          prop="deviceKey"
+          label="设备"
+          width="120"
+        >
           <template #default="{ row }">
-            <el-tag size="small" type="info">{{ row.deviceKey }}</el-tag>
+            <el-tag
+              size="small"
+              type="info"
+            >
+              {{ row.deviceKey }}
+            </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="ruleName" label="触发规则" min-width="160" />
-        <el-table-column label="状态" width="100">
+        <el-table-column
+          prop="ruleName"
+          label="触发规则"
+          min-width="160"
+        />
+        <el-table-column
+          label="状态"
+          width="100"
+        >
           <template #default="{ row }">
-            <el-tag :type="statusMap[row.status]?.type as any" size="small">
+            <el-tag
+              :type="statusMap[row.status]?.type as any"
+              size="small"
+            >
               {{ statusMap[row.status]?.label }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="handler" label="处理人" width="100" />
-        <el-table-column prop="createdAt" label="触发时间" width="170" />
-        <el-table-column label="操作" width="240" fixed="right">
+        <el-table-column
+          prop="handler"
+          label="处理人"
+          width="100"
+        />
+        <el-table-column
+          prop="createdAt"
+          label="触发时间"
+          width="170"
+        />
+        <el-table-column
+          label="操作"
+          width="240"
+          fixed="right"
+        >
           <template #default="{ row }">
-            <el-button link type="primary" :icon="View" @click="showDetail(row)">详情</el-button>
-            <el-button v-if="row.status === 0" link type="success" :icon="Check" @click="onHandle(row, 1)">处理</el-button>
-            <el-button v-if="row.status === 0" link type="info" :icon="Close" @click="onHandle(row, 2)">忽略</el-button>
+            <el-button
+              link
+              type="primary"
+              :icon="View"
+              @click="showDetail(row)"
+            >
+              详情
+            </el-button>
+            <el-button
+              v-if="row.status === 0"
+              link
+              type="success"
+              :icon="Check"
+              @click="onHandle(row, 1)"
+            >
+              处理
+            </el-button>
+            <el-button
+              v-if="row.status === 0"
+              link
+              type="info"
+              :icon="Close"
+              @click="onHandle(row, 2)"
+            >
+              忽略
+            </el-button>
           </template>
         </el-table-column>
-        <template #empty><el-empty description="暂无告警" /></template>
+        <template #empty>
+          <el-empty description="暂无告警" />
+        </template>
       </el-table>
 
       <div class="pagination-wrap">
@@ -183,29 +340,71 @@ onMounted(load)
           :total="total"
           layout="total, sizes, prev, pager, next, jumper"
           @current-change="onPageChange"
-          @size-change="onSizeChange" />
+          @size-change="onSizeChange"
+        />
       </div>
     </div>
 
     <!-- 详情对话框 -->
-    <el-dialog v-model="detailVisible" title="告警详情" width="640px">
-      <el-descriptions v-if="detail" :column="2" border>
+    <el-dialog
+      v-model="detailVisible"
+      title="告警详情"
+      width="640px"
+    >
+      <el-descriptions
+        v-if="detail"
+        :column="2"
+        border
+      >
         <el-descriptions-item label="级别">
           <el-tag :style="{ background: levelMap[detail.level]?.color + '20', color: levelMap[detail.level]?.color, border: 'none' }">
             {{ levelMap[detail.level]?.label || detail.level }}
           </el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="状态">
-          <el-tag :type="statusMap[detail.status]?.type as any">{{ statusMap[detail.status]?.label }}</el-tag>
+          <el-tag :type="statusMap[detail.status]?.type as any">
+            {{ statusMap[detail.status]?.label }}
+          </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="设备" :span="2">{{ detail.deviceKey }} ({{ detail.productKey }})</el-descriptions-item>
-        <el-descriptions-item label="规则" :span="2">{{ detail.ruleName }}</el-descriptions-item>
-        <el-descriptions-item label="标题" :span="2">{{ detail.title }}</el-descriptions-item>
-        <el-descriptions-item label="内容" :span="2">{{ detail.content }}</el-descriptions-item>
-        <el-descriptions-item label="触发时间">{{ detail.createdAt }}</el-descriptions-item>
-        <el-descriptions-item label="处理时间">{{ detail.handleTime || '—' }}</el-descriptions-item>
-        <el-descriptions-item label="处理人">{{ detail.handler || '—' }}</el-descriptions-item>
-        <el-descriptions-item label="处理说明" :span="2">{{ detail.handleRemark || '—' }}</el-descriptions-item>
+        <el-descriptions-item
+          label="设备"
+          :span="2"
+        >
+          {{ detail.deviceKey }} ({{ detail.productKey }})
+        </el-descriptions-item>
+        <el-descriptions-item
+          label="规则"
+          :span="2"
+        >
+          {{ detail.ruleName }}
+        </el-descriptions-item>
+        <el-descriptions-item
+          label="标题"
+          :span="2"
+        >
+          {{ detail.title }}
+        </el-descriptions-item>
+        <el-descriptions-item
+          label="内容"
+          :span="2"
+        >
+          {{ detail.content }}
+        </el-descriptions-item>
+        <el-descriptions-item label="触发时间">
+          {{ detail.createdAt }}
+        </el-descriptions-item>
+        <el-descriptions-item label="处理时间">
+          {{ detail.handleTime || '—' }}
+        </el-descriptions-item>
+        <el-descriptions-item label="处理人">
+          {{ detail.handler || '—' }}
+        </el-descriptions-item>
+        <el-descriptions-item
+          label="处理说明"
+          :span="2"
+        >
+          {{ detail.handleRemark || '—' }}
+        </el-descriptions-item>
       </el-descriptions>
     </el-dialog>
   </div>

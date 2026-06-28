@@ -149,96 +149,218 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="page-container" v-loading="loading">
-    <div v-if="device" class="device-header">
+  <div
+    v-loading="loading"
+    class="page-container"
+  >
+    <div
+      v-if="device"
+      class="device-header"
+    >
       <div class="info">
         <h2 class="page-title">
           <el-icon><Connection /></el-icon>
           设备影子 — {{ device.deviceName }}
-          <el-tag size="small" style="margin-left: 8px">{{ device.deviceKey }}</el-tag>
+          <el-tag
+            size="small"
+            style="margin-left: 8px"
+          >
+            {{ device.deviceKey }}
+          </el-tag>
         </h2>
         <div class="meta">
-          <el-tag :type="statusMap[device.status]?.type as any" size="small">
+          <el-tag
+            :type="statusMap[device.status]?.type as any"
+            size="small"
+          >
             {{ statusMap[device.status]?.label }}
           </el-tag>
           <span class="text-muted">产品: {{ device.productName }} ({{ device.productKey }})</span>
           <span class="text-muted">协议: {{ device.protocol }}</span>
-          <span v-if="device.location" class="text-muted">位置: {{ device.location }}</span>
+          <span
+            v-if="device.location"
+            class="text-muted"
+          >位置: {{ device.location }}</span>
         </div>
       </div>
       <div class="actions">
-        <el-button :icon="Refresh" @click="load">刷新</el-button>
-        <el-button type="primary" @click="onSimulate">模拟设备上报</el-button>
+        <el-button
+          :icon="Refresh"
+          @click="load"
+        >
+          刷新
+        </el-button>
+        <el-button
+          type="primary"
+          @click="onSimulate"
+        >
+          模拟设备上报
+        </el-button>
       </div>
     </div>
 
     <div class="page-card">
-      <el-alert type="info" :closable="false" style="margin-bottom: 12px">
+      <el-alert
+        type="info"
+        :closable="false"
+        style="margin-bottom: 12px"
+      >
         <b>设备影子</b>展示设备最新一次上报的属性值。协议层接通前,可用"模拟上报"按钮或单个"编辑"按钮来手动设置/清空。
       </el-alert>
 
-      <el-table :data="shadows" border size="default" empty-text="该产品暂无物模型属性">
-        <el-table-column prop="identifier" label="标识符" min-width="140">
+      <el-table
+        :data="shadows"
+        border
+        size="default"
+        empty-text="该产品暂无物模型属性"
+      >
+        <el-table-column
+          prop="identifier"
+          label="标识符"
+          min-width="140"
+        >
           <template #default="{ row }">
             <code class="identifier">{{ row.identifier }}</code>
           </template>
         </el-table-column>
-        <el-table-column prop="name" label="名称" min-width="120" />
-        <el-table-column label="类型 / 单位" width="120">
+        <el-table-column
+          prop="name"
+          label="名称"
+          min-width="120"
+        />
+        <el-table-column
+          label="类型 / 单位"
+          width="120"
+        >
           <template #default="{ row }">
-            <el-tag size="small">{{ row.type }}</el-tag>
-            <span v-if="row.unit" class="text-muted"> {{ row.unit }}</span>
+            <el-tag size="small">
+              {{ row.type }}
+            </el-tag>
+            <span
+              v-if="row.unit"
+              class="text-muted"
+            > {{ row.unit }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="权限" width="80">
+        <el-table-column
+          label="权限"
+          width="80"
+        >
           <template #default="{ row }">
-            <el-tag size="small" :type="row.accessMode === 'ro' ? 'info' : 'success'">{{ row.accessMode }}</el-tag>
+            <el-tag
+              size="small"
+              :type="row.accessMode === 'ro' ? 'info' : 'success'"
+            >
+              {{ row.accessMode }}
+            </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="当前值" min-width="200">
+        <el-table-column
+          label="当前值"
+          min-width="200"
+        >
           <template #default="{ row }">
             <span :style="{ color: valueColor(row.valueJson), fontWeight: 500, fontFamily: 'monospace' }">
               {{ formatValue(row.valueJson) }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="updatedAt" label="最近更新" width="170" />
-        <el-table-column label="操作" width="160" fixed="right">
+        <el-table-column
+          prop="updatedAt"
+          label="最近更新"
+          width="170"
+        />
+        <el-table-column
+          label="操作"
+          width="160"
+          fixed="right"
+        >
           <template #default="{ row }">
-            <el-button link type="primary" :icon="Edit" @click="openEditValue(row)">编辑</el-button>
-            <el-button link type="danger" :icon="Delete" :disabled="!row.valueJson || row.valueJson === 'null'"
-              @click="onClear(row)">清除</el-button>
+            <el-button
+              link
+              type="primary"
+              :icon="Edit"
+              @click="openEditValue(row)"
+            >
+              编辑
+            </el-button>
+            <el-button
+              link
+              type="danger"
+              :icon="Delete"
+              :disabled="!row.valueJson || row.valueJson === 'null'"
+              @click="onClear(row)"
+            >
+              清除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
     </div>
 
     <!-- 编辑属性值 -->
-    <el-dialog v-model="editDialog" title="编辑属性值" width="420px" destroy-on-close>
-      <el-form label-width="80px" @submit.prevent>
+    <el-dialog
+      v-model="editDialog"
+      title="编辑属性值"
+      width="420px"
+      destroy-on-close
+    >
+      <el-form
+        label-width="80px"
+        @submit.prevent
+      >
         <el-form-item label="属性">
-          <el-input :model-value="`${editForm.name} (${editForm.identifier})`" disabled />
+          <el-input
+            :model-value="`${editForm.name} (${editForm.identifier})`"
+            disabled
+          />
         </el-form-item>
         <el-form-item label="类型">
-          <el-input :model-value="`${editForm.type}${editForm.unit ? ' / ' + editForm.unit : ''}`" disabled />
+          <el-input
+            :model-value="`${editForm.type}${editForm.unit ? ' / ' + editForm.unit : ''}`"
+            disabled
+          />
         </el-form-item>
         <el-form-item label="值">
-          <el-input v-if="editForm.type === 'bool'" v-model="editForm.value" placeholder="true / false">
+          <el-input
+            v-if="editForm.type === 'bool'"
+            v-model="editForm.value"
+            placeholder="true / false"
+          >
             <template #append>
-              <el-select v-model="editForm.value" style="width: 100px">
-                <el-option label="true" value="true" />
-                <el-option label="false" value="false" />
+              <el-select
+                v-model="editForm.value"
+                style="width: 100px"
+              >
+                <el-option
+                  label="true"
+                  value="true"
+                />
+                <el-option
+                  label="false"
+                  value="false"
+                />
               </el-select>
             </template>
           </el-input>
-          <el-input v-else v-model="editForm.value"
+          <el-input
+            v-else
+            v-model="editForm.value"
             :type="editForm.type === 'string' ? 'textarea' : 'text'"
-            :placeholder="editForm.type === 'int' ? '整数' : editForm.type === 'float' ? '小数' : '字符串'" />
+            :placeholder="editForm.type === 'int' ? '整数' : editForm.type === 'float' ? '小数' : '字符串'"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="editDialog = false">取消</el-button>
-        <el-button type="primary" @click="onSaveValue">保存</el-button>
+        <el-button @click="editDialog = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="onSaveValue"
+        >
+          保存
+        </el-button>
       </template>
     </el-dialog>
   </div>

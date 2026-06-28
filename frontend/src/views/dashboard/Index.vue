@@ -276,44 +276,103 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="page-container dashboard" v-loading="loading">
+  <div
+    v-loading="loading"
+    class="page-container dashboard"
+  >
     <!-- 顶部 KPI 条 -->
     <div class="kpi-bar">
-      <div class="kpi-card kpi-green clickable" @click="router.push('/device/list')">
-        <div class="kpi-icon-bg"><el-icon :size="20"><Connection /></el-icon></div>
+      <div
+        class="kpi-card kpi-green clickable"
+        @click="router.push('/device/list')"
+      >
+        <div class="kpi-icon-bg">
+          <el-icon :size="20">
+            <Connection />
+          </el-icon>
+        </div>
         <div class="kpi-body">
-          <div class="kpi-num">{{ summary?.deviceByStatus.online ?? 0 }}</div>
-          <div class="kpi-label">在线终端</div>
-          <div class="kpi-rate">在线率 {{ summary?.deviceTotal ? Math.round(summary.deviceByStatus.online / summary.deviceTotal * 100) : 0 }}%</div>
+          <div class="kpi-num">
+            {{ summary?.deviceByStatus.online ?? 0 }}
+          </div>
+          <div class="kpi-label">
+            在线终端
+          </div>
+          <div class="kpi-rate">
+            在线率 {{ summary?.deviceTotal ? Math.round(summary.deviceByStatus.online / summary.deviceTotal * 100) : 0 }}%
+          </div>
         </div>
       </div>
 
-      <div class="kpi-card kpi-red clickable" @click="router.push('/alert/center')">
-        <div class="kpi-icon-bg"><el-icon :size="20"><Warning /></el-icon></div>
+      <div
+        class="kpi-card kpi-red clickable"
+        @click="router.push('/alert/center')"
+      >
+        <div class="kpi-icon-bg">
+          <el-icon :size="20">
+            <Warning />
+          </el-icon>
+        </div>
         <div class="kpi-body">
-          <div class="kpi-num">{{ summary?.todayAlerts ?? 0 }}</div>
-          <div class="kpi-label">今日告警</div>
-          <div class="kpi-rate">待处理 {{ summary?.pendingAlerts ?? 0 }}</div>
+          <div class="kpi-num">
+            {{ summary?.todayAlerts ?? 0 }}
+          </div>
+          <div class="kpi-label">
+            今日告警
+          </div>
+          <div class="kpi-rate">
+            待处理 {{ summary?.pendingAlerts ?? 0 }}
+          </div>
         </div>
       </div>
 
-      <div class="kpi-card kpi-blue clickable" @click="router.push('/workorder/list')">
-        <div class="kpi-icon-bg"><el-icon :size="20"><Tickets /></el-icon></div>
+      <div
+        class="kpi-card kpi-blue clickable"
+        @click="router.push('/workorder/list')"
+      >
+        <div class="kpi-icon-bg">
+          <el-icon :size="20">
+            <Tickets />
+          </el-icon>
+        </div>
         <div class="kpi-body">
-          <div class="kpi-num">{{ workOrderStats.pending + workOrderStats.processing }}</div>
-          <div class="kpi-label">未处理工单</div>
-          <div class="kpi-rate">超时 {{ workOrderStats.overdue }}</div>
+          <div class="kpi-num">
+            {{ workOrderStats.pending + workOrderStats.processing }}
+          </div>
+          <div class="kpi-label">
+            未处理工单
+          </div>
+          <div class="kpi-rate">
+            超时 {{ workOrderStats.overdue }}
+          </div>
         </div>
       </div>
 
-      <div class="kpi-card kpi-health" :style="{ background: `linear-gradient(135deg, ${healthColor}1a 0%, var(--iot-bg-card) 100%)` }">
-        <div class="kpi-icon-bg" :style="{ background: `${healthColor}26`, color: healthColor }">
-          <el-icon :size="20"><DataLine /></el-icon>
+      <div
+        class="kpi-card kpi-health"
+        :style="{ background: `linear-gradient(135deg, ${healthColor}1a 0%, var(--iot-bg-card) 100%)` }"
+      >
+        <div
+          class="kpi-icon-bg"
+          :style="{ background: `${healthColor}26`, color: healthColor }"
+        >
+          <el-icon :size="20">
+            <DataLine />
+          </el-icon>
         </div>
         <div class="kpi-body">
-          <div class="kpi-num" :style="{ color: healthColor }">{{ healthScore }}</div>
-          <div class="kpi-label">健康度 · {{ healthLabel }}</div>
-          <div class="kpi-rate">{{ currentTime }}</div>
+          <div
+            class="kpi-num"
+            :style="{ color: healthColor }"
+          >
+            {{ healthScore }}
+          </div>
+          <div class="kpi-label">
+            健康度 · {{ healthLabel }}
+          </div>
+          <div class="kpi-rate">
+            {{ currentTime }}
+          </div>
         </div>
       </div>
     </div>
@@ -323,33 +382,46 @@ onBeforeUnmount(() => {
       <!-- 左:饼图 + 状态分布 -->
       <div class="page-card left-panel">
         <div class="panel-header">
-          <h3 class="card-title"><el-icon><DataBoard /></el-icon> 设备状态</h3>
+          <h3 class="card-title">
+            <el-icon><DataBoard /></el-icon> 设备状态
+          </h3>
         </div>
-        <div ref="pieRef" class="pie-chart"></div>
+        <div
+          ref="pieRef"
+          class="pie-chart"
+        />
         <el-divider class="thin-divider" />
         <div class="quick-stats">
           <div class="quick-item">
-            <span class="dot online"></span>
+            <span class="dot online" />
             <span class="lbl">正常</span>
             <span class="num">{{ summary?.deviceByStatus.online ?? 0 }}</span>
           </div>
           <div class="quick-item">
-            <span class="dot offline"></span>
+            <span class="dot offline" />
             <span class="lbl">离线</span>
             <span class="num">{{ summary?.deviceByStatus.offline ?? 0 }}</span>
           </div>
           <div class="quick-item">
-            <span class="dot warning"></span>
+            <span class="dot warning" />
             <span class="lbl">待处理</span>
             <span class="num">{{ summary?.pendingAlerts ?? 0 }}</span>
           </div>
           <div class="quick-item">
-            <span class="dot fault"></span>
+            <span class="dot fault" />
             <span class="lbl">故障</span>
             <span class="num">{{ stats.faultCount }}</span>
           </div>
         </div>
-        <el-button class="refresh-btn" :icon="Refresh" @click="loadAll" size="small" plain>刷新数据</el-button>
+        <el-button
+          class="refresh-btn"
+          :icon="Refresh"
+          size="small"
+          plain
+          @click="loadAll"
+        >
+          刷新数据
+        </el-button>
       </div>
 
       <!-- 中:拓扑图(主视图) -->
@@ -358,12 +430,25 @@ onBeforeUnmount(() => {
           <div class="canvas-title-group">
             <span class="canvas-title-icon"><el-icon><Lightning /></el-icon></span>
             <span class="canvas-title">电网拓扑 · 实时视图</span>
-            <el-tag size="small" effect="plain" class="region-tag">{{ graphData?.region === 'all' ? '北京·朝阳供电区' : graphData?.region }}</el-tag>
+            <el-tag
+              size="small"
+              effect="plain"
+              class="region-tag"
+            >
+              {{ graphData?.region === 'all' ? '北京·朝阳供电区' : graphData?.region }}
+            </el-tag>
           </div>
           <div class="canvas-header-right">
             <span class="meta-text">{{ stats.nodeCount }} 节点 / {{ stats.edgeCount }} 连接</span>
-            <el-button link type="primary" size="small" @click="router.push('/monitor/topology')">
-              维护模式 <el-icon class="el-icon--right"><ArrowRight /></el-icon>
+            <el-button
+              link
+              type="primary"
+              size="small"
+              @click="router.push('/monitor/topology')"
+            >
+              维护模式 <el-icon class="el-icon--right">
+                <ArrowRight />
+              </el-icon>
             </el-button>
           </div>
         </div>
@@ -380,26 +465,58 @@ onBeforeUnmount(() => {
 
           <!-- 画布工具栏 -->
           <div class="canvas-tools">
-            <el-tooltip content="放大" placement="left">
-              <el-button :icon="Plus"   size="small" circle @click="onZoomIn" />
+            <el-tooltip
+              content="放大"
+              placement="left"
+            >
+              <el-button
+                :icon="Plus"
+                size="small"
+                circle
+                @click="onZoomIn"
+              />
             </el-tooltip>
-            <el-tooltip content="缩小" placement="left">
-              <el-button :icon="Minus"  size="small" circle @click="onZoomOut" />
+            <el-tooltip
+              content="缩小"
+              placement="left"
+            >
+              <el-button
+                :icon="Minus"
+                size="small"
+                circle
+                @click="onZoomOut"
+              />
             </el-tooltip>
-            <el-tooltip content="自适应" placement="left">
-              <el-button :icon="Aim"    size="small" circle @click="onFitView" />
+            <el-tooltip
+              content="自适应"
+              placement="left"
+            >
+              <el-button
+                :icon="Aim"
+                size="small"
+                circle
+                @click="onFitView"
+              />
             </el-tooltip>
-            <el-tooltip content="全屏" placement="left">
-              <el-button :icon="FullScreen" size="small" circle @click="onFullScreen" />
+            <el-tooltip
+              content="全屏"
+              placement="left"
+            >
+              <el-button
+                :icon="FullScreen"
+                size="small"
+                circle
+                @click="onFullScreen"
+              />
             </el-tooltip>
           </div>
 
           <!-- 底部图例 + 状态汇总 -->
           <div class="canvas-overlay-legend">
             <div class="overlay-row">
-              <span class="overlay-item"><span class="dot normal"></span>正常 {{ stats.nodeCount - stats.faultCount - stats.warningCount }}</span>
-              <span class="overlay-item warning"><span class="dot"></span>警告 {{ stats.warningCount }}</span>
-              <span class="overlay-item fault pulse"><span class="dot"></span>故障 {{ stats.faultCount }}</span>
+              <span class="overlay-item"><span class="dot normal" />正常 {{ stats.nodeCount - stats.faultCount - stats.warningCount }}</span>
+              <span class="overlay-item warning"><span class="dot" />警告 {{ stats.warningCount }}</span>
+              <span class="overlay-item fault pulse"><span class="dot" />故障 {{ stats.faultCount }}</span>
             </div>
             <div class="overlay-row hint">
               <el-icon><Aim /></el-icon> 点击节点查看上下文 · 滚轮缩放 · 拖动平移
@@ -413,27 +530,68 @@ onBeforeUnmount(() => {
         <template v-if="selectedNode">
           <div class="context-header">
             <h3 class="card-title">
-              <span class="title-dot" :style="{ background: statusColor[selectedNode.status].fill }"></span>
+              <span
+                class="title-dot"
+                :style="{ background: statusColor[selectedNode.status].fill }"
+              />
               {{ selectedNode.name }}
             </h3>
-            <el-button link size="small" @click="clearSelection">清除</el-button>
+            <el-button
+              link
+              size="small"
+              @click="clearSelection"
+            >
+              清除
+            </el-button>
           </div>
 
-          <el-descriptions :column="2" border size="small" class="node-desc">
+          <el-descriptions
+            :column="2"
+            border
+            size="small"
+            class="node-desc"
+          >
             <el-descriptions-item label="类型">
-              <el-tag size="small">{{ selectedNode.type }}</el-tag>
+              <el-tag size="small">
+                {{ selectedNode.type }}
+              </el-tag>
             </el-descriptions-item>
             <el-descriptions-item label="电压">
-              <el-tag size="small" type="warning">{{ selectedNode.voltageLevel }}</el-tag>
+              <el-tag
+                size="small"
+                type="warning"
+              >
+                {{ selectedNode.voltageLevel }}
+              </el-tag>
             </el-descriptions-item>
-            <el-descriptions-item label="状态" :span="2">
-              <el-tag :type="statusColor[selectedNode.status].tag as any" size="small">
+            <el-descriptions-item
+              label="状态"
+              :span="2"
+            >
+              <el-tag
+                :type="statusColor[selectedNode.status].tag as any"
+                size="small"
+              >
                 {{ statusColor[selectedNode.status].label }}
               </el-tag>
             </el-descriptions-item>
-            <el-descriptions-item v-if="selectedNode.region" label="区域" :span="2">{{ selectedNode.region }}</el-descriptions-item>
-            <el-descriptions-item v-if="selectedNode.deviceId" label="设备" :span="2">
-              <el-link type="primary" :underline="false" @click="goDeviceDetail(selectedNode)">
+            <el-descriptions-item
+              v-if="selectedNode.region"
+              label="区域"
+              :span="2"
+            >
+              {{ selectedNode.region }}
+            </el-descriptions-item>
+            <el-descriptions-item
+              v-if="selectedNode.deviceId"
+              label="设备"
+              :span="2"
+            >
+              <el-link
+                type="primary"
+                :underline="false"
+                @click="goDeviceDetail(selectedNode)"
+              >
                 #{{ selectedNode.deviceId }} <el-icon><ArrowRight /></el-icon>
               </el-link>
             </el-descriptions-item>
@@ -444,18 +602,48 @@ onBeforeUnmount(() => {
             <h4 class="sub-title">
               <el-icon><Bell /></el-icon>
               关联告警
-              <el-tag size="small" :type="nodeAlerts.length ? 'danger' : 'info'" round>{{ nodeAlerts.length }}</el-tag>
+              <el-tag
+                size="small"
+                :type="nodeAlerts.length ? 'danger' : 'info'"
+                round
+              >
+                {{ nodeAlerts.length }}
+              </el-tag>
             </h4>
-            <div v-if="nodeAlerts.length === 0" class="empty-tip">
-              <el-icon :size="28" color="var(--iot-color-success)"><Connection /></el-icon>
+            <div
+              v-if="nodeAlerts.length === 0"
+              class="empty-tip"
+            >
+              <el-icon
+                :size="28"
+                color="var(--iot-color-success)"
+              >
+                <Connection />
+              </el-icon>
               <p>该节点运行正常</p>
             </div>
-            <div v-else class="alert-list">
-              <div v-for="a in nodeAlerts" :key="a.id" class="alert-item">
-                <el-tag size="small" :type="a.level === '紧急' ? 'danger' : 'warning'">{{ a.level }}</el-tag>
+            <div
+              v-else
+              class="alert-list"
+            >
+              <div
+                v-for="a in nodeAlerts"
+                :key="a.id"
+                class="alert-item"
+              >
+                <el-tag
+                  size="small"
+                  :type="a.level === '紧急' ? 'danger' : 'warning'"
+                >
+                  {{ a.level }}
+                </el-tag>
                 <div class="alert-content">
-                  <div class="alert-title">{{ a.title }}</div>
-                  <div class="alert-time">{{ a.time }}</div>
+                  <div class="alert-title">
+                    {{ a.title }}
+                  </div>
+                  <div class="alert-time">
+                    {{ a.time }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -466,29 +654,76 @@ onBeforeUnmount(() => {
             <h4 class="sub-title">
               <el-icon><Tickets /></el-icon>
               关联工单
-              <el-tag size="small" :type="nodeWorkOrders.length ? 'warning' : 'info'" round>{{ nodeWorkOrders.length }}</el-tag>
+              <el-tag
+                size="small"
+                :type="nodeWorkOrders.length ? 'warning' : 'info'"
+                round
+              >
+                {{ nodeWorkOrders.length }}
+              </el-tag>
             </h4>
-            <div v-if="nodeWorkOrders.length === 0" class="empty-tip">
-              <el-icon :size="28" color="var(--iot-text-placeholder)"><Reading /></el-icon>
+            <div
+              v-if="nodeWorkOrders.length === 0"
+              class="empty-tip"
+            >
+              <el-icon
+                :size="28"
+                color="var(--iot-text-placeholder)"
+              >
+                <Reading />
+              </el-icon>
               <p>无关联工单</p>
             </div>
-            <div v-else class="wo-list">
-              <div v-for="w in nodeWorkOrders" :key="w.id" class="wo-item">
-                <el-link type="primary" :underline="false" @click="router.push(`/workorder/detail/${w.id}`)">
+            <div
+              v-else
+              class="wo-list"
+            >
+              <div
+                v-for="w in nodeWorkOrders"
+                :key="w.id"
+                class="wo-item"
+              >
+                <el-link
+                  type="primary"
+                  :underline="false"
+                  @click="router.push(`/workorder/detail/${w.id}`)"
+                >
                   {{ w.title }}
                 </el-link>
-                <div class="wo-meta">{{ w.id }} · {{ w.assignee }} · {{ w.status }}</div>
+                <div class="wo-meta">
+                  {{ w.id }} · {{ w.assignee }} · {{ w.status }}
+                </div>
               </div>
             </div>
           </div>
 
           <!-- 快速入口 -->
           <div class="context-section">
-            <h4 class="sub-title">快速操作</h4>
+            <h4 class="sub-title">
+              快速操作
+            </h4>
             <div class="quick-actions">
-              <el-button :icon="View" size="small" @click="goDeviceDetail(selectedNode)">设备详情</el-button>
-              <el-button :icon="Bell" size="small" @click="router.push('/alert/center')">告警</el-button>
-              <el-button :icon="SwitchButton" size="small" @click="router.push('/workorder/list')">工单</el-button>
+              <el-button
+                :icon="View"
+                size="small"
+                @click="goDeviceDetail(selectedNode)"
+              >
+                设备详情
+              </el-button>
+              <el-button
+                :icon="Bell"
+                size="small"
+                @click="router.push('/alert/center')"
+              >
+                告警
+              </el-button>
+              <el-button
+                :icon="SwitchButton"
+                size="small"
+                @click="router.push('/workorder/list')"
+              >
+                工单
+              </el-button>
             </div>
           </div>
         </template>
@@ -496,50 +731,107 @@ onBeforeUnmount(() => {
         <template v-else>
           <!-- 未选中:全网概览 -->
           <div class="panel-header">
-            <h3 class="card-title"><el-icon><TrendCharts /></el-icon> 全网概览</h3>
+            <h3 class="card-title">
+              <el-icon><TrendCharts /></el-icon> 全网概览
+            </h3>
           </div>
 
           <div class="context-section">
-            <h4 class="sub-title">最近告警</h4>
-            <div v-if="!summary?.recentAlerts?.length" class="empty-tip">
-              <el-icon :size="36" color="var(--iot-color-success)"><Connection /></el-icon>
+            <h4 class="sub-title">
+              最近告警
+            </h4>
+            <div
+              v-if="!summary?.recentAlerts?.length"
+              class="empty-tip"
+            >
+              <el-icon
+                :size="36"
+                color="var(--iot-color-success)"
+              >
+                <Connection />
+              </el-icon>
               <p>一切正常 · 暂无告警</p>
             </div>
-            <div v-else class="alert-list">
-              <div v-for="a in (summary?.recentAlerts ?? []).slice(0, 5)" :key="a.id" class="alert-item">
-                <el-tag size="small">{{ a.level }}</el-tag>
+            <div
+              v-else
+              class="alert-list"
+            >
+              <div
+                v-for="a in (summary?.recentAlerts ?? []).slice(0, 5)"
+                :key="a.id"
+                class="alert-item"
+              >
+                <el-tag size="small">
+                  {{ a.level }}
+                </el-tag>
                 <div class="alert-content">
-                  <div class="alert-title">{{ a.title }}</div>
-                  <div class="alert-time">{{ a.deviceKey }} · {{ a.createdAt }}</div>
+                  <div class="alert-title">
+                    {{ a.title }}
+                  </div>
+                  <div class="alert-time">
+                    {{ a.deviceKey }} · {{ a.createdAt }}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="context-section">
-            <h4 class="sub-title">工单状态</h4>
+            <h4 class="sub-title">
+              工单状态
+            </h4>
             <div class="wo-summary">
               <div class="wo-stat">
-                <div class="wo-num" style="color: var(--iot-color-info)">{{ workOrderStats.pending }}</div>
-                <div class="wo-label">待派单</div>
+                <div
+                  class="wo-num"
+                  style="color: var(--iot-color-info)"
+                >
+                  {{ workOrderStats.pending }}
+                </div>
+                <div class="wo-label">
+                  待派单
+                </div>
               </div>
               <div class="wo-stat">
-                <div class="wo-num" style="color: var(--iot-color-primary)">{{ workOrderStats.processing }}</div>
-                <div class="wo-label">处理中</div>
+                <div
+                  class="wo-num"
+                  style="color: var(--iot-color-primary)"
+                >
+                  {{ workOrderStats.processing }}
+                </div>
+                <div class="wo-label">
+                  处理中
+                </div>
               </div>
               <div class="wo-stat">
-                <div class="wo-num" style="color: var(--iot-color-success)">{{ workOrderStats.completed }}</div>
-                <div class="wo-label">已完成</div>
+                <div
+                  class="wo-num"
+                  style="color: var(--iot-color-success)"
+                >
+                  {{ workOrderStats.completed }}
+                </div>
+                <div class="wo-label">
+                  已完成
+                </div>
               </div>
               <div class="wo-stat">
-                <div class="wo-num" style="color: var(--iot-color-danger)">{{ workOrderStats.overdue }}</div>
-                <div class="wo-label">已超时</div>
+                <div
+                  class="wo-num"
+                  style="color: var(--iot-color-danger)"
+                >
+                  {{ workOrderStats.overdue }}
+                </div>
+                <div class="wo-label">
+                  已超时
+                </div>
               </div>
             </div>
           </div>
 
           <div class="context-section">
-            <h4 class="sub-title">拓扑统计</h4>
+            <h4 class="sub-title">
+              拓扑统计
+            </h4>
             <div class="topo-stats-grid">
               <div class="topo-stat-item">
                 <span class="topo-stat-label">节点</span>
@@ -561,7 +853,11 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="context-section tip-section">
-            <el-alert type="info" :closable="false" show-icon>
+            <el-alert
+              type="info"
+              :closable="false"
+              show-icon
+            >
               <template #title>
                 <span class="tip-title">使用提示</span>
               </template>

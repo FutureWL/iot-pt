@@ -196,9 +196,14 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="page-container gis-page" v-loading="loading">
+  <div
+    v-loading="loading"
+    class="page-container gis-page"
+  >
     <div class="page-header">
-      <h2 class="page-title">GIS 地图 · 高德</h2>
+      <h2 class="page-title">
+        GIS 地图 · 高德
+      </h2>
       <div class="header-tools">
         <el-input
           v-model="keyword"
@@ -207,7 +212,12 @@ onBeforeUnmount(() => {
           :prefix-icon="Aim"
           style="width: 240px"
         />
-        <el-button :icon="Refresh" @click="load">刷新</el-button>
+        <el-button
+          :icon="Refresh"
+          @click="load"
+        >
+          刷新
+        </el-button>
       </div>
     </div>
 
@@ -217,80 +227,158 @@ onBeforeUnmount(() => {
         <div class="page-toolbar">
           <div class="device-summary">
             <div class="summary-item online">
-              <span class="dot"></span>在线 {{ devices.filter(d => d.status === 1).length }}
+              <span class="dot" />在线 {{ devices.filter(d => d.status === 1).length }}
             </div>
             <div class="summary-item offline">
-              <span class="dot"></span>离线 {{ devices.filter(d => d.status === 0).length }}
+              <span class="dot" />离线 {{ devices.filter(d => d.status === 0).length }}
             </div>
             <div class="summary-item danger">
-              <span class="dot"></span>告警 {{ devices.filter(d => (d.alertCount ?? 0) > 0).length }}
+              <span class="dot" />告警 {{ devices.filter(d => (d.alertCount ?? 0) > 0).length }}
             </div>
           </div>
         </div>
         <div class="device-list">
-          <div v-for="d in devices.filter(d => !keyword || d.deviceName.includes(keyword) || d.deviceKey.includes(keyword))"
-               :key="d.deviceId"
-               class="device-item"
-               :class="{ active: selected?.deviceId === d.deviceId }"
-               @click="onDeviceClick(d)">
-            <span class="status-dot" :style="{ background: statusMap[d.status]?.color }"></span>
+          <div
+            v-for="d in devices.filter(d => !keyword || d.deviceName.includes(keyword) || d.deviceKey.includes(keyword))"
+            :key="d.deviceId"
+            class="device-item"
+            :class="{ active: selected?.deviceId === d.deviceId }"
+            @click="onDeviceClick(d)"
+          >
+            <span
+              class="status-dot"
+              :style="{ background: statusMap[d.status]?.color }"
+            />
             <div class="device-info">
-              <div class="device-name">{{ d.deviceName }}</div>
+              <div class="device-name">
+                {{ d.deviceName }}
+              </div>
               <div class="device-meta">
-                <el-tag :type="statusMap[d.status]?.type as any" size="small">{{ statusMap[d.status]?.label }}</el-tag>
+                <el-tag
+                  :type="statusMap[d.status]?.type as any"
+                  size="small"
+                >
+                  {{ statusMap[d.status]?.label }}
+                </el-tag>
                 <span class="device-key">{{ d.deviceKey }}</span>
               </div>
             </div>
-            <el-badge v-if="d.alertCount" :value="d.alertCount" type="danger" />
+            <el-badge
+              v-if="d.alertCount"
+              :value="d.alertCount"
+              type="danger"
+            />
           </div>
-          <el-empty v-if="devices.length === 0" description="暂无设备" />
+          <el-empty
+            v-if="devices.length === 0"
+            description="暂无设备"
+          />
         </div>
       </div>
 
       <!-- 右:高德地图 -->
       <div class="page-card map-panel">
-        <div ref="mapEl" class="map-container"></div>
+        <div
+          ref="mapEl"
+          class="map-container"
+        />
 
         <!-- 加载中 -->
-        <div v-if="mapLoading" class="map-overlay">
-          <el-icon class="is-loading" :size="32"><Refresh /></el-icon>
+        <div
+          v-if="mapLoading"
+          class="map-overlay"
+        >
+          <el-icon
+            class="is-loading"
+            :size="32"
+          >
+            <Refresh />
+          </el-icon>
           <p>地图加载中...</p>
         </div>
 
         <!-- 错误 -->
-        <div v-else-if="mapError" class="map-overlay">
-          <el-icon :size="48" color="#f56c6c"><Warning /></el-icon>
+        <div
+          v-else-if="mapError"
+          class="map-overlay"
+        >
+          <el-icon
+            :size="48"
+            color="#f56c6c"
+          >
+            <Warning />
+          </el-icon>
           <p>{{ mapError }}</p>
-          <p class="text-secondary text-xs">请在 frontend/.env.local 设置 VITE_AMAP_KEY</p>
+          <p class="text-secondary text-xs">
+            请在 frontend/.env.local 设置 VITE_AMAP_KEY
+          </p>
         </div>
 
         <!-- 全屏按钮 -->
-        <el-button class="fullscreen-btn" :icon="FullScreen" circle @click="onFullScreen" />
+        <el-button
+          class="fullscreen-btn"
+          :icon="FullScreen"
+          circle
+          @click="onFullScreen"
+        />
       </div>
     </div>
 
     <!-- 详情抽屉 -->
-    <el-drawer v-model="drawerVisible" :show-close="false" direction="rtl" size="420px" :with-header="false" @close="closeDrawer">
+    <el-drawer
+      v-model="drawerVisible"
+      :show-close="false"
+      direction="rtl"
+      size="420px"
+      :with-header="false"
+      @close="closeDrawer"
+    >
       <template v-if="selected">
         <div class="drawer-content">
           <div class="drawer-header">
             <h3>{{ selected.deviceName }}</h3>
-            <el-button @click="closeDrawer">关闭</el-button>
+            <el-button @click="closeDrawer">
+              关闭
+            </el-button>
           </div>
-          <el-descriptions :column="1" border>
-            <el-descriptions-item label="设备 Key">{{ selected.deviceKey }}</el-descriptions-item>
+          <el-descriptions
+            :column="1"
+            border
+          >
+            <el-descriptions-item label="设备 Key">
+              {{ selected.deviceKey }}
+            </el-descriptions-item>
             <el-descriptions-item label="状态">
-              <el-tag :type="statusMap[selected.status]?.type as any" size="small">
+              <el-tag
+                :type="statusMap[selected.status]?.type as any"
+                size="small"
+              >
                 {{ statusMap[selected.status]?.label }}
               </el-tag>
             </el-descriptions-item>
-            <el-descriptions-item label="经度(WGS-84)">{{ selected.lng.toFixed(6) }}</el-descriptions-item>
-            <el-descriptions-item label="纬度(WGS-84)">{{ selected.lat.toFixed(6) }}</el-descriptions-item>
-            <el-descriptions-item label="地址" v-if="selected.address">{{ selected.address }}</el-descriptions-item>
-            <el-descriptions-item label="告警数">{{ selected.alertCount ?? 0 }}</el-descriptions-item>
+            <el-descriptions-item label="经度(WGS-84)">
+              {{ selected.lng.toFixed(6) }}
+            </el-descriptions-item>
+            <el-descriptions-item label="纬度(WGS-84)">
+              {{ selected.lat.toFixed(6) }}
+            </el-descriptions-item>
+            <el-descriptions-item
+              v-if="selected.address"
+              label="地址"
+            >
+              {{ selected.address }}
+            </el-descriptions-item>
+            <el-descriptions-item label="告警数">
+              {{ selected.alertCount ?? 0 }}
+            </el-descriptions-item>
           </el-descriptions>
           <div class="drawer-actions">
-            <el-button type="primary" @click="goToDetail(selected)">查看设备详情</el-button>
+            <el-button
+              type="primary"
+              @click="goToDetail(selected)"
+            >
+              查看设备详情
+            </el-button>
           </div>
         </div>
       </template>

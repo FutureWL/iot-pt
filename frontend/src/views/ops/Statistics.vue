@@ -121,40 +121,89 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="page-container ops-page" v-loading="loading">
+  <div
+    v-loading="loading"
+    class="page-container ops-page"
+  >
     <div class="page-header">
-      <h2 class="page-title">运维统计</h2>
-      <el-radio-group v-model="range" size="small" @change="load">
-        <el-radio-button value="7d">近 7 天</el-radio-button>
-        <el-radio-button value="30d">近 30 天</el-radio-button>
-        <el-radio-button value="90d">近 90 天</el-radio-button>
+      <h2 class="page-title">
+        运维统计
+      </h2>
+      <el-radio-group
+        v-model="range"
+        size="small"
+        @change="load"
+      >
+        <el-radio-button value="7d">
+          近 7 天
+        </el-radio-button>
+        <el-radio-button value="30d">
+          近 30 天
+        </el-radio-button>
+        <el-radio-button value="90d">
+          近 90 天
+        </el-radio-button>
       </el-radio-group>
-      <el-button :icon="Refresh" @click="load">刷新</el-button>
+      <el-button
+        :icon="Refresh"
+        @click="load"
+      >
+        刷新
+      </el-button>
     </div>
 
     <!-- KPI 卡 -->
-    <el-row :gutter="16" class="mb-16">
-      <el-col :xs="12" :sm="6">
+    <el-row
+      :gutter="16"
+      class="mb-16"
+    >
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="kpi-card kpi-blue">
-          <div class="kpi-label">SLA 达成率</div>
-          <div class="kpi-num">{{ summary.slaRate.toFixed(1) }}<span class="kpi-unit"> %</span></div>
+          <div class="kpi-label">
+            SLA 达成率
+          </div>
+          <div class="kpi-num">
+            {{ summary.slaRate.toFixed(1) }}<span class="kpi-unit"> %</span>
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="kpi-card kpi-green">
-          <div class="kpi-label">平均响应时长</div>
-          <div class="kpi-num">{{ summary.avgResponseMin.toFixed(0) }}<span class="kpi-unit"> 分钟</span></div>
+          <div class="kpi-label">
+            平均响应时长
+          </div>
+          <div class="kpi-num">
+            {{ summary.avgResponseMin.toFixed(0) }}<span class="kpi-unit"> 分钟</span>
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="kpi-card kpi-orange">
-          <div class="kpi-label">故障率</div>
-          <div class="kpi-num">{{ summary.faultRate.toFixed(2) }}<span class="kpi-unit"> %</span></div>
+          <div class="kpi-label">
+            故障率
+          </div>
+          <div class="kpi-num">
+            {{ summary.faultRate.toFixed(2) }}<span class="kpi-unit"> %</span>
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="kpi-card">
-          <div class="kpi-label">工单 / 告警总数</div>
+          <div class="kpi-label">
+            工单 / 告警总数
+          </div>
           <div class="kpi-num">
             {{ summary.totalWorkOrders }}<span class="kpi-divider"> / </span>{{ summary.totalAlerts }}
           </div>
@@ -163,23 +212,44 @@ onBeforeUnmount(() => {
     </el-row>
 
     <el-row :gutter="16">
-      <el-col :xs="24" :md="16">
+      <el-col
+        :xs="24"
+        :md="16"
+      >
         <div class="page-card">
-          <h3 class="card-title"><el-icon><DataAnalysis /></el-icon> 月度趋势</h3>
-          <div ref="trendRef" class="chart-area"></div>
+          <h3 class="card-title">
+            <el-icon><DataAnalysis /></el-icon> 月度趋势
+          </h3>
+          <div
+            ref="trendRef"
+            class="chart-area"
+          />
         </div>
       </el-col>
-      <el-col :xs="24" :md="8">
+      <el-col
+        :xs="24"
+        :md="8"
+      >
         <div class="page-card">
-          <h3 class="card-title">故障类型分布</h3>
-          <div ref="pieRef" class="chart-area"></div>
+          <h3 class="card-title">
+            故障类型分布
+          </h3>
+          <div
+            ref="pieRef"
+            class="chart-area"
+          />
         </div>
       </el-col>
     </el-row>
 
     <div class="page-card mt-16">
-      <h3 class="card-title">班组绩效排行(工单数)</h3>
-      <div ref="rankRef" class="chart-area-tall"></div>
+      <h3 class="card-title">
+        班组绩效排行(工单数)
+      </h3>
+      <div
+        ref="rankRef"
+        class="chart-area-tall"
+      />
     </div>
   </div>
 </template>

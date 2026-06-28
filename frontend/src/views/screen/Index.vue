@@ -166,31 +166,59 @@ onBeforeUnmount(() => {
 <template>
   <div class="screen">
     <div class="screen-header">
-      <h1 class="screen-title">国家电网 10kV 环网柜 · 在线安全监测平台</h1>
-      <div class="screen-time">{{ now }}</div>
+      <h1 class="screen-title">
+        国家电网 10kV 环网柜 · 在线安全监测平台
+      </h1>
+      <div class="screen-time">
+        {{ now }}
+      </div>
     </div>
 
     <!-- 4 大数字 -->
     <div class="stat-row">
       <div class="big-card">
-        <div class="label">设备总数</div>
-        <div class="value">{{ summary?.deviceTotal ?? 0 }}</div>
-        <div class="suffix">台</div>
+        <div class="label">
+          设备总数
+        </div>
+        <div class="value">
+          {{ summary?.deviceTotal ?? 0 }}
+        </div>
+        <div class="suffix">
+          台
+        </div>
       </div>
       <div class="big-card online">
-        <div class="label">在线设备</div>
-        <div class="value">{{ summary?.deviceByStatus.online ?? 0 }}</div>
-        <div class="suffix">台</div>
+        <div class="label">
+          在线设备
+        </div>
+        <div class="value">
+          {{ summary?.deviceByStatus.online ?? 0 }}
+        </div>
+        <div class="suffix">
+          台
+        </div>
       </div>
       <div class="big-card warn">
-        <div class="label">今日告警</div>
-        <div class="value">{{ summary?.todayAlerts ?? 0 }}</div>
-        <div class="suffix">条</div>
+        <div class="label">
+          今日告警
+        </div>
+        <div class="value">
+          {{ summary?.todayAlerts ?? 0 }}
+        </div>
+        <div class="suffix">
+          条
+        </div>
       </div>
       <div class="big-card cyan">
-        <div class="label">待处理</div>
-        <div class="value">{{ summary?.pendingAlerts ?? 0 }}</div>
-        <div class="suffix">条</div>
+        <div class="label">
+          待处理
+        </div>
+        <div class="value">
+          {{ summary?.pendingAlerts ?? 0 }}
+        </div>
+        <div class="suffix">
+          条
+        </div>
       </div>
     </div>
 
@@ -198,60 +226,115 @@ onBeforeUnmount(() => {
     <!-- 第一行: 温度趋势(2 列) + 24h 告警 + 设备状态 -->
     <div class="grid">
       <div class="grid-card tall">
-        <div class="grid-title">设备温度趋势 (最近 1 小时)</div>
-        <div ref="chartTempEl" class="chart"></div>
+        <div class="grid-title">
+          设备温度趋势 (最近 1 小时)
+        </div>
+        <div
+          ref="chartTempEl"
+          class="chart"
+        />
       </div>
       <div class="grid-card tall">
-        <div class="grid-title">24 小时告警分布</div>
-        <div ref="chartHourlyEl" class="chart"></div>
+        <div class="grid-title">
+          24 小时告警分布
+        </div>
+        <div
+          ref="chartHourlyEl"
+          class="chart"
+        />
       </div>
       <div class="grid-card">
-        <div class="grid-title">设备状态分布</div>
-        <div ref="chartStatusEl" class="chart"></div>
+        <div class="grid-title">
+          设备状态分布
+        </div>
+        <div
+          ref="chartStatusEl"
+          class="chart"
+        />
       </div>
       <div class="grid-card">
-        <div class="grid-title">产品 / 设备分布</div>
-        <div ref="chartProductEl" class="chart"></div>
+        <div class="grid-title">
+          产品 / 设备分布
+        </div>
+        <div
+          ref="chartProductEl"
+          class="chart"
+        />
       </div>
     </div>
 
     <!-- 第二行: GIS + PRPD + 3D 数字孪生 + 告警列表 -->
     <div class="grid">
       <div class="grid-card placeholder-card">
-        <div class="grid-title">GIS 配电地理分布</div>
+        <div class="grid-title">
+          GIS 配电地理分布
+        </div>
         <div class="placeholder-body">
-          <div class="placeholder-icon">🗺️</div>
-          <div class="placeholder-text">地图底图选型待 OQ-007 客户确认</div>
-          <div class="placeholder-sub">高德 / 百度 / 天地图 三选一</div>
+          <div class="placeholder-icon">
+            🗺️
+          </div>
+          <div class="placeholder-text">
+            地图底图选型待 OQ-007 客户确认
+          </div>
+          <div class="placeholder-sub">
+            高德 / 百度 / 天地图 三选一
+          </div>
         </div>
       </div>
       <div class="grid-card placeholder-card">
-        <div class="grid-title">PRPD 散点图谱</div>
+        <div class="grid-title">
+          PRPD 散点图谱
+        </div>
         <div class="placeholder-body">
-          <div class="placeholder-icon">📊</div>
-          <div class="placeholder-text">局放相位-幅值散点图</div>
-          <div class="placeholder-sub">需后端 /monitor/prpd 接口数据</div>
+          <div class="placeholder-icon">
+            📊
+          </div>
+          <div class="placeholder-text">
+            局放相位-幅值散点图
+          </div>
+          <div class="placeholder-sub">
+            需后端 /monitor/prpd 接口数据
+          </div>
         </div>
       </div>
       <div class="grid-card placeholder-card">
-        <div class="grid-title">3D 数字孪生窗口</div>
+        <div class="grid-title">
+          3D 数字孪生窗口
+        </div>
         <div class="placeholder-body">
-          <div class="placeholder-icon">🏭</div>
-          <div class="placeholder-text">环网柜 3D 模型 + 实时监测</div>
-          <div class="placeholder-sub">Three.js 示意级(D-NEW-005)</div>
+          <div class="placeholder-icon">
+            🏭
+          </div>
+          <div class="placeholder-text">
+            环网柜 3D 模型 + 实时监测
+          </div>
+          <div class="placeholder-sub">
+            Three.js 示意级(D-NEW-005)
+          </div>
         </div>
       </div>
       <div class="grid-card">
-        <div class="grid-title">最近告警</div>
+        <div class="grid-title">
+          最近告警
+        </div>
         <div class="alert-list">
-          <div v-for="a in summary?.recentAlerts ?? []" :key="a.id" class="alert-item"
-               :class="a.level.toLowerCase()">
+          <div
+            v-for="a in summary?.recentAlerts ?? []"
+            :key="a.id"
+            class="alert-item"
+            :class="a.level.toLowerCase()"
+          >
             <span class="alert-time">{{ a.createdAt }}</span>
             <span class="alert-level">{{ a.level }}</span>
             <span class="alert-title">{{ a.title }}</span>
             <span class="alert-device">{{ a.deviceKey }}</span>
           </div>
-          <div v-if="(summary?.recentAlerts ?? []).length === 0" class="empty-mini">一切正常</div>
+          <div
+            v-if="(summary?.recentAlerts ?? []).length === 0"
+            class="empty-mini"
+          >
+            一切正常
+          </div>
         </div>
       </div>
     </div>

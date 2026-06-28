@@ -168,44 +168,138 @@ onMounted(load)
 
 <template>
   <div class="page-container">
-    <h2 class="page-title">角色管理</h2>
+    <h2 class="page-title">
+      角色管理
+    </h2>
 
     <div class="page-card search-bar">
-      <el-form :inline="true" @submit.prevent>
+      <el-form
+        :inline="true"
+        @submit.prevent
+      >
         <el-form-item label="关键字">
-          <el-input v-model="query.keyword" placeholder="角色编码 / 角色名" clearable style="width: 220px"
-            @keyup.enter="onSearch" />
+          <el-input
+            v-model="query.keyword"
+            placeholder="角色编码 / 角色名"
+            clearable
+            style="width: 220px"
+            @keyup.enter="onSearch"
+          />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :icon="Search" @click="onSearch">查询</el-button>
-          <el-button :icon="Refresh" @click="onReset">重置</el-button>
-          <el-button type="success" :icon="Plus" @click="openCreate">新建角色</el-button>
+          <el-button
+            type="primary"
+            :icon="Search"
+            @click="onSearch"
+          >
+            查询
+          </el-button>
+          <el-button
+            :icon="Refresh"
+            @click="onReset"
+          >
+            重置
+          </el-button>
+          <el-button
+            type="success"
+            :icon="Plus"
+            @click="openCreate"
+          >
+            新建角色
+          </el-button>
         </el-form-item>
       </el-form>
     </div>
 
     <div class="page-card">
-      <el-table v-loading="loading" :data="list" stripe border>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="roleCode" label="角色编码" min-width="160" />
-        <el-table-column prop="roleName" label="角色名" min-width="160" />
-        <el-table-column prop="description" label="描述" min-width="180" />
-        <el-table-column label="类型" width="100">
+      <el-table
+        v-loading="loading"
+        :data="list"
+        stripe
+        border
+      >
+        <el-table-column
+          prop="id"
+          label="ID"
+          width="80"
+        />
+        <el-table-column
+          prop="roleCode"
+          label="角色编码"
+          min-width="160"
+        />
+        <el-table-column
+          prop="roleName"
+          label="角色名"
+          min-width="160"
+        />
+        <el-table-column
+          prop="description"
+          label="描述"
+          min-width="180"
+        />
+        <el-table-column
+          label="类型"
+          width="100"
+        >
           <template #default="{ row }">
-            <el-tag v-if="row.builtIn === 1" type="warning" size="small">内置</el-tag>
-            <el-tag v-else type="info" size="small">自定义</el-tag>
+            <el-tag
+              v-if="row.builtIn === 1"
+              type="warning"
+              size="small"
+            >
+              内置
+            </el-tag>
+            <el-tag
+              v-else
+              type="info"
+              size="small"
+            >
+              自定义
+            </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createdAt" label="创建时间" width="170" />
-        <el-table-column label="操作" width="240" fixed="right">
+        <el-table-column
+          prop="createdAt"
+          label="创建时间"
+          width="170"
+        />
+        <el-table-column
+          label="操作"
+          width="240"
+          fixed="right"
+        >
           <template #default="{ row }">
-            <el-button link type="primary" :icon="Edit" @click="openEdit(row)">编辑</el-button>
-            <el-button link type="success" :icon="Key" @click="openAssignPerm(row)">分配权限</el-button>
-            <el-button link type="danger" :icon="Delete" :disabled="row.builtIn === 1"
-              @click="onDelete(row)">删除</el-button>
+            <el-button
+              link
+              type="primary"
+              :icon="Edit"
+              @click="openEdit(row)"
+            >
+              编辑
+            </el-button>
+            <el-button
+              link
+              type="success"
+              :icon="Key"
+              @click="openAssignPerm(row)"
+            >
+              分配权限
+            </el-button>
+            <el-button
+              link
+              type="danger"
+              :icon="Delete"
+              :disabled="row.builtIn === 1"
+              @click="onDelete(row)"
+            >
+              删除
+            </el-button>
           </template>
         </el-table-column>
-        <template #empty><el-empty description="暂无角色" /></template>
+        <template #empty>
+          <el-empty description="暂无角色" />
+        </template>
       </el-table>
 
       <div class="pagination-wrap">
@@ -216,41 +310,82 @@ onMounted(load)
           :total="total"
           layout="total, sizes, prev, pager, next, jumper"
           @current-change="onPageChange"
-          @size-change="onSizeChange" />
+          @size-change="onSizeChange"
+        />
       </div>
     </div>
 
     <!-- 新建/编辑对话框 -->
-    <el-dialog v-model="dialogVisible"
+    <el-dialog
+      v-model="dialogVisible"
       :title="dialogMode === 'create' ? '新建角色' : '编辑角色'"
-      width="480px" destroy-on-close>
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" @submit.prevent>
-        <el-form-item label="角色编码" prop="roleCode">
-          <el-input v-model="form.roleCode" placeholder="例如 VIEWER / OPERATOR" />
+      width="480px"
+      destroy-on-close
+    >
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="100px"
+        @submit.prevent
+      >
+        <el-form-item
+          label="角色编码"
+          prop="roleCode"
+        >
+          <el-input
+            v-model="form.roleCode"
+            placeholder="例如 VIEWER / OPERATOR"
+          />
         </el-form-item>
-        <el-form-item label="角色名" prop="roleName">
-          <el-input v-model="form.roleName" placeholder="展示用,如 只读用户" />
+        <el-form-item
+          label="角色名"
+          prop="roleName"
+        >
+          <el-input
+            v-model="form.roleName"
+            placeholder="展示用,如 只读用户"
+          />
         </el-form-item>
         <el-form-item label="描述">
-          <el-input v-model="form.description" type="textarea" :rows="2" />
+          <el-input
+            v-model="form.description"
+            type="textarea"
+            :rows="2"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="onSubmit">
+        <el-button @click="dialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="submitting"
+          @click="onSubmit"
+        >
           {{ dialogMode === 'create' ? '创建' : '保存' }}
         </el-button>
       </template>
     </el-dialog>
 
     <!-- 分配权限对话框 -->
-    <el-dialog v-model="permDialog" width="520px" destroy-on-close
-      :title="`分配权限 - ${permTarget?.roleName ?? ''}`">
-      <el-alert type="info" :closable="false" style="margin-bottom: 12px">
+    <el-dialog
+      v-model="permDialog"
+      width="520px"
+      destroy-on-close
+      :title="`分配权限 - ${permTarget?.roleName ?? ''}`"
+    >
+      <el-alert
+        type="info"
+        :closable="false"
+        style="margin-bottom: 12px"
+      >
         目录(无法勾选)仅作分组;只有叶子菜单(实际页面)被勾选后,该角色才能访问对应页面。
       </el-alert>
       <el-tree
         ref="permTreeRef"
+        v-model:checked-keys="checkedKeys"
         :data="menuTree"
         :props="treeProps"
         node-key="id"
@@ -258,10 +393,18 @@ onMounted(load)
         default-expand-all
         :check-strictly="false"
         :node-props="treeNodeProps"
-        v-model:checked-keys="checkedKeys" />
+      />
       <template #footer>
-        <el-button @click="permDialog = false">取消</el-button>
-        <el-button type="primary" :loading="permSubmitting" @click="onAssignPermSubmit">保存权限</el-button>
+        <el-button @click="permDialog = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="permSubmitting"
+          @click="onAssignPermSubmit"
+        >
+          保存权限
+        </el-button>
       </template>
     </el-dialog>
   </div>

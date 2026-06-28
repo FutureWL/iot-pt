@@ -85,44 +85,87 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="page-container report-page" v-loading="loading">
+  <div
+    v-loading="loading"
+    class="page-container report-page"
+  >
     <div class="page-header">
-      <h2 class="page-title">报表中心</h2>
-      <el-button :icon="Refresh" @click="load">刷新</el-button>
+      <h2 class="page-title">
+        报表中心
+      </h2>
+      <el-button
+        :icon="Refresh"
+        @click="load"
+      >
+        刷新
+      </el-button>
     </div>
 
     <el-row :gutter="16">
       <!-- 左:模板库 -->
-      <el-col :xs="24" :md="10">
+      <el-col
+        :xs="24"
+        :md="10"
+      >
         <div class="page-card">
-          <h3 class="card-title"><el-icon><Document /></el-icon> 报表模板库</h3>
+          <h3 class="card-title">
+            <el-icon><Document /></el-icon> 报表模板库
+          </h3>
           <div class="template-list">
-            <div v-for="t in templates" :key="t.id"
-              class="template-item" :class="{ active: selectedTemplate?.id === t.id }"
-              @click="selectTemplate(t)">
+            <div
+              v-for="t in templates"
+              :key="t.id"
+              class="template-item"
+              :class="{ active: selectedTemplate?.id === t.id }"
+              @click="selectTemplate(t)"
+            >
               <div class="tpl-name">
                 <el-icon><DocumentCopy /></el-icon>
                 {{ t.templateName }}
               </div>
-              <el-tag size="small" type="info">{{ t.reportType }}</el-tag>
-              <div class="tpl-desc text-secondary text-xs">{{ t.description || '—' }}</div>
+              <el-tag
+                size="small"
+                type="info"
+              >
+                {{ t.reportType }}
+              </el-tag>
+              <div class="tpl-desc text-secondary text-xs">
+                {{ t.description || '—' }}
+              </div>
             </div>
-            <el-empty v-if="templates.length === 0" description="暂无模板" />
+            <el-empty
+              v-if="templates.length === 0"
+              description="暂无模板"
+            />
           </div>
         </div>
       </el-col>
 
       <!-- 右:参数配置 -->
-      <el-col :xs="24" :md="14">
+      <el-col
+        :xs="24"
+        :md="14"
+      >
         <div class="page-card mb-16">
-          <h3 class="card-title">报表参数配置</h3>
+          <h3 class="card-title">
+            报表参数配置
+          </h3>
           <el-form label-width="100px">
             <el-form-item label="已选模板">
-              <span v-if="selectedTemplate" class="text-primary">{{ selectedTemplate.templateName }}</span>
-              <span v-else class="text-placeholder">请在左侧选择模板</span>
+              <span
+                v-if="selectedTemplate"
+                class="text-primary"
+              >{{ selectedTemplate.templateName }}</span>
+              <span
+                v-else
+                class="text-placeholder"
+              >请在左侧选择模板</span>
             </el-form-item>
             <el-form-item label="设备 Key">
-              <el-input v-model="params.deviceKey" placeholder="可选:过滤特定设备,留空表示全部" />
+              <el-input
+                v-model="params.deviceKey"
+                placeholder="可选:过滤特定设备,留空表示全部"
+              />
             </el-form-item>
             <el-form-item label="时间范围">
               <el-date-picker
@@ -130,24 +173,35 @@ onMounted(load)
                 type="datetime"
                 placeholder="开始时间"
                 style="width: 45%"
-                value-format="YYYY-MM-DD HH:mm:ss" />
+                value-format="YYYY-MM-DD HH:mm:ss"
+              />
               <span style="margin: 0 8px">至</span>
               <el-date-picker
                 v-model="params.endTime"
                 type="datetime"
                 placeholder="结束时间"
                 style="width: 45%"
-                value-format="YYYY-MM-DD HH:mm:ss" />
+                value-format="YYYY-MM-DD HH:mm:ss"
+              />
             </el-form-item>
             <el-form-item label="输出格式">
               <el-radio-group v-model="params.format">
-                <el-radio-button v-for="f in formatOptions" :key="f.value" :value="f.value">
+                <el-radio-button
+                  v-for="f in formatOptions"
+                  :key="f.value"
+                  :value="f.value"
+                >
                   {{ f.label }}
                 </el-radio-button>
               </el-radio-group>
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" :icon="Document" :disabled="!selectedTemplate" @click="onGenerate">
+              <el-button
+                type="primary"
+                :icon="Document"
+                :disabled="!selectedTemplate"
+                @click="onGenerate"
+              >
                 生成报表
               </el-button>
             </el-form-item>
@@ -155,21 +209,58 @@ onMounted(load)
         </div>
 
         <div class="page-card">
-          <h3 class="card-title">历史报表</h3>
-          <el-table :data="history" stripe empty-text="暂无历史报表">
-            <el-table-column prop="templateName" label="报表名" min-width="200" />
-            <el-table-column prop="format" label="格式" width="80">
+          <h3 class="card-title">
+            历史报表
+          </h3>
+          <el-table
+            :data="history"
+            stripe
+            empty-text="暂无历史报表"
+          >
+            <el-table-column
+              prop="templateName"
+              label="报表名"
+              min-width="200"
+            />
+            <el-table-column
+              prop="format"
+              label="格式"
+              width="80"
+            >
               <template #default="{ row }">
-                <el-tag size="small">{{ row.format }}</el-tag>
+                <el-tag size="small">
+                  {{ row.format }}
+                </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="size" label="大小" width="100">
-              <template #default="{ row }">{{ (row.size / 1024).toFixed(1) }} KB</template>
-            </el-table-column>
-            <el-table-column prop="generatedAt" label="生成时间" min-width="170" />
-            <el-table-column label="操作" width="100" fixed="right">
+            <el-table-column
+              prop="size"
+              label="大小"
+              width="100"
+            >
               <template #default="{ row }">
-                <el-button link type="primary" :icon="Download" @click="onDownload(row)">下载</el-button>
+                {{ (row.size / 1024).toFixed(1) }} KB
+              </template>
+            </el-table-column>
+            <el-table-column
+              prop="generatedAt"
+              label="生成时间"
+              min-width="170"
+            />
+            <el-table-column
+              label="操作"
+              width="100"
+              fixed="right"
+            >
+              <template #default="{ row }">
+                <el-button
+                  link
+                  type="primary"
+                  :icon="Download"
+                  @click="onDownload(row)"
+                >
+                  下载
+                </el-button>
               </template>
             </el-table-column>
           </el-table>

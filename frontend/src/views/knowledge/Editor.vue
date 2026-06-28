@@ -77,54 +77,125 @@ onMounted(loadIfEdit)
 <template>
   <div class="page-container editor-page">
     <div class="page-header">
-      <el-button :icon="ArrowLeft" link @click="goBack">返回列表</el-button>
-      <span class="page-title-spacer"></span>
-      <el-button type="primary" :icon="Check" :loading="submitting" @click="onSubmit">
+      <el-button
+        :icon="ArrowLeft"
+        link
+        @click="goBack"
+      >
+        返回列表
+      </el-button>
+      <span class="page-title-spacer" />
+      <el-button
+        type="primary"
+        :icon="Check"
+        :loading="submitting"
+        @click="onSubmit"
+      >
         {{ form.id ? '保存' : '创建' }}
       </el-button>
     </div>
 
-    <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" class="editor-form">
+    <el-form
+      ref="formRef"
+      :model="form"
+      :rules="rules"
+      label-width="100px"
+      class="editor-form"
+    >
       <div class="page-card mb-16">
-        <h3 class="card-title"><el-icon><Reading /></el-icon> 文档信息</h3>
+        <h3 class="card-title">
+          <el-icon><Reading /></el-icon> 文档信息
+        </h3>
         <el-row :gutter="16">
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="标题" prop="title">
-              <el-input v-model="form.title" placeholder="文档标题" maxlength="100" show-word-limit />
+          <el-col
+            :xs="24"
+            :sm="12"
+          >
+            <el-form-item
+              label="标题"
+              prop="title"
+            >
+              <el-input
+                v-model="form.title"
+                placeholder="文档标题"
+                maxlength="100"
+                show-word-limit
+              />
             </el-form-item>
           </el-col>
-          <el-col :xs="24" :sm="6">
-            <el-form-item label="分类" prop="category">
-              <el-select v-model="form.category" placeholder="选择分类" style="width: 100%">
-                <el-option v-for="c in categories" :key="c" :label="c" :value="c" />
+          <el-col
+            :xs="24"
+            :sm="6"
+          >
+            <el-form-item
+              label="分类"
+              prop="category"
+            >
+              <el-select
+                v-model="form.category"
+                placeholder="选择分类"
+                style="width: 100%"
+              >
+                <el-option
+                  v-for="c in categories"
+                  :key="c"
+                  :label="c"
+                  :value="c"
+                />
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :xs="24" :sm="6">
+          <el-col
+            :xs="24"
+            :sm="6"
+          >
             <el-form-item label="状态">
-              <el-select v-model="form.status" style="width: 100%">
-                <el-option v-for="s in statuses" :key="s.value" :label="s.label" :value="s.value" />
+              <el-select
+                v-model="form.status"
+                style="width: 100%"
+              >
+                <el-option
+                  v-for="s in statuses"
+                  :key="s.value"
+                  :label="s.label"
+                  :value="s.value"
+                />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="24">
             <el-form-item label="摘要">
-              <el-input v-model="form.summary" placeholder="一句话描述(可选)" maxlength="200" show-word-limit />
+              <el-input
+                v-model="form.summary"
+                placeholder="一句话描述(可选)"
+                maxlength="200"
+                show-word-limit
+              />
             </el-form-item>
           </el-col>
           <el-col :span="24">
             <el-form-item label="标签">
-              <el-input v-model="form.tags" placeholder="多个标签用英文逗号分隔,如 局放,母排,10kV" />
+              <el-input
+                v-model="form.tags"
+                placeholder="多个标签用英文逗号分隔,如 局放,母排,10kV"
+              />
             </el-form-item>
           </el-col>
         </el-row>
       </div>
 
       <div class="page-card">
-        <h3 class="card-title">正文内容</h3>
+        <h3 class="card-title">
+          正文内容
+        </h3>
         <el-form-item prop="content">
-          <el-input v-model="form.content" type="textarea" :rows="18" resize="vertical"
-            placeholder="支持 Markdown / 富文本格式,可用作标准作业指导书(SOP)" />
+          <el-input
+            v-model="form.content"
+            type="textarea"
+            :rows="18"
+            resize="vertical"
+            placeholder="支持 Markdown / 富文本格式,可用作标准作业指导书(SOP)"
+          />
         </el-form-item>
         <div class="text-secondary text-xs">
           提示:后续可接入富文本编辑器(目前为纯文本)。

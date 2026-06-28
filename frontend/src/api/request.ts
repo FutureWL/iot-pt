@@ -61,6 +61,14 @@ service.interceptors.response.use(
       return res as any
     }
 
+    const errMsg = res.message || '请求失败'
+
+    // Spring "No static resource" 兜底异常(后端未注册的 API 路径):
+    //   业务层通常已 .catch() 降级,这里静默不弹错,但仍 reject 让业务 catch 接管
+    if (errMsg.startsWith('No static resource')) {
+      return Promise.reject(new Error(errMsg))
+    }
+
     // 401 - 重新登录
     if (res.code === 401) {
       ElMessageBox.confirm('登录已过期,请重新登录', '提示', {
@@ -75,11 +83,11 @@ service.interceptors.response.use(
           location.href = '/#/login'
         })
         .catch(() => {})
-      return Promise.reject(new Error(res.message || '未授权'))
+      return Promise.reject(new Error(errMsg || '未授权'))
     }
 
-    ElMessage.error(res.message || '请求失败')
-    return Promise.reject(new Error(res.message || '请求失败'))
+    ElMessage.error(errMsg)
+    return Promise.reject(new Error(errMsg))
   },
   (error) => {
     NProgress.done()

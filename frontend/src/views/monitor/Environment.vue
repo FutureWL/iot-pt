@@ -40,89 +40,197 @@ onMounted(async () => { await load(); calcStats() })
 </script>
 
 <template>
-  <div class="page-container env-page" v-loading="loading">
+  <div
+    v-loading="loading"
+    class="page-container env-page"
+  >
     <div class="page-header">
-      <h2 class="page-title">环境监测</h2>
-      <el-button :icon="Refresh" @click="load">刷新</el-button>
+      <h2 class="page-title">
+        环境监测
+      </h2>
+      <el-button
+        :icon="Refresh"
+        @click="load"
+      >
+        刷新
+      </el-button>
     </div>
 
-    <el-row :gutter="16" class="mb-16">
-      <el-col :xs="12" :sm="6">
+    <el-row
+      :gutter="16"
+      class="mb-16"
+    >
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="env-card">
-          <el-icon :size="22" color="#409eff"><Cloudy /></el-icon>
-          <div class="env-label">监测设备数</div>
-          <div class="env-num">{{ stats.deviceCount }}</div>
+          <el-icon
+            :size="22"
+            color="#409eff"
+          >
+            <Cloudy />
+          </el-icon>
+          <div class="env-label">
+            监测设备数
+          </div>
+          <div class="env-num">
+            {{ stats.deviceCount }}
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="env-card">
-          <div class="env-label">平均温度</div>
-          <div class="env-num">{{ stats.avgTemp.toFixed(1) }}<span class="env-unit"> ℃</span></div>
+          <div class="env-label">
+            平均温度
+          </div>
+          <div class="env-num">
+            {{ stats.avgTemp.toFixed(1) }}<span class="env-unit"> ℃</span>
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="env-card">
-          <div class="env-label">平均湿度</div>
-          <div class="env-num">{{ stats.avgHumidity.toFixed(1) }}<span class="env-unit"> %</span></div>
+          <div class="env-label">
+            平均湿度
+          </div>
+          <div class="env-num">
+            {{ stats.avgHumidity.toFixed(1) }}<span class="env-unit"> %</span>
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="env-card alert-card">
-          <el-icon :size="22" color="#f56c6c"><Warning /></el-icon>
-          <div class="env-label">水浸 / 凝露预警</div>
-          <div class="env-num">{{ stats.waterCount + stats.condensationCount }}</div>
+          <el-icon
+            :size="22"
+            color="#f56c6c"
+          >
+            <Warning />
+          </el-icon>
+          <div class="env-label">
+            水浸 / 凝露预警
+          </div>
+          <div class="env-num">
+            {{ stats.waterCount + stats.condensationCount }}
+          </div>
         </div>
       </el-col>
     </el-row>
 
     <div class="page-card">
-      <h3 class="card-title">柜内微环境实时数据</h3>
-      <el-table :data="list" stripe empty-text="暂无环境数据" border>
-        <el-table-column prop="deviceKey" label="设备" width="140">
+      <h3 class="card-title">
+        柜内微环境实时数据
+      </h3>
+      <el-table
+        :data="list"
+        stripe
+        empty-text="暂无环境数据"
+        border
+      >
+        <el-table-column
+          prop="deviceKey"
+          label="设备"
+          width="140"
+        >
           <template #default="{ row }">
-            <el-tag size="small" type="info">{{ row.deviceKey }}</el-tag>
+            <el-tag
+              size="small"
+              type="info"
+            >
+              {{ row.deviceKey }}
+            </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="deviceName" label="名称" min-width="160" show-overflow-tooltip />
-        <el-table-column label="温度(℃)" width="100">
+        <el-table-column
+          prop="deviceName"
+          label="名称"
+          min-width="160"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          label="温度(℃)"
+          width="100"
+        >
           <template #default="{ row }">
             <span :class="{ 'text-danger': row.temperature > 60 }">{{ row.temperature.toFixed(1) }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="湿度(%)" width="100">
+        <el-table-column
+          label="湿度(%)"
+          width="100"
+        >
           <template #default="{ row }">
             <span :class="{ 'text-warning': row.humidity > 70 }">{{ row.humidity.toFixed(1) }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="水浸状态" width="100">
+        <el-table-column
+          label="水浸状态"
+          width="100"
+        >
           <template #default="{ row }">
-            <el-tag :type="row.waterStatus === 1 ? 'danger' : 'success'" size="small">
+            <el-tag
+              :type="row.waterStatus === 1 ? 'danger' : 'success'"
+              size="small"
+            >
               {{ row.waterStatus === 1 ? '水浸' : '正常' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="倾角(°)" width="100">
+        <el-table-column
+          label="倾角(°)"
+          width="100"
+        >
           <template #default="{ row }">
             <span :class="{ 'text-danger': row.tiltAngle > 5 }">{{ row.tiltAngle.toFixed(2) }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="振动(g RMS)" width="120">
+        <el-table-column
+          label="振动(g RMS)"
+          width="120"
+        >
           <template #default="{ row }">
             <span :class="{ 'text-warning': row.vibrationRMS > 2 }">{{ row.vibrationRMS.toFixed(2) }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="凝露预警" width="100">
+        <el-table-column
+          label="凝露预警"
+          width="100"
+        >
           <template #default="{ row }">
-            <el-tag v-if="row.condensationRisk" type="warning" size="small">预警</el-tag>
-            <span v-else class="text-success">正常</span>
+            <el-tag
+              v-if="row.condensationRisk"
+              type="warning"
+              size="small"
+            >
+              预警
+            </el-tag>
+            <span
+              v-else
+              class="text-success"
+            >正常</span>
           </template>
         </el-table-column>
-        <el-table-column prop="ts" label="采集时间" min-width="170" />
+        <el-table-column
+          prop="ts"
+          label="采集时间"
+          min-width="170"
+        />
       </el-table>
     </div>
 
     <div class="page-card mt-16">
-      <h3 class="card-title">监测说明</h3>
+      <h3 class="card-title">
+        监测说明
+      </h3>
       <ul class="info-list">
         <li>温度阈值: &gt; 60 ℃ 触发告警</li>
         <li>湿度阈值: &gt; 70 % 触发凝露预警(与温度联合判断)</li>

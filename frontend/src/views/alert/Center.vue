@@ -100,108 +100,276 @@ onMounted(load)
 <template>
   <div class="page-container alert-page">
     <div class="page-header">
-      <h2 class="page-title">告警中心</h2>
+      <h2 class="page-title">
+        告警中心
+      </h2>
       <div class="header-tools">
-        <el-button :icon="Setting" @click="ElMessage.info('智能过滤规则配置:待实现')">过滤规则</el-button>
-        <el-button :icon="Refresh" @click="load">刷新</el-button>
+        <el-button
+          :icon="Setting"
+          @click="ElMessage.info('智能过滤规则配置:待实现')"
+        >
+          过滤规则
+        </el-button>
+        <el-button
+          :icon="Refresh"
+          @click="load"
+        >
+          刷新
+        </el-button>
       </div>
     </div>
 
     <!-- 4 级告警统计卡 -->
-    <el-row :gutter="16" class="mb-16">
-      <el-col :xs="12" :sm="6">
+    <el-row
+      :gutter="16"
+      class="mb-16"
+    >
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="level-card level-notice">
-          <div class="level-num">{{ statCount('NOTICE') }}</div>
-          <div class="level-label">注意</div>
+          <div class="level-num">
+            {{ statCount('NOTICE') }}
+          </div>
+          <div class="level-label">
+            注意
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="level-card level-abnormal">
-          <div class="level-num">{{ statCount('ABNORMAL') }}</div>
-          <div class="level-label">异常</div>
+          <div class="level-num">
+            {{ statCount('ABNORMAL') }}
+          </div>
+          <div class="level-label">
+            异常
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="level-card level-serious">
-          <div class="level-num">{{ statCount('SERIOUS') }}</div>
-          <div class="level-label">严重</div>
+          <div class="level-num">
+            {{ statCount('SERIOUS') }}
+          </div>
+          <div class="level-label">
+            严重
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="level-card level-urgent">
-          <div class="level-num">{{ statCount('URGENT') }}</div>
-          <div class="level-label">紧急</div>
+          <div class="level-num">
+            {{ statCount('URGENT') }}
+          </div>
+          <div class="level-label">
+            紧急
+          </div>
         </div>
       </el-col>
     </el-row>
 
     <!-- 搜索栏 -->
     <div class="page-card search-bar">
-      <el-form :inline="true" @submit.prevent>
+      <el-form
+        :inline="true"
+        @submit.prevent
+      >
         <el-form-item label="关键字">
-          <el-input v-model="query.keyword" placeholder="标题 / 内容 / 设备 Key" clearable style="width: 220px"
-            :prefix-icon="Search" @keyup.enter="onSearch" />
+          <el-input
+            v-model="query.keyword"
+            placeholder="标题 / 内容 / 设备 Key"
+            clearable
+            style="width: 220px"
+            :prefix-icon="Search"
+            @keyup.enter="onSearch"
+          />
         </el-form-item>
         <el-form-item label="级别">
-          <el-select v-model="query.level" placeholder="全部" clearable style="width: 120px">
-            <el-option v-for="(v, k) in levelMap" :key="k" :label="v.label" :value="k" />
+          <el-select
+            v-model="query.level"
+            placeholder="全部"
+            clearable
+            style="width: 120px"
+          >
+            <el-option
+              v-for="(v, k) in levelMap"
+              :key="k"
+              :label="v.label"
+              :value="k"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="query.status" placeholder="全部" clearable style="width: 120px">
-            <el-option label="未处理" :value="0" />
-            <el-option label="已处理" :value="1" />
-            <el-option label="已忽略" :value="2" />
+          <el-select
+            v-model="query.status"
+            placeholder="全部"
+            clearable
+            style="width: 120px"
+          >
+            <el-option
+              label="未处理"
+              :value="0"
+            />
+            <el-option
+              label="已处理"
+              :value="1"
+            />
+            <el-option
+              label="已忽略"
+              :value="2"
+            />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="onSearch">查询</el-button>
-          <el-button @click="onReset">重置</el-button>
+          <el-button
+            type="primary"
+            @click="onSearch"
+          >
+            查询
+          </el-button>
+          <el-button @click="onReset">
+            重置
+          </el-button>
         </el-form-item>
       </el-form>
     </div>
 
     <!-- 列表 -->
     <div class="page-card">
-      <el-table v-loading="loading" :data="list" stripe border empty-text="暂无告警">
-        <el-table-column label="级别" width="100">
+      <el-table
+        v-loading="loading"
+        :data="list"
+        stripe
+        border
+        empty-text="暂无告警"
+      >
+        <el-table-column
+          label="级别"
+          width="100"
+        >
           <template #default="{ row }">
             <el-tag :style="{ background: levelMap[row.level as AlertLevel]?.color + '20', color: levelMap[row.level as AlertLevel]?.color, border: 'none' }">
               {{ levelMap[row.level as AlertLevel]?.label || row.level }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="title" label="标题" min-width="220" show-overflow-tooltip />
-        <el-table-column prop="alertType" label="告警类型" width="120" />
-        <el-table-column label="设备" min-width="140">
+        <el-table-column
+          prop="title"
+          label="标题"
+          min-width="220"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          prop="alertType"
+          label="告警类型"
+          width="120"
+        />
+        <el-table-column
+          label="设备"
+          min-width="140"
+        >
           <template #default="{ row }">
-            <el-tag size="small" type="info">{{ row.deviceKey }}</el-tag>
+            <el-tag
+              size="small"
+              type="info"
+            >
+              {{ row.deviceKey }}
+            </el-tag>
             <span class="text-secondary text-xs ml-4">{{ row.deviceName }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="状态" width="100">
+        <el-table-column
+          label="状态"
+          width="100"
+        >
           <template #default="{ row }">
-            <el-tag :type="statusMap[row.status]?.type as any" size="small">
+            <el-tag
+              :type="statusMap[row.status]?.type as any"
+              size="small"
+            >
               {{ statusMap[row.status]?.label }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="工单" width="100">
+        <el-table-column
+          label="工单"
+          width="100"
+        >
           <template #default="{ row }">
-            <el-link v-if="row.workOrderId" type="primary" :underline="false" @click="router.push(`/workorder/detail/${row.workOrderId}`)">
+            <el-link
+              v-if="row.workOrderId"
+              type="primary"
+              :underline="false"
+              @click="router.push(`/workorder/detail/${row.workOrderId}`)"
+            >
               #{{ row.workOrderId }}
             </el-link>
-            <span v-else class="text-disabled">—</span>
+            <span
+              v-else
+              class="text-disabled"
+            >—</span>
           </template>
         </el-table-column>
-        <el-table-column prop="handler" label="处理人" width="100" />
-        <el-table-column prop="alertTime" label="触发时间" width="170" />
-        <el-table-column label="操作" width="280" fixed="right">
+        <el-table-column
+          prop="handler"
+          label="处理人"
+          width="100"
+        />
+        <el-table-column
+          prop="alertTime"
+          label="触发时间"
+          width="170"
+        />
+        <el-table-column
+          label="操作"
+          width="280"
+          fixed="right"
+        >
           <template #default="{ row }">
-            <el-button link type="primary" :icon="View" @click="showDetail(row)">详情</el-button>
-            <el-button v-if="row.status === 0" link type="success" :icon="Check" @click="onHandle(row, 1)">处理</el-button>
-            <el-button v-if="row.status === 0" link type="info" :icon="Close" @click="onHandle(row, 2)">忽略</el-button>
-            <el-button v-if="row.status === 0" link type="warning" @click="onCreateWorkOrder(row)">生成工单</el-button>
+            <el-button
+              link
+              type="primary"
+              :icon="View"
+              @click="showDetail(row)"
+            >
+              详情
+            </el-button>
+            <el-button
+              v-if="row.status === 0"
+              link
+              type="success"
+              :icon="Check"
+              @click="onHandle(row, 1)"
+            >
+              处理
+            </el-button>
+            <el-button
+              v-if="row.status === 0"
+              link
+              type="info"
+              :icon="Close"
+              @click="onHandle(row, 2)"
+            >
+              忽略
+            </el-button>
+            <el-button
+              v-if="row.status === 0"
+              link
+              type="warning"
+              @click="onCreateWorkOrder(row)"
+            >
+              生成工单
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -213,30 +381,67 @@ onMounted(load)
           :total="total"
           layout="total, sizes, prev, pager, next, jumper"
           @current-change="onPageChange"
-          @size-change="onSizeChange" />
+          @size-change="onSizeChange"
+        />
       </div>
     </div>
 
     <!-- 详情 -->
-    <el-dialog v-model="detailVisible" title="告警详情" width="640px">
-      <el-descriptions v-if="detail" :column="2" border>
+    <el-dialog
+      v-model="detailVisible"
+      title="告警详情"
+      width="640px"
+    >
+      <el-descriptions
+        v-if="detail"
+        :column="2"
+        border
+      >
         <el-descriptions-item label="级别">
           <el-tag :style="{ background: levelMap[detail.level as AlertLevel]?.color + '20', color: levelMap[detail.level as AlertLevel]?.color, border: 'none' }">
             {{ levelMap[detail.level as AlertLevel]?.label || detail.level }}
           </el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="状态">
-          <el-tag :type="statusMap[detail.status]?.type as any">{{ statusMap[detail.status]?.label }}</el-tag>
+          <el-tag :type="statusMap[detail.status]?.type as any">
+            {{ statusMap[detail.status]?.label }}
+          </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="告警类型">{{ detail.alertType }}</el-descriptions-item>
-        <el-descriptions-item label="关联设备">{{ detail.deviceKey }} ({{ detail.deviceName }})</el-descriptions-item>
-        <el-descriptions-item label="标题" :span="2">{{ detail.title }}</el-descriptions-item>
-        <el-descriptions-item label="内容" :span="2">{{ detail.content || '—' }}</el-descriptions-item>
-        <el-descriptions-item label="触发时间">{{ detail.alertTime }}</el-descriptions-item>
-        <el-descriptions-item label="处理时间">{{ detail.handleTime || '—' }}</el-descriptions-item>
-        <el-descriptions-item label="处理人">{{ detail.handler || '—' }}</el-descriptions-item>
+        <el-descriptions-item label="告警类型">
+          {{ detail.alertType }}
+        </el-descriptions-item>
+        <el-descriptions-item label="关联设备">
+          {{ detail.deviceKey }} ({{ detail.deviceName }})
+        </el-descriptions-item>
+        <el-descriptions-item
+          label="标题"
+          :span="2"
+        >
+          {{ detail.title }}
+        </el-descriptions-item>
+        <el-descriptions-item
+          label="内容"
+          :span="2"
+        >
+          {{ detail.content || '—' }}
+        </el-descriptions-item>
+        <el-descriptions-item label="触发时间">
+          {{ detail.alertTime }}
+        </el-descriptions-item>
+        <el-descriptions-item label="处理时间">
+          {{ detail.handleTime || '—' }}
+        </el-descriptions-item>
+        <el-descriptions-item label="处理人">
+          {{ detail.handler || '—' }}
+        </el-descriptions-item>
         <el-descriptions-item label="关联工单">
-          <el-link v-if="detail.workOrderId" type="primary" @click="router.push(`/workorder/detail/${detail.workOrderId}`)">#{{ detail.workOrderId }}</el-link>
+          <el-link
+            v-if="detail.workOrderId"
+            type="primary"
+            @click="router.push(`/workorder/detail/${detail.workOrderId}`)"
+          >
+            #{{ detail.workOrderId }}
+          </el-link>
           <span v-else>—</span>
         </el-descriptions-item>
       </el-descriptions>

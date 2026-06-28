@@ -49,14 +49,23 @@ async function onLogin() {
     <div class="login-card">
       <div class="login-left">
         <div class="login-brand">
-          <el-icon :size="48" class="login-brand-icon"><Connection /></el-icon>
+          <el-icon
+            :size="48"
+            class="login-brand-icon"
+          >
+            <Connection />
+          </el-icon>
           <h1>物联网平台</h1>
           <p>通用设备接入 · 物模型 · 实时数据 · 规则引擎</p>
         </div>
       </div>
       <div class="login-right">
-        <h2 class="login-title">欢迎登录</h2>
-        <p class="login-subtitle">输入您的账号信息以继续</p>
+        <h2 class="login-title">
+          欢迎登录
+        </h2>
+        <p class="login-subtitle">
+          输入您的账号信息以继续
+        </p>
         <el-form
           ref="formRef"
           :model="form"
@@ -65,10 +74,18 @@ async function onLogin() {
           @keyup.enter="onLogin"
         >
           <el-form-item prop="tenantCode">
-            <el-input v-model="form.tenantCode" placeholder="租户编码" :prefix-icon="OfficeBuilding" />
+            <el-input
+              v-model="form.tenantCode"
+              placeholder="租户编码"
+              :prefix-icon="OfficeBuilding"
+            />
           </el-form-item>
           <el-form-item prop="username">
-            <el-input v-model="form.username" placeholder="用户名" :prefix-icon="User" />
+            <el-input
+              v-model="form.username"
+              placeholder="用户名"
+              :prefix-icon="User"
+            />
           </el-form-item>
           <el-form-item prop="password">
             <el-input
@@ -88,7 +105,9 @@ async function onLogin() {
           >
             登 录
           </el-button>
-          <p class="login-tip">默认账号: admin / 123456</p>
+          <p class="login-tip">
+            默认账号: admin / 123456
+          </p>
         </el-form>
       </div>
     </div>

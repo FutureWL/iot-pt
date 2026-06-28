@@ -160,66 +160,152 @@ window.addEventListener('resize', () => chart?.resize())
 </script>
 
 <template>
-  <div class="page-container" v-loading="loading">
-    <h2 class="page-title">历史数据</h2>
+  <div
+    v-loading="loading"
+    class="page-container"
+  >
+    <h2 class="page-title">
+      历史数据
+    </h2>
 
     <div class="page-card search-bar">
-      <el-form :inline="true" @submit.prevent>
+      <el-form
+        :inline="true"
+        @submit.prevent
+      >
         <el-form-item label="产品">
-          <el-select v-model="query.productId" placeholder="全部" clearable style="width: 180px" @change="query.deviceId = undefined">
-            <el-option v-for="p in products" :key="p.id"
-              :label="`${p.productKey} - ${p.productName}`" :value="p.id" />
+          <el-select
+            v-model="query.productId"
+            placeholder="全部"
+            clearable
+            style="width: 180px"
+            @change="query.deviceId = undefined"
+          >
+            <el-option
+              v-for="p in products"
+              :key="p.id"
+              :label="`${p.productKey} - ${p.productName}`"
+              :value="p.id"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="设备">
-          <el-select v-model="query.deviceId" placeholder="选设备" style="width: 180px" filterable>
+          <el-select
+            v-model="query.deviceId"
+            placeholder="选设备"
+            style="width: 180px"
+            filterable
+          >
             <el-option
               v-for="d in devices.filter(x => !query.productId || x.productKey === products.find(p => p.id === query.productId)?.productKey)"
-              :key="d.deviceId" :label="`${d.deviceKey} (${d.deviceName})`" :value="d.deviceId" />
+              :key="d.deviceId"
+              :label="`${d.deviceKey} (${d.deviceName})`"
+              :value="d.deviceId"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="属性">
-          <el-select v-model="query.identifier" placeholder="选属性" style="width: 180px" :disabled="!query.deviceId">
-            <el-option v-for="p in props" :key="p.identifier"
-              :label="`${p.name} (${p.identifier})`" :value="p.identifier" />
+          <el-select
+            v-model="query.identifier"
+            placeholder="选属性"
+            style="width: 180px"
+            :disabled="!query.deviceId"
+          >
+            <el-option
+              v-for="p in props"
+              :key="p.identifier"
+              :label="`${p.name} (${p.identifier})`"
+              :value="p.identifier"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="时间">
-          <el-select v-model="query.timeRange" style="width: 160px">
-            <el-option v-for="r in timeRanges" :key="r.value" :label="r.label" :value="r.value" />
+          <el-select
+            v-model="query.timeRange"
+            style="width: 160px"
+          >
+            <el-option
+              v-for="r in timeRanges"
+              :key="r.value"
+              :label="r.label"
+              :value="r.value"
+            />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :icon="Search" @click="doQuery">查询</el-button>
-          <el-button :icon="Refresh" @click="loadOptions">刷新设备</el-button>
+          <el-button
+            type="primary"
+            :icon="Search"
+            @click="doQuery"
+          >
+            查询
+          </el-button>
+          <el-button
+            :icon="Refresh"
+            @click="loadOptions"
+          >
+            刷新设备
+          </el-button>
         </el-form-item>
       </el-form>
     </div>
 
     <!-- 统计卡片 -->
-    <el-row v-if="stats.count" :gutter="12" class="mb-12">
-      <el-col :xs="12" :sm="6">
+    <el-row
+      v-if="stats.count"
+      :gutter="12"
+      class="mb-12"
+    >
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="stat-card">
-          <div class="stat-num">{{ stats.count || 0 }}</div>
-          <div class="stat-label">数据点数</div>
+          <div class="stat-num">
+            {{ stats.count || 0 }}
+          </div>
+          <div class="stat-label">
+            数据点数
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="stat-card stat-blue">
-          <div class="stat-num">{{ stats.avg || '—' }}</div>
-          <div class="stat-label">平均值</div>
+          <div class="stat-num">
+            {{ stats.avg || '—' }}
+          </div>
+          <div class="stat-label">
+            平均值
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="stat-card stat-red">
-          <div class="stat-num">{{ stats.max || '—' }}</div>
-          <div class="stat-label">最大值</div>
+          <div class="stat-num">
+            {{ stats.max || '—' }}
+          </div>
+          <div class="stat-label">
+            最大值
+          </div>
         </div>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
         <div class="stat-card stat-green">
-          <div class="stat-num">{{ stats.min || '—' }}</div>
-          <div class="stat-label">最小值</div>
+          <div class="stat-num">
+            {{ stats.min || '—' }}
+          </div>
+          <div class="stat-label">
+            最小值
+          </div>
         </div>
       </el-col>
     </el-row>
@@ -229,8 +315,14 @@ window.addEventListener('resize', () => chart?.resize())
         <span><el-icon><DataLine /></el-icon> {{ query.identifier || '属性' }} 趋势</span>
         <span class="text-muted">共 {{ points.length }} 个数据点</span>
       </div>
-      <div ref="chartEl" class="chart-container"></div>
-      <el-empty v-if="points.length === 0 && !loading" description="该时间段暂无数据,请先通过 MQTT 模拟器上报数据" />
+      <div
+        ref="chartEl"
+        class="chart-container"
+      />
+      <el-empty
+        v-if="points.length === 0 && !loading"
+        description="该时间段暂无数据,请先通过 MQTT 模拟器上报数据"
+      />
     </div>
   </div>
 </template>

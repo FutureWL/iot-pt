@@ -653,7 +653,11 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="graphEl" class="topology-graph" :style="{ height: props.height }"></div>
+  <div
+    ref="graphEl"
+    class="topology-graph"
+    :style="{ height: props.height }"
+  />
 </template>
 
 <style scoped>
