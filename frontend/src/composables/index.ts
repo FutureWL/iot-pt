@@ -9,7 +9,7 @@
  * - useTable: 分页 loading 封装 (C7)
  */
 
-// export { useDict } from './useDict'
+export { useDict } from './useDict'
 // export { useTable } from './useTable'
 
 export {}
