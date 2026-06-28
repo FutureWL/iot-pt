@@ -1,10 +1,23 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+/**
+ * 告警中心 — <CrudList> 重构版 (483 → ~200 行)
+ *
+ * 设计要点:
+ *   - 列表/筛选/分页 由 <CrudList> 接管
+ *   - 顶部 4 张级别卡保留(自带 pulse 动画等样式)
+ *   - 告警级别是 NOTICE/ABNORMAL/SERIOUS/URGENT,StatusTag 默认 typeMap
+ *     不覆盖,自定义 4 个
+ *   - 状态 0/1/2 语义与 StatusTag 默认不同(0=未处理=danger),
+ *     自定义 typeMap
+ *   - 详情对话框保留(用 el-descriptions 替代 DescriptionList
+ *     是因为它支持 :span 控制)
+ */
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, View, Check, Close, Setting } from '@element-plus/icons-vue'
+import { View, Check, Close, Refresh, Setting } from '@element-plus/icons-vue'
 import {
-  pageAlertsCenter,
+  alertCrud,
   getAlertLevelStats,
   handleAlertCenter,
   createWorkOrderFromAlert,
@@ -13,53 +26,82 @@ import {
   type AlertLevelStat,
   type AlertLevel
 } from '@/api/alert/center'
+import { CrudList, StatusTag, type ColumnDef, type FilterItem, type StatusType } from '@/ui'
 
 const router = useRouter()
-const query = reactive<AlertCenterQuery>({
-  pageNum: 1, pageSize: 10, keyword: '',
-  level: undefined, status: undefined
-})
-const loading = ref(false)
-const list = ref<AlertCenterVO[]>([])
-const total = ref(0)
-const stats = ref<AlertLevelStat[]>([])
 
-const levelMap: Record<AlertLevel, { label: string; color: string; tag: string }> = {
-  NOTICE: { label: '注意', color: '#909399', tag: 'info' },
-  ABNORMAL: { label: '异常', color: '#e6a23c', tag: 'warning' },
-  SERIOUS: { label: '严重', color: '#f78989', tag: 'danger' },
-  URGENT: { label: '紧急', color: '#f56c6c', tag: 'danger' }
-}
-const statusMap: Record<number, { label: string; type: string }> = {
-  0: { label: '未处理', type: 'danger' },
-  1: { label: '已处理', type: 'success' },
-  2: { label: '已忽略', type: 'info' }
-}
-
-async function load() {
-  loading.value = true
-  try {
-    const [lRes, sRes]: any[] = await Promise.all([
-      pageAlertsCenter(query),
-      getAlertLevelStats()
-    ])
-    list.value = lRes.data?.records ?? []
-    total.value = lRes.data?.total ?? 0
-    stats.value = sRes.data ?? []
-  } finally {
-    loading.value = false
+// ========== 列表 ==========
+const filters: FilterItem[] = [
+  {
+    prop: 'level',
+    label: '级别',
+    type: 'select',
+    options: [
+      { label: '注意', value: 'NOTICE' },
+      { label: '异常', value: 'ABNORMAL' },
+      { label: '严重', value: 'SERIOUS' },
+      { label: '紧急', value: 'URGENT' }
+    ]
+  },
+  {
+    prop: 'status',
+    label: '状态',
+    type: 'select',
+    options: [
+      { label: '未处理', value: 0 },
+      { label: '已处理', value: 1 },
+      { label: '已忽略', value: 2 }
+    ]
   }
+]
+
+const columns: ColumnDef<AlertCenterVO>[] = [
+  { prop: 'level', label: '级别', width: 100, slot: 'level' },
+  { prop: 'title', label: '标题', minWidth: 220, showOverflowTooltip: true },
+  { prop: 'alertType', label: '告警类型', width: 120 },
+  { prop: 'deviceKey', label: '设备', minWidth: 180, slot: 'device' },
+  { prop: 'status', label: '状态', width: 100, slot: 'status' },
+  { prop: 'workOrderId', label: '工单', width: 100, slot: 'workOrder' },
+  { prop: 'handler', label: '处理人', width: 100 },
+  { prop: 'alertTime', label: '触发时间', width: 170 },
+  { label: '操作', width: 280, fixed: 'right', slot: 'actions' }
+]
+
+// StatusTag 自定义映射(覆盖默认值)
+const STATUS_TYPE_MAP: Record<string, StatusType> = {
+  '0': 'danger',     // 未处理
+  '1': 'success',    // 已处理
+  '2': 'info'        // 已忽略
+}
+const STATUS_LABEL_MAP: Record<number, string> = { 0: '未处理', 1: '已处理', 2: '已忽略' }
+
+const LEVEL_TYPE_MAP: Record<AlertLevel, StatusType> = {
+  NOTICE: 'info',
+  ABNORMAL: 'warning',
+  SERIOUS: 'danger',
+  URGENT: 'danger'
+}
+const LEVEL_LABEL_MAP: Record<AlertLevel, string> = {
+  NOTICE: '注意', ABNORMAL: '异常', SERIOUS: '严重', URGENT: '紧急'
 }
 
+// 列表 refresh 句柄
+const crudListRef = ref<{ refresh: () => Promise<void> } | null>(null)
+function refresh(): void { void crudListRef.value?.refresh() }
+
+// ========== KPI 统计卡 ==========
+const stats = ref<AlertLevelStat[]>([])
+async function loadStats() {
+  try {
+    const res: any = await getAlertLevelStats()
+    stats.value = res.data ?? []
+  } catch { /* ignore */ }
+}
 function statCount(level: AlertLevel): number {
   return stats.value.find(s => s.level === level)?.count ?? 0
 }
 
-function onSearch() { query.pageNum = 1; load() }
-function onReset() { query.keyword = ''; query.level = undefined; query.status = undefined; query.pageNum = 1; load() }
-function onPageChange(p: number) { query.pageNum = p; load() }
-function onSizeChange(s: number) { query.pageSize = s; query.pageNum = 1; load() }
-
+// ========== 行内操作 ==========
 async function onHandle(row: AlertCenterVO, status: 1 | 2) {
   const action = status === 1 ? '处理' : '忽略'
   let remark = ''
@@ -76,8 +118,8 @@ async function onHandle(row: AlertCenterVO, status: 1 | 2) {
   try {
     await handleAlertCenter(row.id, status, remark)
     ElMessage.success(`${action}成功`)
-    load()
-  } catch {}
+    refresh()
+  } catch { /* ignore */ }
 }
 
 async function onCreateWorkOrder(row: AlertCenterVO) {
@@ -87,14 +129,15 @@ async function onCreateWorkOrder(row: AlertCenterVO) {
     const workOrderId = res.data?.workOrderId
     ElMessage.success('工单已生成')
     if (workOrderId) router.push(`/workorder/detail/${workOrderId}`)
-  } catch {}
+  } catch { /* ignore */ }
 }
 
+// ========== 详情对话框 ==========
 const detailVisible = ref(false)
 const detail = ref<AlertCenterVO | null>(null)
 function showDetail(row: AlertCenterVO) { detail.value = row; detailVisible.value = true }
 
-onMounted(load)
+onMounted(loadStats)
 </script>
 
 <template>
@@ -112,281 +155,126 @@ onMounted(load)
         </el-button>
         <el-button
           :icon="Refresh"
-          @click="load"
+          @click="refresh"
         >
           刷新
         </el-button>
       </div>
     </div>
 
-    <!-- 4 级告警统计卡 -->
+    <!-- 4 级告警统计卡(保留自定义样式:pulse 动画 + 渐变背景) -->
     <el-row
       :gutter="16"
       class="mb-16"
     >
-      <el-col
-        :xs="12"
-        :sm="6"
-      >
+      <el-col :xs="12" :sm="6">
         <div class="level-card level-notice">
-          <div class="level-num">
-            {{ statCount('NOTICE') }}
-          </div>
-          <div class="level-label">
-            注意
-          </div>
+          <div class="level-num">{{ statCount('NOTICE') }}</div>
+          <div class="level-label">注意</div>
         </div>
       </el-col>
-      <el-col
-        :xs="12"
-        :sm="6"
-      >
+      <el-col :xs="12" :sm="6">
         <div class="level-card level-abnormal">
-          <div class="level-num">
-            {{ statCount('ABNORMAL') }}
-          </div>
-          <div class="level-label">
-            异常
-          </div>
+          <div class="level-num">{{ statCount('ABNORMAL') }}</div>
+          <div class="level-label">异常</div>
         </div>
       </el-col>
-      <el-col
-        :xs="12"
-        :sm="6"
-      >
+      <el-col :xs="12" :sm="6">
         <div class="level-card level-serious">
-          <div class="level-num">
-            {{ statCount('SERIOUS') }}
-          </div>
-          <div class="level-label">
-            严重
-          </div>
+          <div class="level-num">{{ statCount('SERIOUS') }}</div>
+          <div class="level-label">严重</div>
         </div>
       </el-col>
-      <el-col
-        :xs="12"
-        :sm="6"
-      >
+      <el-col :xs="12" :sm="6">
         <div class="level-card level-urgent">
-          <div class="level-num">
-            {{ statCount('URGENT') }}
-          </div>
-          <div class="level-label">
-            紧急
-          </div>
+          <div class="level-num">{{ statCount('URGENT') }}</div>
+          <div class="level-label">紧急</div>
         </div>
       </el-col>
     </el-row>
 
-    <!-- 搜索栏 -->
-    <div class="page-card search-bar">
-      <el-form
-        :inline="true"
-        @submit.prevent
-      >
-        <el-form-item label="关键字">
-          <el-input
-            v-model="query.keyword"
-            placeholder="标题 / 内容 / 设备 Key"
-            clearable
-            style="width: 220px"
-            :prefix-icon="Search"
-            @keyup.enter="onSearch"
-          />
-        </el-form-item>
-        <el-form-item label="级别">
-          <el-select
-            v-model="query.level"
-            placeholder="全部"
-            clearable
-            style="width: 120px"
-          >
-            <el-option
-              v-for="(v, k) in levelMap"
-              :key="k"
-              :label="v.label"
-              :value="k"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-select
-            v-model="query.status"
-            placeholder="全部"
-            clearable
-            style="width: 120px"
-          >
-            <el-option
-              label="未处理"
-              :value="0"
-            />
-            <el-option
-              label="已处理"
-              :value="1"
-            />
-            <el-option
-              label="已忽略"
-              :value="2"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
+    <CrudList
+      ref="crudListRef"
+      :api="alertCrud"
+      :columns="columns"
+      :filters="filters"
+      :row-key="'id'"
+      empty-text="暂无告警"
+      keyword-placeholder="标题 / 内容 / 设备 Key"
+    >
+      <template #column-level="{ row }">
+        <StatusTag
+          :value="(row as AlertCenterVO).level"
+          :label="LEVEL_LABEL_MAP[(row as AlertCenterVO).level]"
+          :type-map="LEVEL_TYPE_MAP"
+        />
+      </template>
+
+      <template #column-device="{ row }">
+        <el-tag size="small" type="info">
+          {{ (row as AlertCenterVO).deviceKey }}
+        </el-tag>
+        <span class="text-secondary text-xs ml-4">{{ (row as AlertCenterVO).deviceName }}</span>
+      </template>
+
+      <template #column-status="{ row }">
+        <StatusTag
+          :value="(row as AlertCenterVO).status"
+          :label="STATUS_LABEL_MAP[(row as AlertCenterVO).status]"
+          :type-map="STATUS_TYPE_MAP"
+        />
+      </template>
+
+      <template #column-workOrder="{ row }">
+        <el-link
+          v-if="(row as AlertCenterVO).workOrderId"
+          type="primary"
+          :underline="false"
+          @click="router.push(`/workorder/detail/${(row as AlertCenterVO).workOrderId}`)"
+        >
+          #{{ (row as AlertCenterVO).workOrderId }}
+        </el-link>
+        <span v-else class="text-disabled">—</span>
+      </template>
+
+      <template #column-actions="{ row }">
+        <el-button
+          link
+          type="primary"
+          :icon="View"
+          @click="showDetail(row as AlertCenterVO)"
+        >
+          详情
+        </el-button>
+        <template v-if="(row as AlertCenterVO).status === 0">
           <el-button
-            type="primary"
-            @click="onSearch"
+            link
+            type="success"
+            :icon="Check"
+            @click="onHandle(row as AlertCenterVO, 1)"
           >
-            查询
+            处理
           </el-button>
-          <el-button @click="onReset">
-            重置
+          <el-button
+            link
+            type="info"
+            :icon="Close"
+            @click="onHandle(row as AlertCenterVO, 2)"
+          >
+            忽略
           </el-button>
-        </el-form-item>
-      </el-form>
-    </div>
+          <el-button
+            link
+            type="warning"
+            @click="onCreateWorkOrder(row as AlertCenterVO)"
+          >
+            生成工单
+          </el-button>
+        </template>
+      </template>
+    </CrudList>
 
-    <!-- 列表 -->
-    <div class="page-card">
-      <el-table
-        v-loading="loading"
-        :data="list"
-        stripe
-        border
-        empty-text="暂无告警"
-      >
-        <el-table-column
-          label="级别"
-          width="100"
-        >
-          <template #default="{ row }">
-            <el-tag :style="{ background: levelMap[row.level as AlertLevel]?.color + '20', color: levelMap[row.level as AlertLevel]?.color, border: 'none' }">
-              {{ levelMap[row.level as AlertLevel]?.label || row.level }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column
-          prop="title"
-          label="标题"
-          min-width="220"
-          show-overflow-tooltip
-        />
-        <el-table-column
-          prop="alertType"
-          label="告警类型"
-          width="120"
-        />
-        <el-table-column
-          label="设备"
-          min-width="140"
-        >
-          <template #default="{ row }">
-            <el-tag
-              size="small"
-              type="info"
-            >
-              {{ row.deviceKey }}
-            </el-tag>
-            <span class="text-secondary text-xs ml-4">{{ row.deviceName }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column
-          label="状态"
-          width="100"
-        >
-          <template #default="{ row }">
-            <el-tag
-              :type="statusMap[row.status]?.type as any"
-              size="small"
-            >
-              {{ statusMap[row.status]?.label }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column
-          label="工单"
-          width="100"
-        >
-          <template #default="{ row }">
-            <el-link
-              v-if="row.workOrderId"
-              type="primary"
-              :underline="false"
-              @click="router.push(`/workorder/detail/${row.workOrderId}`)"
-            >
-              #{{ row.workOrderId }}
-            </el-link>
-            <span
-              v-else
-              class="text-disabled"
-            >—</span>
-          </template>
-        </el-table-column>
-        <el-table-column
-          prop="handler"
-          label="处理人"
-          width="100"
-        />
-        <el-table-column
-          prop="alertTime"
-          label="触发时间"
-          width="170"
-        />
-        <el-table-column
-          label="操作"
-          width="280"
-          fixed="right"
-        >
-          <template #default="{ row }">
-            <el-button
-              link
-              type="primary"
-              :icon="View"
-              @click="showDetail(row)"
-            >
-              详情
-            </el-button>
-            <el-button
-              v-if="row.status === 0"
-              link
-              type="success"
-              :icon="Check"
-              @click="onHandle(row, 1)"
-            >
-              处理
-            </el-button>
-            <el-button
-              v-if="row.status === 0"
-              link
-              type="info"
-              :icon="Close"
-              @click="onHandle(row, 2)"
-            >
-              忽略
-            </el-button>
-            <el-button
-              v-if="row.status === 0"
-              link
-              type="warning"
-              @click="onCreateWorkOrder(row)"
-            >
-              生成工单
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      <div class="pagination-wrap">
-        <el-pagination
-          v-model:current-page="query.pageNum"
-          v-model:page-size="query.pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @current-change="onPageChange"
-          @size-change="onSizeChange"
-        />
-      </div>
-    </div>
-
-    <!-- 详情 -->
+    <!-- 详情对话框 -->
     <el-dialog
       v-model="detailVisible"
       title="告警详情"
@@ -398,14 +286,18 @@ onMounted(load)
         border
       >
         <el-descriptions-item label="级别">
-          <el-tag :style="{ background: levelMap[detail.level as AlertLevel]?.color + '20', color: levelMap[detail.level as AlertLevel]?.color, border: 'none' }">
-            {{ levelMap[detail.level as AlertLevel]?.label || detail.level }}
-          </el-tag>
+          <StatusTag
+            :value="detail.level"
+            :label="LEVEL_LABEL_MAP[detail.level]"
+            :type-map="LEVEL_TYPE_MAP"
+          />
         </el-descriptions-item>
         <el-descriptions-item label="状态">
-          <el-tag :type="statusMap[detail.status]?.type as any">
-            {{ statusMap[detail.status]?.label }}
-          </el-tag>
+          <StatusTag
+            :value="detail.status"
+            :label="STATUS_LABEL_MAP[detail.status]"
+            :type-map="STATUS_TYPE_MAP"
+          />
         </el-descriptions-item>
         <el-descriptions-item label="告警类型">
           {{ detail.alertType }}
@@ -413,16 +305,10 @@ onMounted(load)
         <el-descriptions-item label="关联设备">
           {{ detail.deviceKey }} ({{ detail.deviceName }})
         </el-descriptions-item>
-        <el-descriptions-item
-          label="标题"
-          :span="2"
-        >
+        <el-descriptions-item label="标题" :span="2">
           {{ detail.title }}
         </el-descriptions-item>
-        <el-descriptions-item
-          label="内容"
-          :span="2"
-        >
+        <el-descriptions-item label="内容" :span="2">
           {{ detail.content || '—' }}
         </el-descriptions-item>
         <el-descriptions-item label="触发时间">
@@ -457,6 +343,9 @@ onMounted(load)
 .header-tools { display: flex; gap: $spacing-8; }
 .mb-16 { margin-bottom: $spacing-16; }
 .ml-4 { margin-left: $spacing-4; }
+.text-secondary { color: var(--iot-text-regular); }
+.text-disabled { color: var(--iot-text-disabled); }
+.text-xs { font-size: $font-size-extra-small; }
 
 .level-card {
   background: var(--iot-bg-card);
@@ -471,14 +360,11 @@ onMounted(load)
   &.level-serious { border-left-color: #f78989; background: linear-gradient(135deg, var(--iot-color-danger-light) 0%, #fff 100%); }
   &.level-urgent { border-left-color: var(--iot-color-danger); background: linear-gradient(135deg, var(--iot-color-danger-light) 0%, #fff 100%); animation: pulse 2s infinite; }
 }
-.level-num { font-size: 32px; font-weight: $font-weight-bold; font-family: var(--iot-font-family-code); color: var(--iot-text-primary); }
+.level-num { font-size: $font-size-mega; font-weight: $font-weight-bold; font-family: var(--iot-font-family-code); color: var(--iot-text-primary); }
 .level-label { font-size: $font-size-extra-small; color: var(--iot-text-secondary); margin-top: $spacing-4; }
 
 @keyframes pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(245, 108, 108, 0.4); }
   50% { box-shadow: 0 0 0 6px rgba(245, 108, 108, 0); }
 }
-
-.search-bar { margin-bottom: $spacing-12; padding: $spacing-16; :deep(.el-form-item) { margin-bottom: 0; } }
-.pagination-wrap { display: flex; justify-content: flex-end; margin-top: $spacing-16; }
 </style>

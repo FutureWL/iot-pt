@@ -8,6 +8,7 @@
 // 基础原子组件
 export { default as EmptyState } from './EmptyState.vue'
 export { default as StatusTag } from './StatusTag.vue'
+export type { StatusType } from './StatusTag.vue'
 export { default as KpiCard } from './KpiCard.vue'
 export { default as DescriptionList } from './DescriptionList.vue'
 

@@ -13,7 +13,8 @@
  */
 import { computed } from 'vue'
 
-type StatusType = 'success' | 'warning' | 'danger' | 'info' | 'primary'
+/** StatusTag 颜色类型(可被 StatusTag.typeMap 覆盖) */
+export type StatusType = 'success' | 'warning' | 'danger' | 'info' | 'primary'
 
 interface Props {
   /** 状态值:字符串(枚举)或数字(状态码) */
