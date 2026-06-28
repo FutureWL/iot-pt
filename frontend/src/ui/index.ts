@@ -18,8 +18,8 @@ export { default as DescriptionList } from './DescriptionList.vue'
 
 // CRUD 三件套
 export { default as QueryBar } from './QueryBar.vue'
-// export { default as DataTable } from './DataTable.vue'
-// export { default as Pager } from './Pager.vue'
+export { default as DataTable } from './DataTable.vue'
+export { default as Pager } from './Pager.vue'
 
 // CRUD 综合 — 在 C12 提交后解注释
 // export { default as CrudList } from './CrudList.vue'
