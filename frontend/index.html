@@ -5,6 +5,18 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#409eff" />
+    <!--
+      开发期 CSP:仅当 dev server 启动时生效
+      生产环境由 nginx 的 add_header Content-Security-Policy 注入,优先级更高
+      CSP 来源与 nginx 保持同步:
+        'self'                 - 项目自身
+        'unsafe-inline'        - Vue/Vite 模板 + index.html 内联脚本(FOUC 拦截)
+        'unsafe-eval'          - Vite dev 模式需要的 eval
+        https://webapi.amap.com - 高德地图 JS API
+        https://*.amap.com      - 高德地图瓦片/标注
+        ws: / wss:             - WebSocket(Vite HMR + 后端实时数据)
+    -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://webapi.amap.com; style-src 'self' 'unsafe-inline' https://*.amap.com; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' ws: wss: https://webapi.amap.com https://*.amap.com; frame-src 'self' https://*.amap.com; object-src 'none'; base-uri 'self'; form-action 'self'" />
     <title>物联网平台</title>
     <script>
       // 主题预检测 — 在 CSS 加载前把 .dark class 挂到 <html>
@@ -29,7 +41,7 @@
     <style>
       .app-loading { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f5f7fa; }
       .app-loading-spinner { width: 48px; height: 48px; border: 4px solid #e4e7ed; border-top-color: #409eff; border-radius: 50%; animation: app-loading-spin 0.8s linear infinite; }
-      .app-loading-text { margin-top: 16px; color: #606266; font-size: 14px; }
+      .app-loading-text { margin: 16px 0 0; color: #606266; font-size: 14px; }
       @keyframes app-loading-spin { to { transform: rotate(360deg); } }
     </style>
     <script type="module" src="/src/main.ts"></script>
