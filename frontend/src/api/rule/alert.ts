@@ -1,5 +1,6 @@
 import request from '@/api/request'
 import type { PageQuery } from '@/types/common'
+import { adaptCrudPage } from '@/api/crud'
 
 export interface IotAlertVO {
   id: number
@@ -54,4 +55,9 @@ export function alertStats() {
     url: '/alert/stats',
     method: 'get'
   })
+}
+
+/** CrudList 适配 */
+export const alertListCrud = {
+  page: adaptCrudPage<IotAlertVO, IotAlertQuery>(pageAlerts)
 }
