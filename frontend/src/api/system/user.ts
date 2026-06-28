@@ -1,5 +1,6 @@
 import request from '@/api/request'
 import type { PageQuery } from '@/types/common'
+import { adaptCrudPage, adaptCrudRemove } from '@/api/crud'
 import type { SysRoleVO } from './role'
 export type { SysRoleVO } from './role'
 
@@ -86,3 +87,9 @@ export function toggleStatus(id: number, status: number) {
 
 // 角色 API 透传
 export { allRoles } from './role'
+
+/** CrudList 适配 */
+export const userCrud = {
+  page: adaptCrudPage<SysUserVO, UserQuery>(pageUsers),
+  remove: adaptCrudRemove<SysUserVO>(deleteUser)
+}
