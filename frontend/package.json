@@ -11,6 +11,8 @@
     "type-check": "vue-tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "lint:css": "stylelint \"src/**/*.{css,scss}\"",
+    "lint:css:fix": "stylelint --fix \"src/**/*.{css,scss}\"",
     "format": "prettier --write \"src/**/*.{js,ts,vue,json,scss,md,yml,yaml}\" \"tests/**/*.{ts,tsx}\"",
     "format:check": "prettier --check \"src/**/*.{js,ts,vue,json,scss,md,yml,yaml}\" \"tests/**/*.{ts,tsx}\"",
     "test": "vitest",
@@ -25,7 +27,7 @@
     "e2e:debug": "playwright test --debug",
     "e2e:report": "playwright show-report",
     "e2e:install": "playwright install --with-deps chromium",
-    "verify": "npm run type-check && npm run lint && npm run test:run && npm run e2e",
+    "verify": "npm run type-check && npm run lint && npm run lint:css && npm run test:run && npm run e2e",
     "prepare": "husky"
   },
   "dependencies": {
@@ -63,6 +65,8 @@
     "lint-staged": "^17.0.8",
     "prettier": "^3.9.1",
     "sass": "^1.80.6",
+    "stylelint": "^16.10.0",
+    "stylelint-config-standard-scss": "^14.0.0",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.62.0",
     "unplugin-auto-import": "^0.18.5",

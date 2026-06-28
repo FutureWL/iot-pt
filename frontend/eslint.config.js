@@ -52,15 +52,16 @@ export default [
       'vue/no-setup-props-destructure': 'off',
       // 允许 .vue 文件 <script setup> 顶层 await
       'vue/no-top-level-await': 'off',
-      // 允许 console.warn/error (项目内多处使用)
-      'no-console': 'off',
+      // 禁止 console.log/debug,允许 warn/error(用于真正的错误反馈)
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
       // 允许 _ 前缀未使用参数 (catch err 等)
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': [
         'warn',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
       ],
-      // 允许 any (迁移期妥协,后续严格化)
+      // 允许 any(迁移期妥协,见 docs/inspections/2026-06-28-lint-setup.md 的 baseline 84+42 现状)
+      // 新代码 PR 应避免 any,但本规则不强制以免批量噪音
       '@typescript-eslint/no-explicit-any': 'off',
       // 空行规则宽松化
       'no-multiple-empty-lines': ['warn', { max: 2, maxEOF: 1, maxBOF: 0 }],
@@ -70,8 +71,13 @@ export default [
       semi: ['warn', 'never'],
       // 尾逗号 none
       'comma-dangle': 'off',
-      // TS 严格模式对项目友好,但允许 escape hatch
-      '@typescript-eslint/no-non-null-assertion': 'off'
+      // 非空断言(迁移期允许,见 baseline 注释)
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      // 强制 ES Module 类型导入写法(新规则,仅影响新代码习惯)
+      '@typescript-eslint/consistent-type-imports': [
+        'warn',
+        { prefer: 'type-imports', fixStyle: 'separate-type-imports' }
+      ]
     }
   },
 

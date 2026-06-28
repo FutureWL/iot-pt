@@ -37,7 +37,9 @@ export class WSClient {
     this.url = this.buildUrl(path)
   }
 
-  get isConnected() { return this.connected.value }
+  get isConnected() {
+    return this.connected.value
+  }
 
   private buildUrl(path: string): string {
     const proto = location.protocol === 'https:' ? 'wss' : 'ws'
@@ -65,19 +67,30 @@ export class WSClient {
   }
 
   private emit(type: string, data: any) {
-    this.handlers.get(type)?.forEach(h => {
-      try { h(data) } catch (e) { console.error('WS handler err', e) }
+    this.handlers.get(type)?.forEach((h) => {
+      try {
+        h(data)
+      } catch (e) {
+        console.error('WS handler err', e)
+      }
     })
-    this.handlers.get('*')?.forEach(h => {
-      try { h({ type, ...data }) } catch (e) { console.error('WS handler err', e) }
+    this.handlers.get('*')?.forEach((h) => {
+      try {
+        h({ type, ...data })
+      } catch (e) {
+        console.error('WS handler err', e)
+      }
     })
   }
 
   connect() {
-    if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
+    if (
+      this.ws &&
+      (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)
+    ) {
       return
     }
-    console.log('[WS] 连接中:', this.url.replace(/token=.*/, 'token=***'))
+    console.debug('[WS] 连接中:', this.url.replace(/token=.*/, 'token=***'))
     try {
       this.ws = new WebSocket(this.url)
     } catch (e: any) {
@@ -87,7 +100,7 @@ export class WSClient {
       return
     }
     this.ws.onopen = () => {
-      console.log('[WS] 已连接', this.url.replace(/token=.*/, 'token=***'))
+      console.debug('[WS] 已连接', this.url.replace(/token=.*/, 'token=***'))
       this.connected.value = true
       this.lastError.value = ''
       this.reconnectDelay = 1000
@@ -109,7 +122,7 @@ export class WSClient {
     }
     this.ws.onclose = (ev) => {
       // 记录 code + reason,排查路径/鉴权问题时很关键
-      console.log('[WS] 断开', `code=${ev.code} reason=${ev.reason || '(空)'}`)
+      console.debug('[WS] 断开', `code=${ev.code} reason=${ev.reason || '(空)'}`)
       this.connected.value = false
       this.lastError.value = `code=${ev.code}${ev.reason ? ' ' + ev.reason : ''}`
       this.stopPing()
@@ -131,21 +144,31 @@ export class WSClient {
     this.stopPing()
     this.pingTimer = setInterval(() => {
       if (this.ws?.readyState === WebSocket.OPEN) {
-        try { this.ws.send('ping') } catch {}
+        try {
+          this.ws.send('ping')
+        } catch {}
       }
     }, 25000)
   }
 
   private stopPing() {
-    if (this.pingTimer) { clearInterval(this.pingTimer); this.pingTimer = null }
+    if (this.pingTimer) {
+      clearInterval(this.pingTimer)
+      this.pingTimer = null
+    }
   }
 
   close() {
-    if (this.reconnectTimer) { clearTimeout(this.reconnectTimer); this.reconnectTimer = null }
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer)
+      this.reconnectTimer = null
+    }
     this.stopPing()
     if (this.ws) {
-      this.ws.onclose = null  // 阻止重连
-      try { this.ws.close() } catch {}
+      this.ws.onclose = null // 阻止重连
+      try {
+        this.ws.close()
+      } catch {}
       this.ws = null
     }
     this.connected.value = false

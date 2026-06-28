@@ -235,11 +235,11 @@ async function onResetPwdSubmit() {
   pwdSubmitting.value = true
   const username = pwdTarget.username
   const targetId = pwdTarget.id
-  console.log('[resetPwd] 开始请求', { id: targetId, username })
+  console.debug('[resetPwd] 开始请求', { id: targetId, username })
 
   try {
     const res: any = await resetPassword(targetId, pwdForm.newPassword)
-    console.log('[resetPwd] 后端响应', res)
+    console.debug('[resetPwd] 后端响应', res)
 
     // 多渠道反馈 - 你绝对会看到其中一个
     ElNotification.success({
