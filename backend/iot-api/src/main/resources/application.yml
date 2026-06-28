@@ -97,6 +97,34 @@ knife4j:
   setting:
     language: zh_cn
 
+# Actuator 可观测性(K8s 探针 / 监控系统接入)
+# 仅暴露 health/info/metrics,其他端点按需开启
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      # 开发环境显示详情,生产环境走 when-authorized(详见 prod profile)
+      show-details: when-authorized
+      probes:
+        enabled: true  # K8s liveness/readiness 探针
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    os:
+      enabled: true
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99
+
 # JWT 配置
 iot:
   # role: all(单进程,默认) | api(独立 API 进程) | iot(独立 IoT 进程)
@@ -159,6 +187,12 @@ spring:
   config:
     activate:
       on-profile: prod
+# 生产环境关闭 actuator 详细信息,只暴露状态 UP/DOWN
+management:
+  endpoint:
+    health:
+      show-details: never
+      show-components: never
 logging:
   level:
     root: WARN

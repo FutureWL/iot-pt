@@ -63,6 +63,11 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-expression</artifactId>
         </dependency>
+        <!-- 可观测性: 健康检查 + 指标(K8s 探针/监控系统接入) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
         <!-- API 文档 -->
         <dependency>
             <groupId>com.github.xiaoymin</groupId>
@@ -91,6 +96,51 @@
                 <configuration>
                     <mainClass>com.iot.platform.IotPlatformApplication</mainClass>
                 </configuration>
+            </plugin>
+            <!-- JaCoCo 覆盖率门禁
+                 当前 baseline:1%(仅 4 个 Controller 有测试)
+                 TODO:每加一批 service 单测就把 minimum 抬一档
+                 目标路径:1% → 10% → 30% → 60% → 80%(分 4-5 个 sprint)
+            -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>check-coverage</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.01</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
