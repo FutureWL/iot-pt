@@ -12,6 +12,8 @@ export default [
   {
     ignores: [
       'dist/**',
+      'dist-story/**',
+      '.histoire/dist/**',
       'node_modules/**',
       'coverage/**',
       'playwright-report/**',
@@ -25,6 +27,8 @@ export default [
       'postcss.config.*',
       'tailwind.config.*',
       'stylelint.config.*',
+      // Node 脚本(使用 process/fs 等内置模块)
+      'scripts/**',
       // Histoire 组件故事文件(由 histoire 工具单独处理)
       'src/**/*.stories.ts',
       'src/**/*.story.vue',

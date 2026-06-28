@@ -52,6 +52,8 @@ ENV/
 node_modules/
 dist/
 dist-ssr/
+dist-story/
+.histoire/dist/
 *.local
 .pnpm-store/
 
