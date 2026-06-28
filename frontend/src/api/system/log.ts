@@ -1,5 +1,6 @@
 import request from '@/api/request'
 import type { PageQuery } from '@/types/common'
+import { asCrudApi } from '@/api/crud'
 
 export interface SysOperationLogVO {
   id: number
@@ -38,3 +39,18 @@ export function pageOperationLogs(params: OperationLogQuery) {
 export function getOperationLog(id: number) {
   return request<SysOperationLogVO>({ url: `/system/log/${id}`, method: 'get' })
 }
+
+/** CrudList 适配 */
+export const operationLogCrud = asCrudApi<SysOperationLogVO, OperationLogQuery>({
+  page: async (q) => {
+    const res: any = await pageOperationLogs(q)
+    const data = res.data ?? {}
+    return {
+      records: data.records ?? [],
+      total: data.total ?? 0,
+      size: data.size ?? q.pageSize ?? 20,
+      current: data.current ?? q.pageNum ?? 1,
+      pages: data.pages ?? Math.ceil((data.total ?? 0) / (data.size ?? q.pageSize ?? 20))
+    }
+  }
+})
