@@ -1,7 +1,8 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
-// @ts-ignore
+// element-plus/dist/locale/*.mjs 没有 .d.ts,用 @ts-expect-error 抑制
+// @ts-expect-error - no types for locale/*.mjs
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 // 加载 Element Plus 基础样式(ElMessage / ElNotification / ElMessageBox / ElLoading
 // 等以命令式 API 调用的组件不在模板中,unplugin-vue-components 不会为它们注入 CSS,

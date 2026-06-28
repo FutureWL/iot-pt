@@ -476,7 +476,7 @@ onBeforeUnmount(() => {
             </template>
           </el-table-column>
           <el-table-column label="状态">
-            <template #default="{ row }">
+            <template #default>
               <el-tag
                 type="success"
                 size="small"

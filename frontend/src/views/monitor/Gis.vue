@@ -28,8 +28,10 @@ const statusMap: Record<number, { label: string; color: string; type: string }> 
 
 // WGS-84 → GCJ-02 火星坐标转换(国网 GPS 设备默认 WGS-84)
 function wgs84ToGcj02(lng: number, lat: number): [number, number] {
+  // eslint-disable-next-line no-loss-of-precision -- 地球参数,WGS-84 标准值
   const PI = 3.14159265358979324
   const a = 6378240.0
+  // eslint-disable-next-line no-loss-of-precision -- WGS-84 偏心率平方
   const ee = 0.00669342162296594323
   function outOfChina(l: number, w: number) { return w < 72.004 || w > 137.8347 || l < 0.8293 || l > 55.8271 }
   function transformLat(x: number, y: number) {

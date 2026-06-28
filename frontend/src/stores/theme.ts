@@ -9,7 +9,7 @@ const HTML_CLASS = 'dark'
 const MEDIA_QUERY = '(prefers-color-scheme: dark)'
 
 function readModeFromStorage(): ThemeMode {
-  let raw: string | null = null
+  let raw: string | null
   try {
     raw = localStorage.getItem(STORAGE_KEY)
   } catch {
