@@ -1,5 +1,6 @@
 import request from '@/api/request'
 import type { PageQuery } from '@/types/common'
+import { adaptCrudPage, adaptCrudRemove } from '@/api/crud'
 
 export interface IotDeviceVO {
   id: number
@@ -84,4 +85,10 @@ export function toggleDeviceStatus(id: number, status: number) {
     url: `/iot/device/${id}/status/${status}`,
     method: 'put'
   })
+}
+
+/** CrudList 适配 */
+export const deviceCrud = {
+  page: adaptCrudPage<IotDeviceVO, IotDeviceQuery>(pageDevices),
+  remove: adaptCrudRemove<IotDeviceVO>(deleteDevice)
 }
