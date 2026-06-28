@@ -127,6 +127,7 @@ function openEdit(row: SysUserVO) {
 
 async function onSubmit() {
   if (!formRef.value) return
+  // eslint-disable-next-line no-useless-assignment
   let valid = false
   try {
     valid = await formRef.value.validate()
@@ -224,6 +225,7 @@ async function onResetPwdSubmit() {
   }
 
   // 用 Promise 形式的 validate,避开回调式异步语义陷阱
+  // eslint-disable-next-line no-useless-assignment
   let valid = false
   try {
     valid = await pwdFormRef.value.validate()

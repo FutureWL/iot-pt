@@ -72,13 +72,13 @@ function onSearch(searchValues: Record<string, unknown>): void {
   void fetchPage()
 }
 
-// Pager 双向绑定
+// Pager 双向绑定(currentPage 避免与可能的 props 重名;pageSize 同理)
 const currentPage = computed<number>({
   get: () => query.pageNum,
   set: (v: number) => setPage(v)
 })
 
-const pageSize = computed<number>({
+const sizeModel = computed<number>({
   get: () => query.pageSize,
   set: (v: number) => setPageSize(v)
 })
@@ -115,7 +115,7 @@ defineExpose({ refresh: fetchPage, reset })
     <div class="crud-list__pager">
       <Pager
         v-model:current="currentPage"
-        v-model:size="pageSize"
+        v-model:size="sizeModel"
         :total="total"
       />
     </div>

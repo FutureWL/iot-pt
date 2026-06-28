@@ -155,6 +155,7 @@ function openPropEdit(idx: number) {
 
 async function onPropSubmit() {
   if (!propFormRef.value) return
+  // eslint-disable-next-line no-useless-assignment
   let valid = false
   try { valid = await propFormRef.value.validate() } catch { valid = false }
   if (!valid) return
@@ -251,6 +252,7 @@ function openEventEdit(idx: number) {
 }
 async function onEventSubmit() {
   if (!eventFormRef.value) return
+  // eslint-disable-next-line no-useless-assignment
   let valid = false
   try { valid = await eventFormRef.value.validate() } catch { valid = false }
   if (!valid) return
@@ -311,6 +313,7 @@ function openServiceEdit(idx: number) {
 }
 async function onServiceSubmit() {
   if (!serviceFormRef.value) return
+  // eslint-disable-next-line no-useless-assignment
   let valid = false
   try { valid = await serviceFormRef.value.validate() } catch { valid = false }
   if (!valid) return

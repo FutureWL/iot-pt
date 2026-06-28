@@ -87,7 +87,8 @@ function openEditValue(row: IotDeviceShadowVO) {
 
 async function onSaveValue() {
   if (!device.value) return
-  let v: any = editForm.value
+  // let v 无初值:try 内 4 个分支都会赋值,TS 会在使用前检查
+  let v: string | number | boolean
   try {
     if (editForm.type === 'int') v = parseInt(editForm.value) || 0
     else if (editForm.type === 'float') v = parseFloat(editForm.value) || 0

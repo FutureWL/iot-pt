@@ -95,6 +95,7 @@ function openEditItem(row: SysDictVO) {
 
 async function onSaveItem() {
   if (!itemFormRef.value) return
+  // eslint-disable-next-line no-useless-assignment
   let valid = false
   try { valid = await itemFormRef.value.validate() } catch { valid = false }
   if (!valid) return

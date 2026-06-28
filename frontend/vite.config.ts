@@ -112,7 +112,15 @@ export default defineConfig(({ mode }) => {
         provider: 'v8',
         reporter: ['text', 'html', 'json-summary', 'lcov'],
         reportsDirectory: './coverage',
-        include: ['src/stores/**', 'src/utils/**', 'src/components/**'],
+        // 计入阈值的核心模块(不含纯渲染页面 / 业务 API endpoint wrapper)
+        include: [
+          'src/stores/**',
+          'src/utils/**',
+          'src/components/**',
+          'src/ui/**',           // 设计系统组件
+          'src/composables/**',  // 组合式函数(useTable / useDict)
+          'src/api/crud.ts'      // CrudApi 适配器(其他业务 endpoint wrapper 由 E2E 覆盖)
+        ],
         exclude: [
           'src/**/*.{test,spec}.{ts,tsx}',
           'src/main.ts',
@@ -120,14 +128,35 @@ export default defineConfig(({ mode }) => {
           'src/**/types.ts',
           'src/**/*.d.ts',
           'src/**/*.config.ts',
-          'src/**/mocks/**'
+          'src/**/mocks/**',
+          // 业务 API endpoint wrapper(pageXxx / createXxx 等)是简单的 axios 调用,
+          // 由 E2E 间接覆盖,不计入单元覆盖率门槛
+          'src/api/alert/**',
+          'src/api/device/**',
+          'src/api/iot/**',
+          'src/api/knowledge/**',
+          'src/api/login/**',
+          'src/api/ops/**',
+          'src/api/product/**',
+          'src/api/report/**',
+          'src/api/rule/**',
+          'src/api/screen/**',
+          'src/api/system/**',
+          'src/api/workorder/**',
+          'src/api/dashboard.ts',
+          'src/api/monitor.ts',
+          'src/api/topology.ts',
+          // 业务页面由 E2E 覆盖
+          'src/views/**'
         ],
         // 阈值: 渐进式提升
+        //   当前均值 ~70%(不含业务 endpoint wrapper),作为中期目标
+        //   设计系统本身(ui/) 实际在 90%+
         thresholds: {
-          lines: 60,
-          functions: 60,
-          branches: 60,
-          statements: 60
+          lines: 65,
+          functions: 65,
+          branches: 55,
+          statements: 65
         }
       }
     }

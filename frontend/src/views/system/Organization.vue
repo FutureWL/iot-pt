@@ -48,6 +48,7 @@ function openEdit(node: SysOrganizationVO) {
 
 async function onSubmit() {
   if (!formRef.value) return
+  // eslint-disable-next-line no-useless-assignment
   let valid = false
   try { valid = await formRef.value.validate() } catch { valid = false }
   if (!valid) return

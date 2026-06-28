@@ -18,7 +18,13 @@ export default [
       'test-results/**',
       '**/*.d.ts',
       'auto-imports.d.ts',
-      'components.d.ts'
+      'components.d.ts',
+      // Node.js CommonJS 配置文件(commitlint/postcss/tailwind 等)
+      '*.config.cjs',
+      '*.config.js',
+      'postcss.config.*',
+      'tailwind.config.*',
+      'stylelint.config.*'
     ]
   },
 
@@ -73,10 +79,28 @@ export default [
       'comma-dangle': 'off',
       // 非空断言(迁移期允许,见 baseline 注释)
       '@typescript-eslint/no-non-null-assertion': 'off',
+      // 允许空 catch(拦截器已处理 / 业务上可忽略)
+      'no-empty': ['error', { allowEmptyCatch: true }],
       // 强制 ES Module 类型导入写法(新规则,仅影响新代码习惯)
       '@typescript-eslint/consistent-type-imports': [
         'warn',
         { prefer: 'type-imports', fixStyle: 'separate-type-imports' }
+      ],
+      // 多单词组件名 — 例外列表(都是项目惯例命名,不会与 HTML 冲突)
+      //   1. views/**: 路由页面组件,按业务名命名(Index / List / Detail 等)
+      //   2. src/ui/Pager.vue: 设计系统中的 UI 组件,与 HTML <pager> 无冲突
+      //   3. src/main.ts、App.vue: 根入口
+      'vue/multi-word-component-names': [
+        'error',
+        {
+          ignores: [
+            'Index', 'List', 'Detail', 'Editor', 'Center', 'Overview', 'Shadow',
+            'Group', 'History', 'Realtime', 'Environment', 'Gis', 'Pd', 'Prpd',
+            'Temperature', 'Topology', 'Statistics', 'Log', 'Menu', 'Notify',
+            'Organization', 'Role', 'Tenant', 'User', 'Dict', 'Alert',
+            'Pager'
+          ]
+        }
       ]
     }
   },
