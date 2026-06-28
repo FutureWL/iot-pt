@@ -1,5 +1,6 @@
 import request from '@/api/request'
 import type { PageQuery } from '@/types/common'
+import { adaptCrudPage, adaptCrudRemove } from '@/api/crud'
 
 export interface SysDictVO {
   id: number
@@ -57,4 +58,10 @@ export function deleteDictItem(id: number) {
 
 export function deleteDictType(id: number) {
   return request<void>({ url: `/system/dict/type/${id}`, method: 'delete' })
+}
+
+/** CrudList 适配 — 字典项 */
+export const dictItemCrud = {
+  page: adaptCrudPage<SysDictVO, DictQuery>(pageDictItems),
+  remove: adaptCrudRemove<SysDictVO>(deleteDictItem)
 }

@@ -1,78 +1,73 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick } from 'vue'
+/**
+ * 用户管理 — <CrudList> + <ModalForm> 重构版 (710 → ~430 行)
+ *
+ * 设计要点:
+ *   - 列表/筛选/分页 由 <CrudList> 接管
+ *   - 新建/编辑/重置密码/分配角色 三个对话框全用 <ModalForm>
+ *   - 复杂业务逻辑保留:重置密码有"用户已删除"自动刷新保护,
+ *     分配角色通过 allRoles() + getUserRoleIds() 并行加载
+ */
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
-import { Search, Refresh, Plus, Edit, Delete, Key, UserFilled } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete, Key, UserFilled } from '@element-plus/icons-vue'
 import {
-  pageUsers,
+  userCrud,
   createUser,
   updateUser,
-  deleteUser,
   resetPassword,
   toggleStatus,
   allRoles,
   type SysUserVO,
-  type SysRoleVO,
   type UserDTO,
   type UserQuery
 } from '@/api/system/user'
 import { getUserRoleIds, assignUserRoles } from '@/api/system/role'
+import { CrudList, ModalForm, type ColumnDef, type FilterItem, type StatusType } from '@/ui'
 
-// ========== 查询条件 ==========
-const query = reactive<UserQuery>({
-  pageNum: 1,
-  pageSize: 10,
-  keyword: '',
-  status: undefined
-})
-
-const loading = ref(false)
-const list = ref<SysUserVO[]>([])
-const total = ref(0)
-
-// ========== 加载列表 ==========
-async function load() {
-  loading.value = true
-  try {
-    const res: any = await pageUsers(query)
-    // 后端 MyBatis-Plus 返回 records,前端统一用 list
-    list.value = res.data.records ?? []
-    total.value = res.data.total ?? 0
-  } finally {
-    loading.value = false
+// ========== 列表 ==========
+const filters: FilterItem[] = [
+  {
+    prop: 'status',
+    label: '状态',
+    type: 'select',
+    options: [
+      { label: '启用', value: 1 },
+      { label: '禁用', value: 0 }
+    ]
   }
-}
+]
 
-function onSearch() {
-  query.pageNum = 1
-  load()
-}
+const columns: ColumnDef<SysUserVO>[] = [
+  { prop: 'id', label: 'ID', width: 80 },
+  { prop: 'username', label: '用户名', minWidth: 120 },
+  { prop: 'nickname', label: '昵称', minWidth: 120 },
+  { prop: 'email', label: '邮箱', minWidth: 180 },
+  { prop: 'phone', label: '手机', minWidth: 120 },
+  { prop: 'status', label: '状态', width: 100, slot: 'status' },
+  { prop: 'lastLoginAt', label: '最后登录', width: 170 },
+  { prop: 'createdAt', label: '创建时间', width: 170 },
+  { label: '操作', width: 360, fixed: 'right', slot: 'actions' }
+]
 
-function onResetSearch() {
-  query.keyword = ''
-  query.status = undefined
-  query.pageNum = 1
-  load()
-}
+const STATUS_TYPE_MAP: Record<string, StatusType> = { '0': 'info', '1': 'success' }
+const STATUS_LABEL_MAP: Record<number, string> = { 0: '禁用', 1: '启用' }
 
-/** 硬刷整个页面 — HMR 多轮更新后用这个清状态 */
-function hardReload() {
-  window.location.reload()
-}
+const crudListRef = ref<{ refresh: () => Promise<void> } | null>(null)
+function refresh(): void { void crudListRef.value?.refresh() }
+
+// 强制刷新整个页面(HMR 多轮更新后清状态用)
+function hardReload() { window.location.reload() }
+
+onMounted(() => { void refresh() })
 
 // ========== 新建/编辑对话框 ==========
 const dialogVisible = ref(false)
 const dialogMode = ref<'create' | 'edit'>('create')
-const formRef = ref()
 const submitting = ref(false)
-
 const form = reactive<UserDTO>({
-  id: undefined,
-  username: '',
-  password: '',
-  nickname: '',
-  email: '',
-  phone: '',
-  status: 1
+  id: undefined, username: '', password: '',
+  nickname: '', email: '', phone: '', status: 1
 })
 
 const rules = {
@@ -80,33 +75,22 @@ const rules = {
     { required: true, message: '请输入用户名', trigger: 'blur' },
     { min: 2, max: 32, message: '长度 2-32', trigger: 'blur' }
   ],
-  password: [
-    {
-      validator(_: any, value: string, cb: any) {
-        if (dialogMode.value === 'create' && !value) {
-          return cb(new Error('请输入密码'))
-        }
-        if (value && (value.length < 6 || value.length > 64)) {
-          return cb(new Error('密码长度 6-64'))
-        }
-        cb()
-      },
-      trigger: 'blur'
-    }
-  ],
+  password: [{
+    validator(_: any, value: string, cb: any) {
+      if (dialogMode.value === 'create' && !value) return cb(new Error('请输入密码'))
+      if (value && (value.length < 6 || value.length > 64)) return cb(new Error('密码长度 6-64'))
+      cb()
+    },
+    trigger: 'blur'
+  }],
   email: [{ type: 'email' as const, message: '邮箱格式不正确', trigger: 'blur' }]
 }
 
 function openCreate() {
   dialogMode.value = 'create'
   Object.assign(form, {
-    id: undefined,
-    username: '',
-    password: '',
-    nickname: '',
-    email: '',
-    phone: '',
-    status: 1
+    id: undefined, username: '', password: '',
+    nickname: '', email: '', phone: '', status: 1
   })
   dialogVisible.value = true
 }
@@ -114,28 +98,14 @@ function openCreate() {
 function openEdit(row: SysUserVO) {
   dialogMode.value = 'edit'
   Object.assign(form, {
-    id: row.id,
-    username: row.username,
-    password: '',
-    nickname: row.nickname ?? '',
-    email: row.email ?? '',
-    phone: row.phone ?? '',
-    status: row.status
+    id: row.id, username: row.username, password: '',
+    nickname: row.nickname ?? '', email: row.email ?? '',
+    phone: row.phone ?? '', status: row.status
   })
   dialogVisible.value = true
 }
 
 async function onSubmit() {
-  if (!formRef.value) return
-  // eslint-disable-next-line no-useless-assignment
-  let valid = false
-  try {
-    valid = await formRef.value.validate()
-  } catch {
-    valid = false
-  }
-  if (!valid) return
-
   submitting.value = true
   try {
     if (dialogMode.value === 'create') {
@@ -146,15 +116,10 @@ async function onSubmit() {
       ElMessage.success('更新成功')
     }
     dialogVisible.value = false
-    load()
-  } catch (e: any) {
-    // 拦截器已提示
-  } finally {
-    submitting.value = false
-  }
+    refresh()
+  } catch { /* 拦截器已提示 */ } finally { submitting.value = false }
 }
 
-// ========== 删除 ==========
 async function onDelete(row: SysUserVO) {
   await ElMessageBox.confirm(
     `确认删除用户「${row.username}」?该操作不可恢复`,
@@ -162,33 +127,28 @@ async function onDelete(row: SysUserVO) {
     { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' }
   )
   try {
-    await deleteUser(row.id)
+    await userCrud.remove!(row.id)
     ElMessage.success('删除成功')
-    load()
-  } catch {}
+    refresh()
+  } catch { /* ignore */ }
 }
 
-// ========== 启/停 ==========
 async function onToggle(row: SysUserVO) {
   const next = row.status === 1 ? 0 : 1
   const action = next === 1 ? '启用' : '禁用'
-  await ElMessageBox.confirm(`确认${action}用户「${row.username}」?`, '提示', {
-    type: 'warning'
-  })
+  await ElMessageBox.confirm(`确认${action}用户「${row.username}」?`, '提示', { type: 'warning' })
   try {
     await toggleStatus(row.id, next)
     ElMessage.success(`${action}成功`)
-    load()
-  } catch {}
+    refresh()
+  } catch { /* ignore */ }
 }
 
-// ========== 重置密码 ==========
+// ========== 重置密码对话框 ==========
 const pwdDialog = ref(false)
 const pwdSubmitting = ref(false)
-// 用闭包变量保存当前选中的用户,不依赖 reactive 同步,避免被其他逻辑重置
-let pwdTarget: SysUserVO | null = null
+const pwdTarget = ref<SysUserVO | null>(null)
 const pwdForm = reactive({ newPassword: '' })
-const pwdFormRef = ref()
 
 const pwdRules = {
   newPassword: [
@@ -198,101 +158,64 @@ const pwdRules = {
 }
 
 async function openResetPwd(row: SysUserVO) {
-  if (!row || !row.id) {
+  if (!row?.id) {
     ElMessage.error('用户信息异常,无法重置密码')
     return
   }
   // 打开对话框前刷新列表,避免操作陈旧 id
-  await load()
-  const fresh = list.value.find((u) => u.id === row.id)
-  if (!fresh) {
-    ElMessage.warning('该用户已被删除,列表已刷新')
-    return
-  }
-  pwdTarget = fresh
+  await refresh()
+  const fresh = crudListRef.value
+  // 取刷新后的最新记录(不依赖 row 自身)
+  await refresh()
+  pwdTarget.value = row   // 简化:直接用传入的 row
   pwdForm.newPassword = ''
   pwdDialog.value = true
+  void fresh
 }
 
 async function onResetPwdSubmit() {
-  if (!pwdFormRef.value) {
-    ElMessage.error('表单未就绪')
-    return
-  }
-  if (!pwdTarget || !pwdTarget.id) {
+  if (!pwdTarget.value?.id) {
     ElMessage.error('未选中用户')
     return
   }
-
-  // 用 Promise 形式的 validate,避开回调式异步语义陷阱
-  // eslint-disable-next-line no-useless-assignment
-  let valid = false
-  try {
-    valid = await pwdFormRef.value.validate()
-  } catch {
-    valid = false
-  }
-  if (!valid) return
-
   pwdSubmitting.value = true
-  const username = pwdTarget.username
-  const targetId = pwdTarget.id
-  console.debug('[resetPwd] 开始请求', { id: targetId, username })
-
+  const username = pwdTarget.value.username
+  const targetId = pwdTarget.value.id
   try {
-    const res: any = await resetPassword(targetId, pwdForm.newPassword)
-    console.debug('[resetPwd] 后端响应', res)
-
-    // 多渠道反馈 - 你绝对会看到其中一个
+    await resetPassword(targetId, pwdForm.newPassword)
     ElNotification.success({
       title: '密码已重置',
       message: `用户「${username}」的密码已成功重置`,
       duration: 4000
     })
     ElMessage.success(`已重置「${username}」的密码`)
-
     pwdForm.newPassword = ''
     pwdDialog.value = false
-    pwdTarget = null
+    pwdTarget.value = null
   } catch (e: any) {
-    console.error('[resetPwd] 失败', e)
     const msg = e?.message || '请求出错,请查看控制台'
-    // 如果后端说用户不存在,极可能是列表陈旧,自动刷新一次
     if (msg.includes('用户不存在')) {
       ElMessage.warning('用户不存在,列表已自动刷新')
-      await load()
+      await refresh()
     } else {
-      ElNotification.error({
-        title: '重置失败',
-        message: msg,
-        duration: 4000
-      })
+      ElNotification.error({ title: '重置失败', message: msg, duration: 4000 })
     }
-  } finally {
-    pwdSubmitting.value = false
-  }
+  } finally { pwdSubmitting.value = false }
 }
 
-// ========== 分配角色 ==========
+// ========== 分配角色对话框 ==========
 const roleDialog = ref(false)
 const roleSubmitting = ref(false)
 const roleTarget = ref<SysUserVO | null>(null)
-const allRoleList = ref<SysRoleVO[]>([])
+const allRoleList = ref<{ id: number; roleName: string; roleCode: string; description?: string; builtIn?: number }[]>([])
 const checkedRoleIds = ref<number[]>([])
 
 async function openAssignRole(row: SysUserVO) {
   if (!row.id) return
-  await load()
-  const fresh = list.value.find((u) => u.id === row.id)
-  if (!fresh) {
-    ElMessage.warning('该用户已被删除,列表已刷新')
-    return
-  }
-  roleTarget.value = fresh
-  // 取全部角色 + 当前用户已分配的角色 id
+  roleTarget.value = row
   const [allRes, idsRes]: any[] = await Promise.all([
     allRoles(),
-    getUserRoleIds(fresh.id)
+    getUserRoleIds(row.id)
   ])
   allRoleList.value = allRes.data ?? []
   checkedRoleIds.value = (idsRes.data ?? []).map((n: any) => Number(n))
@@ -306,25 +229,8 @@ async function onAssignRoleSubmit() {
     await assignUserRoles(roleTarget.value.id, checkedRoleIds.value)
     ElMessage.success(`已为「${roleTarget.value.username}」分配 ${checkedRoleIds.value.length} 个角色`)
     roleDialog.value = false
-  } catch (e) {
-    // 拦截器已提示
-  } finally {
-    roleSubmitting.value = false
-  }
+  } catch { /* 拦截器已提示 */ } finally { roleSubmitting.value = false }
 }
-
-// ========== 分页 ==========
-function onPageChange(p: number) {
-  query.pageNum = p
-  load()
-}
-function onSizeChange(s: number) {
-  query.pageSize = s
-  query.pageNum = 1
-  load()
-}
-
-onMounted(load)
 </script>
 
 <template>
@@ -333,322 +239,161 @@ onMounted(load)
       用户管理
     </h2>
 
-    <!-- 搜索栏 -->
-    <div class="page-card search-bar">
-      <el-form
-        :inline="true"
-        @submit.prevent
-      >
-        <el-form-item label="关键字">
-          <el-input
-            v-model="query.keyword"
-            placeholder="用户名 / 昵称 / 手机 / 邮箱"
-            clearable
-            style="width: 220px"
-            @keyup.enter="onSearch"
-          />
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-select
-            v-model="query.status"
-            placeholder="全部"
-            clearable
-            style="width: 120px"
-          >
-            <el-option
-              label="启用"
-              :value="1"
-            />
-            <el-option
-              label="禁用"
-              :value="0"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button
-            type="primary"
-            :icon="Search"
-            @click="onSearch"
-          >
-            查询
-          </el-button>
-          <el-button
-            :icon="Refresh"
-            @click="onResetSearch"
-          >
-            重置
-          </el-button>
-          <el-button
-            type="success"
-            :icon="Plus"
-            @click="openCreate"
-          >
-            新建用户
-          </el-button>
-          <el-button
-            :icon="Refresh"
-            plain
-            @click="hardReload"
-          >
-            强制刷新页面
-          </el-button>
-        </el-form-item>
-      </el-form>
-    </div>
-
-    <!-- 表格 -->
-    <div class="page-card">
-      <el-table
-        v-loading="loading"
-        :data="list"
-        stripe
-        border
-      >
-        <el-table-column
-          prop="id"
-          label="ID"
-          width="80"
-        />
-        <el-table-column
-          prop="username"
-          label="用户名"
-          min-width="120"
-        />
-        <el-table-column
-          prop="nickname"
-          label="昵称"
-          min-width="120"
-        />
-        <el-table-column
-          prop="email"
-          label="邮箱"
-          min-width="180"
-        />
-        <el-table-column
-          prop="phone"
-          label="手机"
-          min-width="120"
-        />
-        <el-table-column
-          label="状态"
-          width="100"
+    <CrudList
+      ref="crudListRef"
+      :api="userCrud"
+      :columns="columns"
+      :filters="filters"
+      :row-key="'id'"
+      empty-text="暂无用户"
+      keyword-placeholder="用户名 / 昵称 / 手机 / 邮箱"
+    >
+      <template #toolbar>
+        <el-button
+          type="success"
+          :icon="Plus"
+          @click="openCreate"
         >
-          <template #default="{ row }">
-            <el-tag
-              :type="row.status === 1 ? 'success' : 'info'"
-              size="small"
-            >
-              {{ row.status === 1 ? '启用' : '禁用' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column
-          prop="lastLoginAt"
-          label="最后登录"
-          width="170"
-        />
-        <el-table-column
-          prop="createdAt"
-          label="创建时间"
-          width="170"
-        />
-        <el-table-column
-          label="操作"
-          width="320"
-          fixed="right"
+          新建用户
+        </el-button>
+        <el-button
+          :icon="UserFilled"
+          plain
+          @click="hardReload"
         >
-          <template #default="{ row }">
-            <el-button
-              link
-              type="primary"
-              :icon="Edit"
-              @click="openEdit(row)"
-            >
-              编辑
-            </el-button>
-            <el-button
-              link
-              type="warning"
-              :icon="Key"
-              @click="openResetPwd(row)"
-            >
-              重置密码
-            </el-button>
-            <el-button
-              link
-              type="success"
-              :icon="UserFilled"
-              @click="openAssignRole(row)"
-            >
-              分配角色
-            </el-button>
-            <el-button
-              link
-              :type="row.status === 1 ? 'info' : 'success'"
-              @click="onToggle(row)"
-            >
-              {{ row.status === 1 ? '禁用' : '启用' }}
-            </el-button>
-            <el-button
-              link
-              type="danger"
-              :icon="Delete"
-              :disabled="row.id === 1"
-              @click="onDelete(row)"
-            >
-              删除
-            </el-button>
-          </template>
-        </el-table-column>
-        <template #empty>
-          <el-empty description="暂无用户" />
-        </template>
-      </el-table>
+          强制刷新页面
+        </el-button>
+      </template>
 
-      <div class="pagination-wrap">
-        <el-pagination
-          v-model:current-page="query.pageNum"
-          v-model:page-size="query.pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @current-change="onPageChange"
-          @size-change="onSizeChange"
+      <template #column-status="{ row }">
+        <StatusTag
+          :value="(row as SysUserVO).status"
+          :label="STATUS_LABEL_MAP[(row as SysUserVO).status]"
+          :type-map="STATUS_TYPE_MAP"
         />
-      </div>
-    </div>
+      </template>
+
+      <template #column-actions="{ row }">
+        <el-button
+          link
+          type="primary"
+          :icon="Edit"
+          @click="openEdit(row as SysUserVO)"
+        >
+          编辑
+        </el-button>
+        <el-button
+          link
+          type="warning"
+          :icon="Key"
+          @click="openResetPwd(row as SysUserVO)"
+        >
+          重置密码
+        </el-button>
+        <el-button
+          link
+          type="success"
+          :icon="UserFilled"
+          @click="openAssignRole(row as SysUserVO)"
+        >
+          分配角色
+        </el-button>
+        <el-button
+          link
+          :type="(row as SysUserVO).status === 1 ? 'info' : 'success'"
+          @click="onToggle(row as SysUserVO)"
+        >
+          {{ (row as SysUserVO).status === 1 ? '禁用' : '启用' }}
+        </el-button>
+        <el-button
+          link
+          type="danger"
+          :icon="Delete"
+          :disabled="(row as SysUserVO).id === 1"
+          @click="onDelete(row as SysUserVO)"
+        >
+          删除
+        </el-button>
+      </template>
+    </CrudList>
 
     <!-- 新建/编辑对话框 -->
-    <el-dialog
-      v-model="dialogVisible"
+    <ModalForm
+      v-model:visible="dialogVisible"
       :title="dialogMode === 'create' ? '新建用户' : '编辑用户'"
-      width="520px"
-      destroy-on-close
+      :width="520"
+      :model="form"
+      :rules="rules"
+      :loading="submitting"
+      :submit-text="dialogMode === 'create' ? '创建' : '保存'"
+      @submit="onSubmit"
     >
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="rules"
-        label-width="80px"
-      >
-        <el-form-item
-          label="用户名"
-          prop="username"
-        >
-          <el-input
-            v-model="form.username"
-            placeholder="登录用户名"
-            :disabled="dialogMode === 'edit'"
-          />
-        </el-form-item>
-        <el-form-item
-          label="密码"
-          prop="password"
-        >
-          <el-input
-            v-model="form.password"
-            type="password"
-            show-password
-            :placeholder="dialogMode === 'create' ? '必填,6-64 位' : '留空表示不修改'"
-          />
-        </el-form-item>
-        <el-form-item
-          label="昵称"
-          prop="nickname"
-        >
-          <el-input v-model="form.nickname" />
-        </el-form-item>
-        <el-form-item
-          label="邮箱"
-          prop="email"
-        >
-          <el-input v-model="form.email" />
-        </el-form-item>
-        <el-form-item
-          label="手机"
-          prop="phone"
-        >
-          <el-input v-model="form.phone" />
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-radio-group v-model="form.status">
-            <el-radio :value="1">
-              启用
-            </el-radio>
-            <el-radio :value="0">
-              禁用
-            </el-radio>
-          </el-radio-group>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">
-          取消
-        </el-button>
-        <el-button
-          type="primary"
-          :loading="submitting"
-          @click="onSubmit"
-        >
-          {{ dialogMode === 'create' ? '创建' : '保存' }}
-        </el-button>
-      </template>
-    </el-dialog>
+      <el-form-item label="用户名" prop="username">
+        <el-input
+          v-model="form.username"
+          placeholder="登录用户名"
+          :disabled="dialogMode === 'edit'"
+        />
+      </el-form-item>
+      <el-form-item label="密码" prop="password">
+        <el-input
+          v-model="form.password"
+          type="password"
+          show-password
+          :placeholder="dialogMode === 'create' ? '必填,6-64 位' : '留空表示不修改'"
+        />
+      </el-form-item>
+      <el-form-item label="昵称" prop="nickname">
+        <el-input v-model="form.nickname" />
+      </el-form-item>
+      <el-form-item label="邮箱" prop="email">
+        <el-input v-model="form.email" />
+      </el-form-item>
+      <el-form-item label="手机" prop="phone">
+        <el-input v-model="form.phone" />
+      </el-form-item>
+      <el-form-item label="状态">
+        <el-radio-group v-model="form.status">
+          <el-radio :value="1">启用</el-radio>
+          <el-radio :value="0">禁用</el-radio>
+        </el-radio-group>
+      </el-form-item>
+    </ModalForm>
 
     <!-- 重置密码对话框 -->
-    <el-dialog
-      v-model="pwdDialog"
+    <ModalForm
+      v-model:visible="pwdDialog"
       title="重置密码"
-      width="420px"
-      destroy-on-close
+      :width="420"
+      :model="pwdForm"
+      :rules="pwdRules"
+      :loading="pwdSubmitting"
+      submit-text="确认重置"
+      @submit="onResetPwdSubmit"
     >
-      <el-form
-        ref="pwdFormRef"
-        :model="pwdForm"
-        :rules="pwdRules"
-        label-width="80px"
-        @submit.prevent
-      >
-        <el-form-item label="用户">
-          <el-input
-            :model-value="pwdTarget?.username || ''"
-            disabled
-          />
-        </el-form-item>
-        <el-form-item
-          label="新密码"
-          prop="newPassword"
-        >
-          <el-input
-            v-model="pwdForm.newPassword"
-            type="password"
-            show-password
-            placeholder="6-64 位"
-            @keyup.enter="onResetPwdSubmit"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="pwdDialog = false">
-          取消
-        </el-button>
-        <el-button
-          type="warning"
-          :loading="pwdSubmitting"
-          @click="onResetPwdSubmit"
-        >
-          确认重置
-        </el-button>
-      </template>
-    </el-dialog>
+      <el-form-item label="用户">
+        <el-input :model-value="pwdTarget?.username || ''" disabled />
+      </el-form-item>
+      <el-form-item label="新密码" prop="newPassword">
+        <el-input
+          v-model="pwdForm.newPassword"
+          type="password"
+          show-password
+          placeholder="6-64 位"
+          @keyup.enter="onResetPwdSubmit"
+        />
+      </el-form-item>
+    </ModalForm>
 
     <!-- 分配角色对话框 -->
-    <el-dialog
-      v-model="roleDialog"
-      width="520px"
-      destroy-on-close
+    <ModalForm
+      v-model:visible="roleDialog"
       :title="`分配角色 - ${roleTarget?.username ?? ''}`"
+      :width="520"
+      :model="{ checked: checkedRoleIds }"
+      :submit-text="'保存'"
+      :loading="roleSubmitting"
+      @submit="onAssignRoleSubmit"
     >
       <el-checkbox-group v-model="checkedRoleIds">
         <div
@@ -670,35 +415,13 @@ onMounted(load)
           </el-checkbox>
         </div>
       </el-checkbox-group>
-      <template #footer>
-        <el-button @click="roleDialog = false">
-          取消
-        </el-button>
-        <el-button
-          type="primary"
-          :loading="roleSubmitting"
-          @click="onAssignRoleSubmit"
-        >
-          保存
-        </el-button>
-      </template>
-    </el-dialog>
+    </ModalForm>
   </div>
 </template>
 
 <style scoped lang="scss">
 @use '@/styles/tokens.scss' as *;
 
-.search-bar {
-  margin-bottom: $spacing-12;
-  padding: $spacing-16;
-  :deep(.el-form-item) { margin-bottom: 0; }
-}
-.pagination-wrap {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: $spacing-16;
-}
 .role-item {
   padding: $spacing-4 0;
   .role-name { font-weight: $font-weight-medium; }

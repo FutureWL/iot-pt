@@ -1,5 +1,6 @@
 import request from '@/api/request'
 import type { PageQuery } from '@/types/common'
+import { adaptCrudPage, adaptCrudRemove } from '@/api/crud'
 
 export interface SysRoleVO {
   id: number
@@ -52,6 +53,12 @@ export function updateRole(data: RoleDTO) {
 
 export function deleteRole(id: number) {
   return request<void>({ url: `/system/role/${id}`, method: 'delete' })
+}
+
+/** CrudList 适配 */
+export const roleCrud = {
+  page: adaptCrudPage<SysRoleVO, RoleQuery>(pageRoles),
+  remove: adaptCrudRemove<SysRoleVO>(deleteRole)
 }
 
 export function getRoleMenuIds(id: number) {

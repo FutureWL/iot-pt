@@ -3,8 +3,10 @@ package com.iot.platform.device.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.iot.platform.common.BusinessException;
 import com.iot.platform.device.dto.IotDeviceGroupDTO;
+import com.iot.platform.device.dto.IotDeviceGroupQueryDTO;
 import com.iot.platform.device.entity.IotDevice;
 import com.iot.platform.device.entity.IotDeviceGroup;
 import com.iot.platform.device.mapper.IotDeviceGroupMapper;
@@ -16,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,22 +33,59 @@ public class IotDeviceGroupServiceImpl implements IotDeviceGroupService {
 
     @Override
     public List<IotDeviceGroupVO> all() {
+        return allWithDeviceCount(TenantContext.getTenantId(), null, false);
+    }
+
+    @Override
+    public List<IotDeviceGroupVO> page(IotDeviceGroupQueryDTO query) {
         Long tenantId = TenantContext.getTenantId();
-        List<IotDeviceGroup> list = groupMapper.selectList(new LambdaQueryWrapper<IotDeviceGroup>()
+        // 构造分页查询(只带 tenantId + keyword)
+        Page<IotDeviceGroup> pageReq = new Page<>(query.getCurrent(), query.getSize());
+        LambdaQueryWrapper<IotDeviceGroup> wrapper = new LambdaQueryWrapper<IotDeviceGroup>()
                 .eq(IotDeviceGroup::getTenantId, tenantId)
                 .orderByAsc(IotDeviceGroup::getSort)
-                .orderByAsc(IotDeviceGroup::getId));
-        if (list.isEmpty()) return List.of();
+                .orderByAsc(IotDeviceGroup::getId);
+        if (StrUtil.isNotBlank(query.getKeyword())) {
+            wrapper.and(w -> w.like(IotDeviceGroup::getGroupName, query.getKeyword())
+                    .or().like(IotDeviceGroup::getDescription, query.getKeyword()));
+        }
+        Page<IotDeviceGroup> result = groupMapper.selectPage(pageReq, wrapper);
+        List<IotDeviceGroup> records = result.getRecords();
+        if (records.isEmpty()) return Collections.emptyList();
+        return enrichWithDeviceCount(tenantId, records);
+    }
 
+    @Override
+    public long countPage(IotDeviceGroupQueryDTO query) {
+        Long tenantId = TenantContext.getTenantId();
+        LambdaQueryWrapper<IotDeviceGroup> wrapper = new LambdaQueryWrapper<IotDeviceGroup>()
+                .eq(IotDeviceGroup::getTenantId, tenantId);
+        if (StrUtil.isNotBlank(query.getKeyword())) {
+            wrapper.and(w -> w.like(IotDeviceGroup::getGroupName, query.getKeyword())
+                    .or().like(IotDeviceGroup::getDescription, query.getKeyword()));
+        }
+        return groupMapper.selectCount(wrapper);
+    }
+
+    /**
+     * 共享 helper: 取全量或已分页的分组列表,并补齐 deviceCount。
+     * 复用 all() 与 page() 的设备数计算逻辑。
+     */
+    private List<IotDeviceGroupVO> allWithDeviceCount(Long tenantId, List<IotDeviceGroup> list, boolean needsCount) {
+        if (list == null || list.isEmpty()) return List.of();
+        return enrichWithDeviceCount(tenantId, list);
+    }
+
+    private List<IotDeviceGroupVO> enrichWithDeviceCount(Long tenantId, List<IotDeviceGroup> records) {
         // 统计每个分组下的设备数
-        List<Long> ids = list.stream().map(IotDeviceGroup::getId).collect(Collectors.toList());
+        List<Long> ids = records.stream().map(IotDeviceGroup::getId).collect(Collectors.toList());
         Map<Long, Integer> countMap = new HashMap<>();
         for (IotDevice d : deviceMapper.selectList(new LambdaQueryWrapper<IotDevice>()
                 .eq(IotDevice::getTenantId, tenantId)
                 .in(IotDevice::getGroupId, ids))) {
             countMap.merge(d.getGroupId(), 1, Integer::sum);
         }
-        return list.stream().map(g -> {
+        return records.stream().map(g -> {
             IotDeviceGroupVO vo = new IotDeviceGroupVO();
             BeanUtil.copyProperties(g, vo);
             vo.setDeviceCount(countMap.getOrDefault(g.getId(), 0));

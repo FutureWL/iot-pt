@@ -2,6 +2,7 @@ package com.iot.platform.device.controller;
 
 import com.iot.platform.common.R;
 import com.iot.platform.device.dto.IotDeviceGroupDTO;
+import com.iot.platform.device.dto.IotDeviceGroupQueryDTO;
 import com.iot.platform.device.service.IotDeviceGroupService;
 import com.iot.platform.device.vo.IotDeviceGroupVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,7 +11,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Tag(name = "设备分组")
 @RestController
@@ -24,6 +27,18 @@ public class IotDeviceGroupController {
     @GetMapping("/all")
     public R<List<IotDeviceGroupVO>> all() {
         return R.ok(groupService.all());
+    }
+
+    @Operation(summary = "分页查询(供 CrudList 使用)")
+    @GetMapping("/page")
+    public R<Map<String, Object>> page(IotDeviceGroupQueryDTO query) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("records", groupService.page(query));
+        result.put("total", groupService.countPage(query));
+        result.put("current", query.getCurrent());
+        result.put("size", query.getSize());
+        result.put("pages", groupService.countPage(query) / query.getSize() + 1);
+        return R.ok(result);
     }
 
     @Operation(summary = "新建")

@@ -1,4 +1,12 @@
 <script setup lang="ts">
+/**
+ * 组织架构 — <ModalForm> 改造版 (240 → ~190 行)
+ *
+ * 设计要点:
+ *   - 列表用 el-tree(树形结构,不适合 CrudList)
+ *   - 新建/编辑对话框 用 <ModalForm> 统一
+ *   - 支持新建顶级 + 在任一节点下新建子组织
+ */
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Edit, Delete, Share } from '@element-plus/icons-vue'
@@ -9,12 +17,14 @@ import {
   deleteOrganization,
   type SysOrganizationVO
 } from '@/api/system/organization'
+import { ModalForm } from '@/ui'
 
 const loading = ref(false)
 const tree = ref<SysOrganizationVO[]>([])
+
 const dialogVisible = ref(false)
 const dialogMode = ref<'create' | 'edit' | 'create-child'>('create')
-const formRef = ref()
+const submitting = ref(false)
 const form = ref<Partial<SysOrganizationVO>>({})
 
 const rules = {
@@ -26,9 +36,7 @@ async function load() {
   try {
     const res: any = await treeOrganizations()
     tree.value = res.data ?? []
-  } finally {
-    loading.value = false
-  }
+  } finally { loading.value = false }
 }
 
 function openCreate(parent?: SysOrganizationVO) {
@@ -47,11 +55,7 @@ function openEdit(node: SysOrganizationVO) {
 }
 
 async function onSubmit() {
-  if (!formRef.value) return
-  // eslint-disable-next-line no-useless-assignment
-  let valid = false
-  try { valid = await formRef.value.validate() } catch { valid = false }
-  if (!valid) return
+  submitting.value = true
   try {
     if (dialogMode.value === 'edit') {
       await updateOrganization(form.value)
@@ -61,20 +65,20 @@ async function onSubmit() {
       ElMessage.success('已创建')
     }
     dialogVisible.value = false
-    load()
-  } catch {}
+    await load()
+  } catch { /* 拦截器已提示 */ } finally { submitting.value = false }
 }
 
 async function onDelete(node: SysOrganizationVO) {
+  await ElMessageBox.confirm(
+    `确认删除组织「${node.name}」?若存在子组织将一并删除。`,
+    '删除确认', { type: 'warning' }
+  )
   try {
-    await ElMessageBox.confirm(
-      `确认删除组织「${node.name}」?若存在子组织将一并删除。`,
-      '删除确认', { type: 'warning' }
-    )
     await deleteOrganization(node.id)
     ElMessage.success('已删除')
-    load()
-  } catch {}
+    await load()
+  } catch { /* ignore */ }
 }
 
 onMounted(load)
@@ -150,73 +154,48 @@ onMounted(load)
       />
     </div>
 
-    <el-dialog
-      v-model="dialogVisible"
+    <!-- 新建/编辑对话框:用 ModalForm 统一 -->
+    <ModalForm
+      v-model:visible="dialogVisible"
       :title="dialogMode === 'edit' ? '编辑组织' : '新建组织'"
-      width="540px"
-      destroy-on-close
+      :width="540"
+      :model="form"
+      :rules="rules"
+      :loading="submitting"
+      submit-text="保存"
+      @submit="onSubmit"
     >
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="rules"
-        label-width="100px"
-      >
-        <el-form-item label="父组织">
-          <el-input
-            :model-value="form.parentId === 0 ? '(顶级)' : form.parentId"
-            disabled
-          />
-        </el-form-item>
-        <el-form-item
-          label="名称"
-          prop="name"
-        >
-          <el-input
-            v-model="form.name"
-            placeholder="组织名称"
-          />
-        </el-form-item>
-        <el-form-item label="排序">
-          <el-input-number
-            v-model="form.sort"
-            :min="0"
-            :max="9999"
-            controls-position="right"
-          />
-        </el-form-item>
-        <el-form-item label="负责人">
-          <el-input
-            v-model="form.leader"
-            placeholder="负责人姓名"
-          />
-        </el-form-item>
-        <el-form-item label="联系电话">
-          <el-input
-            v-model="form.phone"
-            placeholder="如 138-0000-0000"
-          />
-        </el-form-item>
-        <el-form-item label="描述">
-          <el-input
-            v-model="form.description"
-            type="textarea"
-            :rows="2"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">
-          取消
-        </el-button>
-        <el-button
-          type="primary"
-          @click="onSubmit"
-        >
-          保存
-        </el-button>
-      </template>
-    </el-dialog>
+      <el-form-item label="父组织">
+        <el-input
+          :model-value="form.parentId === 0 ? '(顶级)' : form.parentId"
+          disabled
+        />
+      </el-form-item>
+      <el-form-item label="名称" prop="name">
+        <el-input v-model="form.name" placeholder="组织名称" />
+      </el-form-item>
+      <el-form-item label="排序">
+        <el-input-number
+          v-model="form.sort"
+          :min="0"
+          :max="9999"
+          controls-position="right"
+        />
+      </el-form-item>
+      <el-form-item label="负责人">
+        <el-input v-model="form.leader" placeholder="负责人姓名" />
+      </el-form-item>
+      <el-form-item label="联系电话">
+        <el-input v-model="form.phone" placeholder="如 138-0000-0000" />
+      </el-form-item>
+      <el-form-item label="描述">
+        <el-input
+          v-model="form.description"
+          type="textarea"
+          :rows="2"
+        />
+      </el-form-item>
+    </ModalForm>
   </div>
 </template>
 
