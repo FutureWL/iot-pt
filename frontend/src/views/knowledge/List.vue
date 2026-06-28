@@ -1,265 +1,154 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+/**
+ * 知识库列表 — 演示 CrudList 重构(265 行 → ~80 行)
+ */
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Plus, Edit, Delete, Reading } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete, Reading } from '@element-plus/icons-vue'
 import {
-  pageKnowledge,
+  knowledgeCrud,
   deleteKnowledge,
-  type KnowledgeVO,
-  type KnowledgeQuery
+  type KnowledgeVO
 } from '@/api/knowledge'
+import { CrudList, StatusTag } from '@/ui'
+import type { ColumnDef, FilterItem } from '@/ui'
 
 const router = useRouter()
-const query = reactive<KnowledgeQuery>({
-  pageNum: 1, pageSize: 10, keyword: '',
-  category: undefined, status: undefined
-})
-const loading = ref(false)
-const list = ref<KnowledgeVO[]>([])
-const total = ref(0)
 
-const statusMap: Record<string, { label: string; type: string }> = {
-  DRAFT: { label: '草稿', type: 'info' },
-  PUBLISHED: { label: '已发布', type: 'success' },
-  ARCHIVED: { label: '已归档', type: 'warning' }
-}
-
-const categories = ['故障处理', '巡检作业', '应急处置', '设备维护', '基础知识']
-
-async function load() {
-  loading.value = true
-  try {
-    const res: any = await pageKnowledge(query)
-    list.value = res.data?.records ?? []
-    total.value = res.data?.total ?? 0
-  } finally {
-    loading.value = false
+const filters: FilterItem[] = [
+  {
+    prop: 'category',
+    label: '分类',
+    type: 'select',
+    options: ['故障处理', '巡检作业', '应急处置', '设备维护', '基础知识'].map((c) => ({ label: c, value: c }))
+  },
+  {
+    prop: 'status',
+    label: '状态',
+    type: 'select',
+    options: [
+      { label: '草稿', value: 'DRAFT' },
+      { label: '已发布', value: 'PUBLISHED' },
+      { label: '已归档', value: 'ARCHIVED' }
+    ]
   }
+]
+
+const columns: ColumnDef<KnowledgeVO>[] = [
+  { prop: 'title', label: '标题', minWidth: 240, slot: 'title' },
+  { prop: 'category', label: '分类', width: 120, slot: 'category' },
+  { prop: 'summary', label: '摘要', minWidth: 200, showOverflowTooltip: true },
+  { prop: 'tags', label: '标签', minWidth: 160, slot: 'tags' },
+  { label: '版本', width: 80, slot: 'version' },
+  { prop: 'status', label: '状态', width: 100, slot: 'status' },
+  { prop: 'author', label: '作者', width: 100 },
+  { prop: 'updatedAt', label: '更新时间', width: 170 },
+  { label: '操作', width: 160, fixed: 'right', slot: 'actions' }
+]
+
+function goCreate(): void {
+  router.push('/knowledge/editor')
 }
 
-function onSearch() { query.pageNum = 1; load() }
-function onReset() { query.keyword = ''; query.category = undefined; query.status = undefined; query.pageNum = 1; load() }
-function onPageChange(p: number) { query.pageNum = p; load() }
-function onSizeChange(s: number) { query.pageSize = s; query.pageNum = 1; load() }
+function goEdit(row: KnowledgeVO): void {
+  router.push(`/knowledge/editor/${row.id}`)
+}
 
-function goCreate() { router.push('/knowledge/editor') }
-function goEdit(row: KnowledgeVO) { router.push(`/knowledge/editor/${row.id}`) }
-
-async function onDelete(row: KnowledgeVO) {
+async function onDelete(row: KnowledgeVO): Promise<void> {
   await ElMessageBox.confirm(`确认删除文档「${row.title}」?`, '删除确认', { type: 'warning' })
   try {
     await deleteKnowledge(row.id)
     ElMessage.success('删除成功')
-    load()
+    crudListRef.value?.refresh()
   } catch {}
 }
 
-onMounted(load)
+const crudListRef = ref<{ refresh: () => Promise<void> } | null>(null)
 </script>
 
 <template>
-  <div class="page-container kb-page">
+  <div class="kb-page page-container">
     <div class="page-header">
       <h2 class="page-title">
         知识库
       </h2>
-      <el-button
-        type="primary"
-        :icon="Plus"
-        @click="goCreate"
-      >
-        新建文档
-      </el-button>
     </div>
 
-    <div class="page-card search-bar">
-      <el-form
-        :inline="true"
-        @submit.prevent
-      >
-        <el-form-item label="关键字">
-          <el-input
-            v-model="query.keyword"
-            placeholder="标题 / 标签"
-            clearable
-            style="width: 220px"
-            :prefix-icon="Search"
-            @keyup.enter="onSearch"
-          />
-        </el-form-item>
-        <el-form-item label="分类">
-          <el-select
-            v-model="query.category"
-            placeholder="全部"
-            clearable
-            style="width: 140px"
-          >
-            <el-option
-              v-for="c in categories"
-              :key="c"
-              :label="c"
-              :value="c"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-select
-            v-model="query.status"
-            placeholder="全部"
-            clearable
-            style="width: 120px"
-          >
-            <el-option
-              v-for="(v, k) in statusMap"
-              :key="k"
-              :label="v.label"
-              :value="k"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button
-            type="primary"
-            @click="onSearch"
-          >
-            查询
-          </el-button>
-          <el-button
-            :icon="Refresh"
-            @click="onReset"
-          >
-            重置
-          </el-button>
-        </el-form-item>
-      </el-form>
-    </div>
+    <CrudList
+      ref="crudListRef"
+      :api="knowledgeCrud"
+      :columns="columns"
+      :filters="filters"
+      :row-key="'id'"
+      empty-text="暂无文档"
+      keyword-placeholder="标题 / 标签"
+    >
+      <template #toolbar>
+        <el-button
+          type="primary"
+          :icon="Plus"
+          @click="goCreate"
+        >
+          新建文档
+        </el-button>
+      </template>
 
-    <div class="page-card">
-      <el-table
-        v-loading="loading"
-        :data="list"
-        stripe
-        border
-        empty-text="暂无文档"
-      >
-        <el-table-column
-          prop="title"
-          label="标题"
-          min-width="240"
+      <template #column-title="{ row }">
+        <el-link
+          type="primary"
+          :underline="false"
+          @click="goEdit(row as KnowledgeVO)"
         >
-          <template #default="{ row }">
-            <el-link
-              type="primary"
-              :underline="false"
-              @click="goEdit(row)"
-            >
-              <el-icon><Reading /></el-icon> {{ row.title }}
-            </el-link>
-          </template>
-        </el-table-column>
-        <el-table-column
-          prop="category"
-          label="分类"
-          width="120"
+          <el-icon><Reading /></el-icon> {{ (row as KnowledgeVO).title }}
+        </el-link>
+      </template>
+
+      <template #column-category="{ row }">
+        <el-tag size="small">
+          {{ (row as KnowledgeVO).category }}
+        </el-tag>
+      </template>
+
+      <template #column-tags="{ row }">
+        <el-tag
+          v-for="tag in ((row as KnowledgeVO).tags ?? '').split(',').filter(Boolean)"
+          :key="tag"
+          size="small"
+          type="info"
+          class="mr-4"
         >
-          <template #default="{ row }">
-            <el-tag size="small">
-              {{ row.category }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column
-          prop="summary"
-          label="摘要"
-          min-width="200"
-          show-overflow-tooltip
-        />
-        <el-table-column
-          prop="tags"
-          label="标签"
-          min-width="160"
+          {{ tag }}
+        </el-tag>
+      </template>
+
+      <template #column-version="{ row }">
+        v{{ (row as KnowledgeVO).version }}
+      </template>
+
+      <template #column-status="{ row }">
+        <StatusTag :value="(row as KnowledgeVO).status" />
+      </template>
+
+      <template #column-actions="{ row }">
+        <el-button
+          link
+          type="primary"
+          :icon="Edit"
+          @click="goEdit(row as KnowledgeVO)"
         >
-          <template #default="{ row }">
-            <el-tag
-              v-for="tag in (row.tags ?? '').split(',').filter(Boolean)"
-              :key="tag"
-              size="small"
-              type="info"
-              class="mr-4"
-            >
-              {{ tag }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column
-          label="版本"
-          width="80"
+          编辑
+        </el-button>
+        <el-button
+          link
+          type="danger"
+          :icon="Delete"
+          @click="onDelete(row as KnowledgeVO)"
         >
-          <template #default="{ row }">
-            v{{ row.version }}
-          </template>
-        </el-table-column>
-        <el-table-column
-          label="状态"
-          width="100"
-        >
-          <template #default="{ row }">
-            <el-tag
-              :type="statusMap[row.status]?.type as any"
-              size="small"
-            >
-              {{ statusMap[row.status]?.label }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column
-          prop="author"
-          label="作者"
-          width="100"
-        />
-        <el-table-column
-          prop="updatedAt"
-          label="更新时间"
-          width="170"
-        />
-        <el-table-column
-          label="操作"
-          width="160"
-          fixed="right"
-        >
-          <template #default="{ row }">
-            <el-button
-              link
-              type="primary"
-              :icon="Edit"
-              @click="goEdit(row)"
-            >
-              编辑
-            </el-button>
-            <el-button
-              link
-              type="danger"
-              :icon="Delete"
-              @click="onDelete(row)"
-            >
-              删除
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      <div class="pagination-wrap">
-        <el-pagination
-          v-model:current-page="query.pageNum"
-          v-model:page-size="query.pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @current-change="onPageChange"
-          @size-change="onSizeChange"
-        />
-      </div>
-    </div>
+          删除
+        </el-button>
+      </template>
+    </CrudList>
   </div>
 </template>
 
@@ -269,7 +158,4 @@ onMounted(load)
 .kb-page { background: var(--iot-bg-page); }
 .page-header { display: flex; align-items: center; gap: $spacing-12; margin-bottom: $spacing-16; .page-title { margin: 0; flex: 1; } }
 .mr-4 { margin-right: $spacing-4; }
-
-.search-bar { margin-bottom: $spacing-12; padding: $spacing-16; :deep(.el-form-item) { margin-bottom: 0; } }
-.pagination-wrap { display: flex; justify-content: flex-end; margin-top: $spacing-16; }
 </style>

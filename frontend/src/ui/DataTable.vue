@@ -14,8 +14,8 @@
  *   </DataTable>
  */
 export interface ColumnDef<T = Record<string, unknown>> {
-  /** 数据字段名 */
-  prop: string
+  /** 数据字段名(slot 列或纯操作列可省略) */
+  prop?: string
   /** 列标题 */
   label: string
   /** 列宽 */
@@ -28,6 +28,8 @@ export interface ColumnDef<T = Record<string, unknown>> {
   align?: 'left' | 'center' | 'right'
   /** 固定列 */
   fixed?: 'left' | 'right'
+  /** 文本溢出省略 */
+  showOverflowTooltip?: boolean
   /** 默认格式化函数(无 slot 时生效) */
   formatter?: (row: T) => unknown
 }
@@ -72,13 +74,14 @@ const props = withDefaults(defineProps<Props>(), {
     </template>
     <el-table-column
       v-for="col in props.columns"
-      :key="col.prop"
+      :key="col.prop ?? col.label"
       :prop="col.prop"
       :label="col.label"
       :width="col.width"
       :min-width="col.minWidth"
       :align="col.align"
       :fixed="col.fixed"
+      :show-overflow-tooltip="col.showOverflowTooltip"
     >
       <template v-if="col.slot" #default="{ row }">
         <slot :name="`column-${col.slot}`" :row="row" :col="col" />
