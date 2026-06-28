@@ -31,8 +31,8 @@ public class AlertCenterServiceImpl implements AlertCenterService {
 
     @Override
     public Map<String, Object> page(Map<String, Object> params) {
-        Integer current = (Integer) params.getOrDefault("current", 1);
-        Integer size = (Integer) params.getOrDefault("size", 10);
+        Integer current = safeInt(params.get("current"), 1);
+        Integer size = safeInt(params.get("size"), 10);
         String level = (String) params.get("level");
         Integer status = (Integer) params.get("status");
 
@@ -68,4 +68,17 @@ public class AlertCenterServiceImpl implements AlertCenterService {
         v.setHandleTime(a.getHandleTime() != null ? a.getHandleTime().toString() : null);
         return v;
     }
+
+    /** 安全转为 Integer:支持 String / Integer / Number(避免 ClassCastException) */
+    private static Integer safeInt(Object v, Integer defaultVal) {
+        if (v == null) return defaultVal;
+        if (v instanceof Integer) return (Integer) v;
+        if (v instanceof Number) return ((Number) v).intValue();
+        if (v instanceof String) {
+            try { return Integer.parseInt(((String) v).trim()); }
+            catch (NumberFormatException e) { return defaultVal; }
+        }
+        return defaultVal;
+    }
+
 }

@@ -11,9 +11,21 @@ public class KnowledgeServiceImpl implements KnowledgeService {
         Map<String, Object> map = new HashMap<>();
         map.put("records", java.util.Collections.emptyList());
         map.put("total", 0);
-        Integer current = (Integer) params.getOrDefault("current", 1);
-        Integer size = (Integer) params.getOrDefault("size", 10);
+        Integer current = safeInt(params.get("current"), 1);
+        Integer size = safeInt(params.get("size"), 10);
         map.put("current", current); map.put("size", size);
         return map;
     }
+
+    private static Integer safeInt(Object v, Integer defaultVal) {
+        if (v == null) return defaultVal;
+        if (v instanceof Integer) return (Integer) v;
+        if (v instanceof Number) return ((Number) v).intValue();
+        if (v instanceof String) {
+            try { return Integer.parseInt(((String) v).trim()); }
+            catch (NumberFormatException e) { return defaultVal; }
+        }
+        return defaultVal;
+    }
+
 }
