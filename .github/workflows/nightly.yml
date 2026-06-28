@@ -1,0 +1,140 @@
+# GitHub Actions Nightly E2E workflow
+# 触发: 每天 02:00 北京时间(18:00 UTC) + 手动 dispatch
+# 内容: 前端 Playwright E2E(慢、需后端起容器,所以单独跑)
+# 后端通过 docker-compose 起 mysql/tdengine/emqx/backend,前端 dev server 后台跑 e2e
+
+name: Nightly E2E
+
+on:
+  schedule:
+    # 每天 18:00 UTC = 北京时间次日 02:00
+    - cron: '0 18 * * *'
+  workflow_dispatch:  # 允许在 Actions 页面手动触发
+
+# 防并发:同一时间只跑一个 nightly 实例
+concurrency:
+  group: nightly-e2e
+  cancel-in-progress: false
+
+jobs:
+  e2e:
+    name: Frontend Playwright E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 30  # E2E 含服务启动,留充足时间
+    services:
+      # ===== 后端依赖中间件(用 docker-compose 启)=====
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root123456
+          MYSQL_DATABASE: iot_platform
+          MYSQL_USER: iot
+          MYSQL_PASSWORD: iot123456
+        ports:
+          - 33402:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h localhost"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      tdengine:
+        image: tdengine/tdengine:3.0.4.0
+        ports:
+          - 33403:6041
+
+      emqx:
+        image: emqx:5
+        ports:
+          - 33405:1883
+          - 33409:18083
+
+    env:
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_PORT: 33402
+      TDENGINE_HOST: 127.0.0.1
+      TDENGINE_PORT: 33403
+      MQTT_BROKER: tcp://127.0.0.1:33405
+      BACKEND_PORT: 33412
+      BROKER_PORT: 33410
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # ===== 启动后端 =====
+      - name: Install Playwright Chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Build backend
+        working-directory: backend
+        run: mvn -pl iot-api -am package -DskipTests -B -q
+
+      - name: Start backend (background)
+        working-directory: backend
+        run: |
+          nohup java -jar iot-api/target/iot-api.jar > /tmp/iot-api.log 2>&1 &
+          echo "PID=$!"
+          # 等待 health 端点 UP
+          for i in {1..60}; do
+            sleep 2
+            if curl -sf http://localhost:9000/actuator/health > /dev/null 2>&1; then
+              echo "✅ Backend ready"
+              break
+            fi
+            if [ $i -eq 60 ]; then
+              echo "❌ Backend failed to start"
+              tail -50 /tmp/iot-api.log
+              exit 1
+            fi
+          done
+
+      # ===== 启动前端 dev server =====
+      - name: Start frontend dev server (background)
+        working-directory: frontend
+        run: |
+          nohup npx vite --port 33411 > /tmp/frontend.log 2>&1 &
+          echo "PID=$!"
+          for i in {1..30}; do
+            sleep 2
+            if curl -sf http://localhost:33411 > /dev/null 2>&1; then
+              echo "✅ Frontend ready"
+              break
+            fi
+          done
+
+      - name: Run Playwright E2E
+        working-directory: frontend
+        run: npm run e2e
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 14
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-logs
+          path: |
+            /tmp/iot-api.log
+            /tmp/frontend.log
+          retention-days: 7

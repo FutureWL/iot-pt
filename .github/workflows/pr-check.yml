@@ -1,6 +1,6 @@
 # GitHub Actions PR check workflow
 # 触发: pull_request + push to main
-# 检查: 前端 type-check / lint / test + 后端 mvn test
+# 检查: 前端 type-check / lint / lint:css / build:check / test + 后端 mvn verify + JaCoCo
 
 name: PR Check
 
@@ -20,7 +20,7 @@ jobs:
   # 前端 (Vue 3 + Vite + TypeScript)
   # ============================================================
   frontend:
-    name: Frontend (type-check + lint + test)
+    name: Frontend (type-check + lint + lint:css + build:check + test)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -42,22 +42,27 @@ jobs:
       - name: Type check
         run: npm run type-check
 
-      - name: Lint
-        # baseline 有 84 errors + 42 warnings,见 docs/inspections/2026-06-28-lint-setup.md
-        # 后续 sprint 修完后改为 fail-on-warn
-        run: npm run lint || true
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Lint CSS (stylelint)
+        run: npm run lint:css
 
       - name: Unit tests
         run: npm run test:run
 
+      - name: Build check
+        # 验证 vite build 能跑通(打包阶段常见错误)
+        run: npm run build:check
+
       # e2e 在 PR check 中跳过(慢、需要后端在跑)
-      # nightly job 单独跑 playwright
+      # nightly job 单独跑 playwright (见 .github/workflows/nightly.yml)
 
   # ============================================================
   # 后端 (Spring Boot 3 + Java 17 + Maven)
   # ============================================================
   backend:
-    name: Backend (mvn test)
+    name: Backend (mvn verify + JaCoCo)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -73,15 +78,24 @@ jobs:
           java-version: '17'
           cache: 'maven'
 
-      - name: Run tests
+      - name: Run tests + JaCoCo coverage check
+        # verify 阶段会触发 surefire(单测) + failsafe(IT) + jacoco(check)
         # -am (also-make) 自动构建依赖模块 (iot-common)
-        run: mvn test -pl iot-api -am -B
-        # 失败时打印更多上下文
+        run: mvn -pl iot-api -am verify -B
+
       - name: Publish test report on failure
         if: failure()
         run: |
           echo "=== Surefire reports ==="
           find backend -path '*/surefire-reports/*.txt' -exec echo '--- {} ---' \; -exec cat {} \;
+
+      - name: Upload JaCoCo coverage report
+        if: always() && hashFiles('backend/iot-api/target/site/jacoco/index.html') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: backend/iot-api/target/site/jacoco/
+          retention-days: 14
 
   # ============================================================
   # 合并门禁: 任意一个 job 失败则 PR 不可合并
