@@ -27,7 +27,7 @@ COPY . .
 RUN npx vite build
 
 # ---- 阶段 2: 运行 ----
-FROM nginx:1.27-alpine
+FROM nginx:1.31-alpine
 WORKDIR /usr/share/nginx/html
 
 # 复制构建产物
