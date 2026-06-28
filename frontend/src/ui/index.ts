@@ -16,8 +16,8 @@ export { default as StatusTag } from './StatusTag.vue'
 export { default as KpiCard } from './KpiCard.vue'
 export { default as DescriptionList } from './DescriptionList.vue'
 
-// CRUD 三件套 — 在 C9-C11 提交后逐个解注释
-// export { default as QueryBar } from './QueryBar.vue'
+// CRUD 三件套
+export { default as QueryBar } from './QueryBar.vue'
 // export { default as DataTable } from './DataTable.vue'
 // export { default as Pager } from './Pager.vue'
 
