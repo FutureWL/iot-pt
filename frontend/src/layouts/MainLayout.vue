@@ -76,7 +76,7 @@ const menus: MenuItem[] = [
     children: [
       { path: '/device/list',      title: '设备列表', icon: 'List',       permission: 'device:list' },
       { path: '/device/group',     title: '设备分组', icon: 'Folder',     permission: 'device:group' },
-      { path: '/device/shadow',    title: '设备影子', icon: 'Document',   permission: 'device:shadow' },
+      { path: '/device/list',      title: '设备影子', icon: 'Document',   permission: 'device:shadow' },
       { path: '/product',          title: '产品管理', icon: 'Goods',      permission: 'product:list' }
     ]
   },
