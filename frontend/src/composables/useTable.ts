@@ -19,6 +19,8 @@ import type { CrudApi } from '@/api/crud'
 interface UseTableOptions {
   /** 默认 pageSize,默认 10 */
   pageSize?: number
+  /** 挂载时自动 fetch 一次,默认 true */
+  autoFetch?: boolean
 }
 
 export function useTable<T, Q extends PageQuery = PageQuery>(
@@ -35,6 +37,11 @@ export function useTable<T, Q extends PageQuery = PageQuery>(
     pageSize: options.pageSize ?? 10,
     ...initialQuery
   } as Q)
+
+  // 挂载时立即拉一次数据(由 autoFetch 控制,默认 true)
+  if (options.autoFetch !== false) {
+    void fetchPage()
+  }
 
   async function fetchPage(): Promise<void> {
     loading.value = true
@@ -71,11 +78,7 @@ export function useTable<T, Q extends PageQuery = PageQuery>(
   }
 
   // 深度 watch:业务侧直接改 query 字段也自动 fetch
-  watch(
-    query,
-    () => void fetchPage(),
-    { deep: true }
-  )
+  watch(query, () => void fetchPage(), { deep: true })
 
   return { loading, records, total, query, fetchPage, reset, setPage, setPageSize }
 }

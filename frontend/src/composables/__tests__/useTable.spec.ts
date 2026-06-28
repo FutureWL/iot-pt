@@ -28,7 +28,10 @@ function makeApi(): { api: CrudApi<Item, Query>; calls: Query[] } {
     page: vi.fn(async (q: Query) => {
       calls.push({ ...q })
       return {
-        records: [{ id: 1, name: 'a' }, { id: 2, name: 'b' }],
+        records: [
+          { id: 1, name: 'a' },
+          { id: 2, name: 'b' }
+        ],
         total: 20,
         size: q.pageSize,
         current: q.pageNum,
@@ -64,17 +67,37 @@ describe('composables/useTable', () => {
     const { api } = makeApi()
     const { fetchPage, records, total, loading } = useTable<Item, Query>(api)
     await fetchPage()
-    expect(records.value).toEqual([{ id: 1, name: 'a' }, { id: 2, name: 'b' }])
+    expect(records.value).toEqual([
+      { id: 1, name: 'a' },
+      { id: 2, name: 'b' }
+    ])
     expect(total.value).toBe(20)
     expect(loading.value).toBe(false)
   })
 
   it('fetchPage 期间 loading=true', async () => {
-    let resolvePage: ((v: { records: Item[]; total: number; size: number; current: number; pages: number }) => void) | undefined
+    let resolvePage:
+      | ((v: {
+          records: Item[]
+          total: number
+          size: number
+          current: number
+          pages: number
+        }) => void)
+      | undefined
     const api: CrudApi<Item, Query> = {
-      page: vi.fn(() => new Promise<{ records: Item[]; total: number; size: number; current: number; pages: number }>((resolve) => {
-        resolvePage = resolve
-      }))
+      page: vi.fn(
+        () =>
+          new Promise<{
+            records: Item[]
+            total: number
+            size: number
+            current: number
+            pages: number
+          }>((resolve) => {
+            resolvePage = resolve
+          })
+      )
     }
     const { fetchPage, loading } = useTable<Item, Query>(api)
     const promise = fetchPage()
@@ -98,14 +121,14 @@ describe('composables/useTable', () => {
 
   it('setPage 改 pageNum 并 fetch', async () => {
     const { api, calls } = makeApi()
-    const { setPage } = useTable<Item, Query>(api)
+    const { setPage } = useTable<Item, Query>(api, undefined, { autoFetch: false })
     await setPage(3)
     expect(calls[0]?.pageNum).toBe(3)
   })
 
   it('setPageSize 改 pageSize 并重置 pageNum=1', async () => {
     const { api, calls } = makeApi()
-    const { query, setPageSize } = useTable<Item, Query>(api)
+    const { query, setPageSize } = useTable<Item, Query>(api, undefined, { autoFetch: false })
     query.pageNum = 5
     await setPageSize(50)
     expect(query.pageSize).toBe(50)
