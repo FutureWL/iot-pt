@@ -1,5 +1,6 @@
 import request from '@/api/request'
 import type { PageQuery } from '@/types/common'
+import { adaptCrudPage, adaptCrudRemove } from '@/api/crud'
 
 export interface IotProductVO {
   id: number
@@ -71,4 +72,10 @@ export function updateProduct(data: IotProductDTO) {
 
 export function deleteProduct(id: number) {
   return request<void>({ url: `/iot/product/${id}`, method: 'delete' })
+}
+
+/** CrudList 适配 */
+export const productCrud = {
+  page: adaptCrudPage<IotProductVO, IotProductQuery>(pageProducts),
+  remove: adaptCrudRemove<IotProductVO>(deleteProduct)
 }

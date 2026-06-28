@@ -1,28 +1,33 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+/**
+ * 产品管理 — <CrudList> 重构版 (673 → ~350 行)
+ *
+ * 设计要点:
+ *   - 列表/筛选/分页 由 <CrudList> 接管
+ *   - "新建/编辑"对话框保留(物模型 JSON + 国网芯模板)
+ *   - "从模板新建"下拉菜单保留
+ *   - 物模型预览对话框保留
+ *   - 状态/认证/联网 等标签用 StatusTag 统一
+ */
+import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Edit, Delete, Search, Refresh, View, Setting, ArrowDown } from '@element-plus/icons-vue'
 import {
-  pageProducts,
+  Plus, Edit, Delete, View, Setting, ArrowDown
+} from '@element-plus/icons-vue'
+import {
+  productCrud,
   createProduct,
   updateProduct,
-  deleteProduct,
   defaultThingModel,
   getProduct,
   type IotProductVO,
   type IotProductDTO,
   type IotProductQuery
 } from '@/api/iot/product'
+import { CrudList, StatusTag, type ColumnDef, type FilterItem, type StatusType } from '@/ui'
 
 // ========== 列表 ==========
-const query = reactive<IotProductQuery>({
-  pageNum: 1, pageSize: 10, keyword: '', category: '', netType: '', status: undefined
-})
-const loading = ref(false)
-const list = ref<IotProductVO[]>([])
-const total = ref(0)
-
 const netTypeOptions = [
   { label: 'MQTT', value: 'MQTT' },
   { label: 'TCP', value: 'TCP' }
@@ -37,27 +42,46 @@ const nodeTypeOptions = [
   { label: '网关', value: 1 },
   { label: '网关子设备', value: 2 }
 ]
-
 const nodeTypeLabel = (n?: number) => nodeTypeOptions.find(o => o.value === n)?.label ?? '-'
 const authTypeLabel = (a?: string) => authTypeOptions.find(o => o.value === a)?.label ?? '-'
 
-async function load() {
-  loading.value = true
-  try {
-    const res: any = await pageProducts(query)
-    list.value = res.data.records ?? []
-    total.value = res.data.total ?? 0
-  } finally {
-    loading.value = false
+const filters: FilterItem[] = [
+  {
+    prop: 'netType',
+    label: '联网方式',
+    type: 'select',
+    options: netTypeOptions
+  },
+  {
+    prop: 'status',
+    label: '状态',
+    type: 'select',
+    options: [
+      { label: '启用', value: 1 },
+      { label: '禁用', value: 0 }
+    ]
   }
-}
-function onSearch() { query.pageNum = 1; load() }
-function onReset() {
-  query.keyword = ''; query.category = ''; query.netType = ''; query.status = undefined
-  query.pageNum = 1; load()
-}
-function onPageChange(p: number) { query.pageNum = p; load() }
-function onSizeChange(s: number) { query.pageSize = s; query.pageNum = 1; load() }
+]
+
+const columns: ColumnDef<IotProductVO>[] = [
+  { prop: 'id', label: 'ID', width: 80 },
+  { prop: 'productKey', label: '产品 Key', minWidth: 160, slot: 'productKey' },
+  { prop: 'productName', label: '产品名称', minWidth: 160 },
+  { prop: 'category', label: '分类', minWidth: 100 },
+  { prop: 'nodeType', label: '节点类型', width: 120, slot: 'nodeType' },
+  { prop: 'netType', label: '联网', width: 90 },
+  { prop: 'authType', label: '认证', width: 110, slot: 'auth' },
+  { prop: 'description', label: '描述', minWidth: 200, showOverflowTooltip: true },
+  { prop: 'status', label: '状态', width: 80, slot: 'status' },
+  { prop: 'createdAt', label: '创建时间', width: 170 },
+  { label: '操作', width: 320, fixed: 'right', slot: 'actions' }
+]
+
+const STATUS_TYPE_MAP: Record<string, StatusType> = { '0': 'info', '1': 'success' }
+const STATUS_LABEL_MAP: Record<number, string> = { 0: '禁用', 1: '启用' }
+
+const crudListRef = ref<{ refresh: () => Promise<void> } | null>(null)
+function refresh(): void { void crudListRef.value?.refresh() }
 
 // ========== 新建/编辑对话框 ==========
 const dialogVisible = ref(false)
@@ -65,16 +89,8 @@ const dialogMode = ref<'create' | 'edit'>('create')
 const submitting = ref(false)
 const formRef = ref()
 const form = reactive<IotProductDTO>({
-  id: undefined,
-  productKey: '',
-  productName: '',
-  category: '',
-  description: '',
-  authType: 'deviceSecret',
-  nodeType: 0,
-  netType: 'MQTT',
-  status: 1,
-  thingModel: ''
+  id: undefined, productKey: '', productName: '', category: '', description: '',
+  authType: 'deviceSecret', nodeType: 0, netType: 'MQTT', status: 1, thingModel: ''
 })
 
 const rules = {
@@ -127,12 +143,8 @@ async function onSubmit() {
       ElMessage.success('更新成功')
     }
     dialogVisible.value = false
-    load()
-  } catch (e) {
-    // 拦截器已提示
-  } finally {
-    submitting.value = false
-  }
+    refresh()
+  } catch { /* 拦截器已提示 */ } finally { submitting.value = false }
 }
 
 async function onDelete(row: IotProductVO) {
@@ -140,13 +152,12 @@ async function onDelete(row: IotProductVO) {
     type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消'
   })
   try {
-    await deleteProduct(row.id)
+    await productCrud.remove!(row.id)
     ElMessage.success('删除成功')
-    load()
-  } catch {}
+    refresh()
+  } catch { /* ignore */ }
 }
 
-// ========== 物模型编辑器跳转 ==========
 const router = useRouter()
 function openThingModel(row: IotProductVO) {
   router.push(`/product/thing-model/${row.id}`)
@@ -254,7 +265,6 @@ function useTemplate(t: ProductTemplate) {
   dialogVisible.value = true
 }
 
-// 只读预览(用 dialog 弹 JSON)
 const tslVisible = ref(false)
 const tslContent = ref('')
 async function previewTsl(row: IotProductVO) {
@@ -262,8 +272,6 @@ async function previewTsl(row: IotProductVO) {
   tslContent.value = res.data.thingModel
   tslVisible.value = true
 }
-
-onMounted(load)
 </script>
 
 <template>
@@ -272,251 +280,115 @@ onMounted(load)
       产品管理
     </h2>
 
-    <div class="page-card search-bar">
-      <el-form
-        :inline="true"
-        @submit.prevent
-      >
-        <el-form-item label="关键字">
-          <el-input
-            v-model="query.keyword"
-            placeholder="Key / 名称 / 描述"
-            clearable
-            style="width: 220px"
-            @keyup.enter="onSearch"
-          />
-        </el-form-item>
-        <el-form-item label="联网方式">
-          <el-select
-            v-model="query.netType"
-            placeholder="全部"
-            clearable
-            style="width: 120px"
-          >
-            <el-option
-              v-for="o in netTypeOptions"
-              :key="o.value"
-              :label="o.label"
-              :value="o.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-select
-            v-model="query.status"
-            placeholder="全部"
-            clearable
-            style="width: 120px"
-          >
-            <el-option
-              label="启用"
-              :value="1"
-            />
-            <el-option
-              label="禁用"
-              :value="0"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
+    <CrudList
+      ref="crudListRef"
+      :api="productCrud"
+      :columns="columns"
+      :filters="filters"
+      :row-key="'id'"
+      empty-text="暂无产品"
+      keyword-placeholder="Key / 名称 / 描述"
+    >
+      <template #toolbar>
+        <el-button
+          type="success"
+          :icon="Plus"
+          @click="openCreate"
+        >
+          新建产品
+        </el-button>
+        <el-dropdown
+          trigger="click"
+          @command="useTemplate"
+        >
           <el-button
             type="primary"
-            :icon="Search"
-            @click="onSearch"
+            plain
           >
-            查询
+            从模板新建<el-icon class="el-icon--right">
+              <ArrowDown />
+            </el-icon>
           </el-button>
-          <el-button
-            :icon="Refresh"
-            @click="onReset"
-          >
-            重置
-          </el-button>
-          <el-button
-            type="success"
-            :icon="Plus"
-            @click="openCreate"
-          >
-            新建产品
-          </el-button>
-          <el-dropdown
-            trigger="click"
-            @command="useTemplate"
-          >
-            <el-button
-              type="primary"
-              plain
-            >
-              从模板新建<el-icon class="el-icon--right">
-                <ArrowDown />
-              </el-icon>
-            </el-button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item
-                  v-for="t in PRODUCT_TEMPLATES"
-                  :key="t.key"
-                  :command="t"
-                >
-                  <div style="font-weight: 500;">
-                    {{ t.name }}
-                  </div>
-                  <div style="font-size: 11px; color: #909399;">
-                    {{ t.description }}
-                  </div>
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-        </el-form-item>
-      </el-form>
-    </div>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item
+                v-for="t in PRODUCT_TEMPLATES"
+                :key="t.key"
+                :command="t"
+              >
+                <div style="font-weight: 500;">
+                  {{ t.name }}
+                </div>
+                <div style="font-size: 11px; color: #909399;">
+                  {{ t.description }}
+                </div>
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </template>
 
-    <div class="page-card">
-      <el-table
-        v-loading="loading"
-        :data="list"
-        stripe
-        border
-      >
-        <el-table-column
-          prop="id"
-          label="ID"
-          width="80"
-        />
-        <el-table-column
-          prop="productKey"
-          label="产品 Key"
-          min-width="160"
-        >
-          <template #default="{ row }">
-            <el-tag
-              size="small"
-              type="info"
-            >
-              {{ row.productKey }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column
-          prop="productName"
-          label="产品名称"
-          min-width="160"
-        />
-        <el-table-column
-          prop="category"
-          label="分类"
-          min-width="100"
-        />
-        <el-table-column
-          label="节点类型"
-          width="120"
-        >
-          <template #default="{ row }">
-            <el-tag size="small">
-              {{ nodeTypeLabel(row.nodeType) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column
-          prop="netType"
-          label="联网"
-          width="90"
-        />
-        <el-table-column
-          label="认证"
-          width="110"
-        >
-          <template #default="{ row }">
-            <el-tag
-              size="small"
-              type="warning"
-            >
-              {{ authTypeLabel(row.authType) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column
-          prop="description"
-          label="描述"
-          min-width="200"
-          show-overflow-tooltip
-        />
-        <el-table-column
-          label="状态"
-          width="80"
-        >
-          <template #default="{ row }">
-            <el-tag
-              :type="row.status === 1 ? 'success' : 'info'"
-              size="small"
-            >
-              {{ row.status === 1 ? '启用' : '禁用' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column
-          prop="createdAt"
-          label="创建时间"
-          width="170"
-        />
-        <el-table-column
-          label="操作"
-          width="280"
-          fixed="right"
-        >
-          <template #default="{ row }">
-            <el-button
-              link
-              type="primary"
-              :icon="Edit"
-              @click="openEdit(row)"
-            >
-              编辑
-            </el-button>
-            <el-button
-              link
-              type="success"
-              :icon="Setting"
-              @click="openThingModel(row)"
-            >
-              物模型
-            </el-button>
-            <el-button
-              link
-              type="info"
-              :icon="View"
-              @click="previewTsl(row)"
-            >
-              预览
-            </el-button>
-            <el-button
-              link
-              type="danger"
-              :icon="Delete"
-              @click="onDelete(row)"
-            >
-              删除
-            </el-button>
-          </template>
-        </el-table-column>
-        <template #empty>
-          <el-empty description="暂无产品" />
-        </template>
-      </el-table>
+      <template #column-productKey="{ row }">
+        <el-tag size="small" type="info">
+          {{ (row as IotProductVO).productKey }}
+        </el-tag>
+      </template>
 
-      <div class="pagination-wrap">
-        <el-pagination
-          v-model:current-page="query.pageNum"
-          v-model:page-size="query.pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @current-change="onPageChange"
-          @size-change="onSizeChange"
+      <template #column-nodeType="{ row }">
+        <el-tag size="small">
+          {{ nodeTypeLabel((row as IotProductVO).nodeType) }}
+        </el-tag>
+      </template>
+
+      <template #column-auth="{ row }">
+        <el-tag size="small" type="warning">
+          {{ authTypeLabel((row as IotProductVO).authType) }}
+        </el-tag>
+      </template>
+
+      <template #column-status="{ row }">
+        <StatusTag
+          :value="(row as IotProductVO).status"
+          :label="STATUS_LABEL_MAP[(row as IotProductVO).status]"
+          :type-map="STATUS_TYPE_MAP"
         />
-      </div>
-    </div>
+      </template>
+
+      <template #column-actions="{ row }">
+        <el-button
+          link
+          type="primary"
+          :icon="Edit"
+          @click="openEdit(row as IotProductVO)"
+        >
+          编辑
+        </el-button>
+        <el-button
+          link
+          type="success"
+          :icon="Setting"
+          @click="openThingModel(row as IotProductVO)"
+        >
+          物模型
+        </el-button>
+        <el-button
+          link
+          type="info"
+          :icon="View"
+          @click="previewTsl(row as IotProductVO)"
+        >
+          预览
+        </el-button>
+        <el-button
+          link
+          type="danger"
+          :icon="Delete"
+          @click="onDelete(row as IotProductVO)"
+        >
+          删除
+        </el-button>
+      </template>
+    </CrudList>
 
     <!-- 新建/编辑对话框 -->
     <el-dialog
@@ -532,19 +404,13 @@ onMounted(load)
         label-width="100px"
         @submit.prevent
       >
-        <el-form-item
-          label="产品 Key"
-          prop="productKey"
-        >
+        <el-form-item label="产品 Key" prop="productKey">
           <el-input
             v-model="form.productKey"
             placeholder="英文,设备上报会用,如 th_sensor"
           />
         </el-form-item>
-        <el-form-item
-          label="产品名称"
-          prop="productName"
-        >
+        <el-form-item label="产品名称" prop="productName">
           <el-input
             v-model="form.productName"
             placeholder="中文展示名,如 温湿度传感器"
@@ -567,10 +433,7 @@ onMounted(load)
             </el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item
-          label="联网方式"
-          prop="netType"
-        >
+        <el-form-item label="联网方式" prop="netType">
           <el-radio-group v-model="form.netType">
             <el-radio
               v-for="o in netTypeOptions"
@@ -581,10 +444,7 @@ onMounted(load)
             </el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item
-          label="认证方式"
-          prop="authType"
-        >
+        <el-form-item label="认证方式" prop="authType">
           <el-select
             v-model="form.authType"
             style="width: 220px"
@@ -599,12 +459,8 @@ onMounted(load)
         </el-form-item>
         <el-form-item label="状态">
           <el-radio-group v-model="form.status">
-            <el-radio :value="1">
-              启用
-            </el-radio>
-            <el-radio :value="0">
-              禁用
-            </el-radio>
+            <el-radio :value="1">启用</el-radio>
+            <el-radio :value="0">禁用</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="描述">
@@ -619,7 +475,7 @@ onMounted(load)
             v-model="form.thingModel"
             type="textarea"
             :rows="6"
-            placeholder="{&quot;properties&quot;:[],&quot;events&quot;:[],&quot;services&quot;:[]}"
+            placeholder='{"properties":[],"events":[],"services":[]}'
           />
           <div class="hint">
             P1-② 阶段会提供可视化编辑器,目前先手填 JSON
@@ -627,9 +483,7 @@ onMounted(load)
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">
-          取消
-        </el-button>
+        <el-button @click="dialogVisible = false">取消</el-button>
         <el-button
           type="primary"
           :loading="submitting"
@@ -648,26 +502,28 @@ onMounted(load)
     >
       <pre class="tsl-pre">{{ tslContent }}</pre>
       <template #footer>
-        <el-button @click="tslVisible = false">
-          关闭
-        </el-button>
+        <el-button @click="tslVisible = false">关闭</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <style scoped lang="scss">
-.search-bar { margin-bottom: 12px; padding: 16px; :deep(.el-form-item) { margin-bottom: 0; } }
-.pagination-wrap { display: flex; justify-content: flex-end; margin-top: 16px; }
-.hint { font-size: 12px; color: #909399; margin-top: 4px; }
+@use '@/styles/tokens.scss' as *;
+
+.hint {
+  font-size: $font-size-extra-small;
+  color: var(--iot-text-secondary);
+  margin-top: $spacing-4;
+}
 .tsl-pre {
   background: #1e1e1e;
   color: #d4d4d4;
-  padding: 16px;
-  border-radius: 6px;
-  font-family: 'Menlo', 'Consolas', monospace;
-  font-size: 12px;
-  line-height: 1.6;
+  padding: $spacing-16;
+  border-radius: $radius-base;
+  font-family: var(--iot-font-family-code);
+  font-size: $font-size-extra-small;
+  line-height: $line-height-base;
   max-height: 60vh;
   overflow: auto;
 }
