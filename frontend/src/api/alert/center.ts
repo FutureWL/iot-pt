@@ -1,5 +1,6 @@
 import request from '@/api/request'
 import type { PageQuery } from '@/types/common'
+import { adaptCrudPage } from '@/api/crud'
 
 /** 告警级别(电力专项:注意/异常/严重/紧急) */
 export type AlertLevel = 'NOTICE' | 'ABNORMAL' | 'SERIOUS' | 'URGENT'
@@ -58,4 +59,9 @@ export function createWorkOrderFromAlert(alertId: number) {
     url: `/alert/center/${alertId}/create-work-order`,
     method: 'post'
   })
+}
+
+/** CrudList 适配 */
+export const alertCrud = {
+  page: adaptCrudPage<AlertCenterVO, AlertCenterQuery>(pageAlertsCenter)
 }
