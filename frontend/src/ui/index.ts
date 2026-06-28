@@ -19,6 +19,10 @@ export { default as DataTable } from './DataTable.vue'
 export type { ColumnDef } from './DataTable.vue'
 export { default as Pager } from './Pager.vue'
 
+// 业务通用组件
+export { default as ModalForm } from './ModalForm.vue'
+export { default as DictSelect } from './DictSelect.vue'
+
 // CRUD 综合
 export { default as CrudList } from './CrudList.vue'
 
