@@ -47,7 +47,7 @@ export function updateGroup(data: IotDeviceGroupDTO) {
   return request<void>({ url: '/iot/device-group', method: 'put', data })
 }
 
-export function deleteGroup(id: number) {
+export function deleteGroup(id: string | number) {
   return request<void>({ url: `/iot/device-group/${id}`, method: 'delete' })
 }
 

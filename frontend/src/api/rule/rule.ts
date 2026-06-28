@@ -41,7 +41,7 @@ export function pageRules(params: IotRuleQuery) {
   }>({ url: '/rule/page', method: 'get', params })
 }
 
-export function getRule(id: number) {
+export function getRule(id: string | number) {
   return request<IotRuleVO>({ url: `/rule/${id}`, method: 'get' })
 }
 
@@ -53,7 +53,7 @@ export function updateRule(data: IotRuleDTO) {
   return request<void>({ url: '/rule', method: 'put', data })
 }
 
-export function deleteRule(id: number) {
+export function deleteRule(id: string | number) {
   return request<void>({ url: `/rule/${id}`, method: 'delete' })
 }
 

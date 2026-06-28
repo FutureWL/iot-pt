@@ -25,6 +25,6 @@ export function updateOrganization(data: Partial<SysOrganizationVO>) {
   return request<void>({ url: '/system/organization', method: 'put', data })
 }
 
-export function deleteOrganization(id: number) {
+export function deleteOrganization(id: string | number) {
   return request<void>({ url: `/system/organization/${id}`, method: 'delete' })
 }

@@ -39,7 +39,7 @@ export function allRoles() {
   return request<SysRoleVO[]>({ url: '/system/role/all', method: 'get' })
 }
 
-export function getRole(id: number) {
+export function getRole(id: string | number) {
   return request<SysRoleVO>({ url: `/system/role/${id}`, method: 'get' })
 }
 
@@ -51,7 +51,7 @@ export function updateRole(data: RoleDTO) {
   return request<void>({ url: '/system/role', method: 'put', data })
 }
 
-export function deleteRole(id: number) {
+export function deleteRole(id: string | number) {
   return request<void>({ url: `/system/role/${id}`, method: 'delete' })
 }
 
@@ -61,7 +61,7 @@ export const roleCrud = {
   remove: adaptCrudRemove<SysRoleVO>(deleteRole)
 }
 
-export function getRoleMenuIds(id: number) {
+export function getRoleMenuIds(id: string | number) {
   return request<number[]>({ url: `/system/role/${id}/menus`, method: 'get' })
 }
 

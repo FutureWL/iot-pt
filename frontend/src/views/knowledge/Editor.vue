@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft, Check, Reading } from '@element-plus/icons-vue'
@@ -12,7 +12,8 @@ import {
 
 const route = useRoute()
 const router = useRouter()
-const id = computed(() => route.params.id ? Number(route.params.id) : null)
+// id 保持字符串(后端返回的 Snowflake id 是 19 位,Number() 转换会丢精度)
+const id = computed(() => route.params.id ? String(route.params.id) : null)
 
 const submitting = ref(false)
 const form = reactive<Partial<KnowledgeDetailVO>>({
@@ -73,6 +74,11 @@ async function onSubmit() {
 function goBack() { router.push('/knowledge/list') }
 
 onMounted(loadIfEdit)
+// 路由参数变化时重新加载(Vue Router 默认会复用组件,
+// 仅 params 变化不会重新触发 onMounted)
+watch(id, (newId) => {
+  if (newId !== undefined && newId !== null) loadIfEdit()
+})
 </script>
 
 <template>

@@ -52,11 +52,11 @@ export function updateDictItem(data: Partial<SysDictVO>) {
   return request<void>({ url: '/system/dict/item', method: 'put', data })
 }
 
-export function deleteDictItem(id: number) {
+export function deleteDictItem(id: string | number) {
   return request<void>({ url: `/system/dict/item/${id}`, method: 'delete' })
 }
 
-export function deleteDictType(id: number) {
+export function deleteDictType(id: string | number) {
   return request<void>({ url: `/system/dict/type/${id}`, method: 'delete' })
 }
 

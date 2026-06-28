@@ -49,7 +49,7 @@ export function pageUsers(params: UserQuery) {
 }
 
 /** 详情 */
-export function getUser(id: number) {
+export function getUser(id: string | number) {
   return request<SysUserVO>({ url: `/system/user/${id}`, method: 'get' })
 }
 
@@ -64,7 +64,7 @@ export function updateUser(data: UserDTO) {
 }
 
 /** 删除 */
-export function deleteUser(id: number) {
+export function deleteUser(id: string | number) {
   return request<void>({ url: `/system/user/${id}`, method: 'delete' })
 }
 

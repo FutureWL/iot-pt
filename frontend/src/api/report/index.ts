@@ -45,7 +45,7 @@ export function generateReport(params: ReportGenerateParams) {
 }
 
 /** 下载报表 */
-export function downloadReport(id: number) {
+export function downloadReport(id: string | number) {
   return request<Blob>({
     url: `/report/${id}/download`,
     method: 'get',
