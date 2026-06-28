@@ -43,7 +43,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <mybatis-plus.version>3.5.9</mybatis-plus.version>
-        <hutool.version>5.8.32</hutool.version>
+        <hutool.version>5.8.46</hutool.version>
         <jjwt.version>0.12.6</jjwt.version>
         <knife4j.version>4.5.0</knife4j.version>
         <tdengine.version>3.0.4</tdengine.version>
