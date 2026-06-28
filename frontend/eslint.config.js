@@ -24,7 +24,12 @@ export default [
       '*.config.js',
       'postcss.config.*',
       'tailwind.config.*',
-      'stylelint.config.*'
+      'stylelint.config.*',
+      // Histoire 组件故事文件(由 histoire 工具单独处理)
+      'src/**/*.stories.ts',
+      'src/**/*.story.vue',
+      '*.stories.ts',
+      '*.story.vue'
     ]
   },
 
