@@ -6,6 +6,13 @@ import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import path from 'node:path'
 
+// Vitest 模式下跳过 Element Plus 自动注册解析器:
+// 解析器会在 SFC 模板里注入 `import { ElXxx } from 'element-plus'`,
+// 真实加载会触发 .css 资源请求,happy-dom + Node 环境下 ERR_UNKNOWN_FILE_EXTENSION
+// 测试中所有 el-* 组件已通过 tests/setup.ts 的 config.global.stubs 替换为 stub
+const isVitest = process.env.VITEST === 'true' || process.env.VITEST === '1'
+const uiResolvers = isVitest ? [] : [ElementPlusResolver()]
+
 export default defineConfig(({ mode }) => {
   // mode 由 CLI 决定:
   //   npm run dev  -> 'development' -> 加载 .env.development
@@ -20,8 +27,8 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       vue(),
-      AutoImport({ resolvers: [ElementPlusResolver()] }),
-      Components({ resolvers: [ElementPlusResolver()] })
+      AutoImport({ resolvers: uiResolvers }),
+      Components({ resolvers: uiResolvers })
     ],
     resolve: {
       alias: {
