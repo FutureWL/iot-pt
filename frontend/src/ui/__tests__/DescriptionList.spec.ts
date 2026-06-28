@@ -118,6 +118,8 @@ describe('ui/DescriptionList', () => {
   it('span prop 透传到 el-descriptions-item', () => {
     const items: DlItem[] = [{ label: '完整描述', value: 'xxx', span: 2 }]
     const wrapper = mountDl(items)
-    expect(wrapper.find('[data-testid="el-descriptions-item"]').attributes('data-label')).toBe('完整描述')
+    expect(wrapper.find('[data-testid="el-descriptions-item"]').attributes('data-label')).toBe(
+      '完整描述'
+    )
   })
 })

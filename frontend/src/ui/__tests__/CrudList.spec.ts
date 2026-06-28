@@ -48,14 +48,22 @@ const QueryBarStub = defineComponent({
   setup(_props, { slots, emit }) {
     return () =>
       h('div', { 'data-testid': 'query-bar' }, [
-        h('button', {
-          'data-testid': 'btn-search',
-          onClick: () => emit('search', { keyword: 'q', status: 'PENDING' })
-        }, 'search'),
-        h('button', {
-          'data-testid': 'btn-reset',
-          onClick: () => emit('reset')
-        }, 'reset'),
+        h(
+          'button',
+          {
+            'data-testid': 'btn-search',
+            onClick: () => emit('search', { keyword: 'q', status: 'PENDING' })
+          },
+          'search'
+        ),
+        h(
+          'button',
+          {
+            'data-testid': 'btn-reset',
+            onClick: () => emit('reset')
+          },
+          'reset'
+        ),
         slots.extra ? slots.extra() : null
       ])
   }
@@ -84,26 +92,48 @@ const PagerStub = defineComponent({
   emits: ['update:current', 'update:size'],
   setup(props, { emit, attrs }) {
     return () =>
-      h('div', {
-        'data-testid': 'pager',
-        'data-current': attrs.current ?? props.current,
-        'data-total': props.total
-      }, [
-        h('button', {
-          'data-testid': 'btn-page-next',
-          onClick: () => emit('update:current', (Number(attrs.current ?? props.current)) + 1)
-        }, 'next'),
-        h('button', {
-          'data-testid': 'btn-page-size',
-          onClick: () => emit('update:size', 50)
-        }, 'size')
-      ])
+      h(
+        'div',
+        {
+          'data-testid': 'pager',
+          'data-current': attrs.current ?? props.current,
+          'data-total': props.total
+        },
+        [
+          h(
+            'button',
+            {
+              'data-testid': 'btn-page-next',
+              onClick: () => emit('update:current', Number(attrs.current ?? props.current) + 1)
+            },
+            'next'
+          ),
+          h(
+            'button',
+            {
+              'data-testid': 'btn-page-size',
+              onClick: () => emit('update:size', 50)
+            },
+            'size'
+          )
+        ]
+      )
   }
 })
 
-function makeApi(): { api: CrudApi<Item, Query>; calls: Query[]; setResponse: (data: Item[], total: number) => void } {
+function makeApi(): {
+  api: CrudApi<Item, Query>
+  calls: Query[]
+  setResponse: (data: Item[], total: number) => void
+} {
   const calls: Query[] = []
-  let nextResponse: { records: Item[]; total: number; size: number; current: number; pages: number } = {
+  let nextResponse: {
+    records: Item[]
+    total: number
+    size: number
+    current: number
+    pages: number
+  } = {
     records: [],
     total: 0,
     size: 10,
@@ -111,7 +141,13 @@ function makeApi(): { api: CrudApi<Item, Query>; calls: Query[]; setResponse: (d
     pages: 0
   }
   const setResponse = (records: Item[], total: number): void => {
-    nextResponse = { records, total, size: nextResponse.size, current: nextResponse.current, pages: Math.ceil(total / nextResponse.size) }
+    nextResponse = {
+      records,
+      total,
+      size: nextResponse.size,
+      current: nextResponse.current,
+      pages: Math.ceil(total / nextResponse.size)
+    }
   }
   const api: CrudApi<Item, Query> = {
     page: vi.fn(async (q: Query) => {
@@ -246,7 +282,13 @@ describe('ui/CrudList', () => {
 
   it('数据加载完成后 DataTable 接收 records', async () => {
     const { api, setResponse } = makeApi()
-    setResponse([{ id: 1, name: 'a' }, { id: 2, name: 'b' }], 2)
+    setResponse(
+      [
+        { id: 1, name: 'a' },
+        { id: 2, name: 'b' }
+      ],
+      2
+    )
     const wrapper = mountCl({ api, columns: [{ prop: 'name', label: '名称' }] })
     await flushPromises()
     const dt = wrapper.find('[data-testid="data-table"]')

@@ -30,8 +30,7 @@ const ElButtonStub = defineComponent({
   name: 'ElButton',
   props: ['type', 'disabled'],
   setup(_props, { slots, attrs }) {
-    return () =>
-      h('button', { ...attrs, 'data-testid': 'el-button' }, slots.default?.() ?? [])
+    return () => h('button', { ...attrs, 'data-testid': 'el-button' }, slots.default?.() ?? [])
   }
 })
 

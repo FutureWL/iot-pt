@@ -21,11 +21,7 @@ const ElTagStub = defineComponent({
   props: ['type', 'size', 'effect'],
   setup(props, { slots }) {
     return () =>
-      h(
-        'span',
-        { 'data-testid': 'el-tag', 'data-type': props.type },
-        slots.default?.() ?? []
-      )
+      h('span', { 'data-testid': 'el-tag', 'data-type': props.type }, slots.default?.() ?? [])
   }
 })
 

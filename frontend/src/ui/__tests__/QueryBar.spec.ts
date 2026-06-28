@@ -53,8 +53,7 @@ const ElOptionStub = defineComponent({
   name: 'ElOption',
   props: ['label', 'value'],
   setup(props) {
-    return () =>
-      h('div', { 'data-testid': 'el-option', 'data-value': props.value }, props.label)
+    return () => h('div', { 'data-testid': 'el-option', 'data-value': props.value }, props.label)
   }
 })
 
@@ -62,8 +61,7 @@ const ElFormStub = defineComponent({
   name: 'ElForm',
   props: ['inline', 'model'],
   setup(_props, { slots }) {
-    return () =>
-      h('div', { 'data-testid': 'el-form' }, slots.default ? slots.default() : [])
+    return () => h('div', { 'data-testid': 'el-form' }, slots.default ? slots.default() : [])
   }
 })
 

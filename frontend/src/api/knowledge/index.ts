@@ -63,5 +63,8 @@ export const knowledgeCrud = asCrudApi<KnowledgeVO, KnowledgeQuery>({
     }
   },
   // CrudApi.remove 是 (id: string | number),deleteKnowledge 是 (id: number),用 cast
-  remove: ((id: string | number) => deleteKnowledge(id as number)) as CrudApi<KnowledgeVO, KnowledgeQuery>['remove']
+  remove: ((id: string | number) => deleteKnowledge(id as number)) as CrudApi<
+    KnowledgeVO,
+    KnowledgeQuery
+  >['remove']
 })

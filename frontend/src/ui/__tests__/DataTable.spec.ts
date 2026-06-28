@@ -130,9 +130,7 @@ describe('ui/DataTable', () => {
   })
 
   it('width / align 透传到 el-table-column', () => {
-    const columns: ColumnDef[] = [
-      { prop: 'id', label: 'ID', width: 80, align: 'center' }
-    ]
+    const columns: ColumnDef[] = [{ prop: 'id', label: 'ID', width: 80, align: 'center' }]
     const wrapper = mountDt({ columns, data: [] })
     const col = wrapper.find('[data-testid="el-table-column"]')
     expect(col.exists()).toBe(true)
