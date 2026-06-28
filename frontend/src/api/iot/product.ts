@@ -58,7 +58,7 @@ export function defaultThingModel() {
   return request<string>({ url: '/iot/product/thing-model/default', method: 'get' })
 }
 
-export function getProduct(id: number) {
+export function getProduct(id: string | number) {
   return request<IotProductVO>({ url: `/iot/product/${id}`, method: 'get' })
 }
 
@@ -70,7 +70,7 @@ export function updateProduct(data: IotProductDTO) {
   return request<void>({ url: '/iot/product', method: 'put', data })
 }
 
-export function deleteProduct(id: number) {
+export function deleteProduct(id: string | number) {
   return request<void>({ url: `/iot/product/${id}`, method: 'delete' })
 }
 

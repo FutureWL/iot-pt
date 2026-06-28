@@ -32,7 +32,8 @@ export function pageKnowledge(params: KnowledgeQuery) {
   }>({ url: '/knowledge/page', method: 'get', params })
 }
 
-export function getKnowledgeDetail(id: number) {
+/** 接受 string|number:Snowflake id 是 19 位 long,Number() 会丢精度,路由参数应用 string */
+export function getKnowledgeDetail(id: string | number) {
   return request<KnowledgeDetailVO>({ url: `/knowledge/${id}`, method: 'get' })
 }
 
@@ -44,7 +45,7 @@ export function updateKnowledge(data: Partial<KnowledgeDetailVO>) {
   return request<void>({ url: '/knowledge', method: 'put', data })
 }
 
-export function deleteKnowledge(id: number) {
+export function deleteKnowledge(id: string | number) {
   return request<void>({ url: `/knowledge/${id}`, method: 'delete' })
 }
 

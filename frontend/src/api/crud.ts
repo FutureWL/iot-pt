@@ -106,7 +106,10 @@ export function adaptCrudPage<T, Q extends PageQuery = PageQuery>(
 
 /**
  * 通用 remove 适配:CrudApi.remove 接受 string|number,业务 API 多为 number
- * 运行时会 Number(id) 真转,不只是 TS cast
+ *
+ * 注:不对 id 做 Number() 转换!Snofflake id 是 19 位,Number() 会丢精度
+ * (Number.MAX_SAFE_INTEGER = 16 位)。保持 string 让 axios 原样发出,
+ * 后端 @PathVariable Long 自动从 string 解析。
  *
  * @example
  *   export const workorderCrud = {
@@ -115,17 +118,18 @@ export function adaptCrudPage<T, Q extends PageQuery = PageQuery>(
  *   }
  */
 export function adaptCrudRemove<T>(
-  rawRemove: (id: number) => Promise<unknown>
+  rawRemove: (id: string | number) => Promise<unknown>
 ): (id: string | number) => Promise<unknown> {
-  return (id: string | number) => rawRemove(Number(id)) as Promise<unknown>
+  return (id: string | number) => rawRemove(id) as Promise<unknown>
 }
 
 /**
  * 通用 detail 适配:CrudApi.detail 接受 string|number,业务 API 多为 number
- * 运行时会 Number(id) 真转,不只是 TS cast
+ *
+ * 注:同 adaptCrudRemove,不对 id 做 Number() 转换
  */
 export function adaptCrudDetail<T>(
-  rawDetail: (id: number) => Promise<T>
+  rawDetail: (id: string | number) => Promise<T>
 ): (id: string | number) => Promise<T> {
-  return (id: string | number) => rawDetail(Number(id))
+  return (id: string | number) => rawDetail(id)
 }

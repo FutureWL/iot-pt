@@ -36,7 +36,7 @@ export function pageOperationLogs(params: OperationLogQuery) {
   }>({ url: '/system/log/page', method: 'get', params })
 }
 
-export function getOperationLog(id: number) {
+export function getOperationLog(id: string | number) {
   return request<SysOperationLogVO>({ url: `/system/log/${id}`, method: 'get' })
 }
 

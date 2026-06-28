@@ -72,11 +72,11 @@ export function updateDevice(data: IotDeviceDTO) {
   return request<void>({ url: '/iot/device', method: 'put', data })
 }
 
-export function deleteDevice(id: number) {
+export function deleteDevice(id: string | number) {
   return request<void>({ url: `/iot/device/${id}`, method: 'delete' })
 }
 
-export function resetDeviceSecret(id: number) {
+export function resetDeviceSecret(id: string | number) {
   return request<string>({ url: `/iot/device/${id}/reset-secret`, method: 'post' })
 }
 

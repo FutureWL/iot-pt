@@ -55,7 +55,7 @@ export function pageWorkOrders(params: WorkOrderQuery) {
   }>({ url: '/workorder/page', method: 'get', params })
 }
 
-export function getWorkOrder(id: number) {
+export function getWorkOrder(id: string | number) {
   return request<WorkOrderVO>({ url: `/workorder/${id}`, method: 'get' })
 }
 

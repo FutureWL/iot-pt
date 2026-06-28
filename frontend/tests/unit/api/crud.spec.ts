@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { adaptCrudPage, adaptCrudRemove, adaptCrudDetail, asCrudApi } from '@/api/crud'
 import type { PageQuery } from '@/types/common'
 
-interface Row { id: number; title: string }
+interface Row { id: string | number; title: string }
 interface Q extends PageQuery {
   status?: string
 }
@@ -91,20 +91,22 @@ describe('api/crud — adaptCrudPage', () => {
 })
 
 describe('api/crud — adaptCrudRemove / adaptCrudDetail', () => {
-  it('adaptCrudRemove 把 string|number 强转为 number 调原函数', async () => {
-    const raw = vi.fn(async (id: number) => id)
+  it('adaptCrudRemove 透传 string|number 给原函数(不 Number 化,避免 Snowflake id 精度丢失)', async () => {
+    const raw = vi.fn(async (id: string | number) => id)
     const remove = adaptCrudRemove<Row>(raw)
     expect(await remove(123)).toBe(123)
     expect(raw).toHaveBeenCalledWith(123)
+    // 字符串 id 保持原样透传
+    expect(await remove('2071318485283131393')).toBe('2071318485283131393')
+    expect(raw).toHaveBeenCalledWith('2071318485283131393')
   })
 
-  it('adaptCrudDetail 同上', async () => {
-    const raw = vi.fn(async (id: number) => ({ id, title: 't' }))
+  it('adaptCrudDetail 同上,string id 保持原样', async () => {
+    const raw = vi.fn(async (id: string | number) => ({ id, title: 't' }))
     const detail = adaptCrudDetail<Row>(raw)
     const r = await detail('7')
-    // raw fn 返回 id=7(number),detail 包装不修改返回
-    expect(r).toEqual({ id: 7, title: 't' })
-    expect(raw).toHaveBeenCalledWith(7)  // string '7' 已转 number
+    expect(r).toEqual({ id: '7', title: 't' })
+    expect(raw).toHaveBeenCalledWith('7')
   })
 })
 

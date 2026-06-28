@@ -38,7 +38,7 @@ export function pageAlerts(params: IotAlertQuery) {
   }>({ url: '/alert/page', method: 'get', params })
 }
 
-export function getAlert(id: number) {
+export function getAlert(id: string | number) {
   return request<IotAlertVO>({ url: `/alert/${id}`, method: 'get' })
 }
 
