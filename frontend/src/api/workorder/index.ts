@@ -1,5 +1,6 @@
 import request from '@/api/request'
 import type { PageQuery } from '@/types/common'
+import { adaptCrudPage } from '@/api/crud'
 
 export type WorkOrderStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'OVERDUE' | 'CLOSED'
 export type WorkOrderPriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT'
@@ -80,4 +81,9 @@ export function assignWorkOrder(id: number, assignee: string) {
 
 export function completeWorkOrder(id: number, remark?: string) {
   return request<void>({ url: `/workorder/${id}/complete`, method: 'put', data: { remark } })
+}
+
+/** CrudList 适配:WorkOrder 后端暂未提供 DELETE,故不含 remove */
+export const workorderCrud = {
+  page: adaptCrudPage<WorkOrderVO, WorkOrderQuery>(pageWorkOrders)
 }
