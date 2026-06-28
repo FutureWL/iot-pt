@@ -44,7 +44,7 @@
 
         <mybatis-plus.version>3.5.9</mybatis-plus.version>
         <hutool.version>5.8.32</hutool.version>
-        <jjwt.version>0.12.6</jjwt.version>
+        <jjwt.version>0.13.0</jjwt.version>
         <knife4j.version>4.5.0</knife4j.version>
         <tdengine.version>3.0.4</tdengine.version>
         <netty.version>4.1.115.Final</netty.version>
