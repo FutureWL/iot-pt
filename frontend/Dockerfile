@@ -5,7 +5,7 @@
 # ============================================================
 
 # ---- 阶段 1: 构建 ----
-FROM node:20-alpine AS builder
+FROM node:26-alpine AS builder
 WORKDIR /build
 
 # 镜像源加速
