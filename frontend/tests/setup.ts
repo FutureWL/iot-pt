@@ -41,30 +41,28 @@ vi.mock('nprogress', () => ({
   }
 }))
 
-// element-plus 消息提示
-vi.mock('element-plus', async () => {
-  const actual = await vi.importActual<typeof import('element-plus')>('element-plus')
-  return {
-    ...actual,
-    ElMessage: {
-      success: vi.fn(),
-      error: vi.fn(),
-      warning: vi.fn(),
-      info: vi.fn()
-    },
-    ElMessageBox: {
-      confirm: vi.fn().mockResolvedValue('confirm'),
-      alert: vi.fn().mockResolvedValue('alert'),
-      prompt: vi.fn().mockResolvedValue({ value: 'ok' })
-    },
-    ElNotification: {
-      success: vi.fn(),
-      error: vi.fn(),
-      warning: vi.fn(),
-      info: vi.fn()
-    }
+// element-plus — 仅 mock 我们用到的消息组件,避免加载 CSS 资源
+// (真实 ElEmpty/ElButton/ElForm 等在 SFC 中通过 unplugin-vue-components 自动注册;
+// 测试中通过 config.global.stubs 替换,不需真实加载)
+vi.mock('element-plus', () => ({
+  ElMessage: {
+    success: vi.fn(),
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn()
+  },
+  ElMessageBox: {
+    confirm: vi.fn().mockResolvedValue('confirm'),
+    alert: vi.fn().mockResolvedValue('alert'),
+    prompt: vi.fn().mockResolvedValue({ value: 'ok' })
+  },
+  ElNotification: {
+    success: vi.fn(),
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn()
   }
-})
+}))
 
 // echarts — 图表库,测试中无 canvas
 vi.mock('echarts', () => ({
