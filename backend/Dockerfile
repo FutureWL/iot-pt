@@ -22,7 +22,7 @@ COPY iot-api/src iot-api/src
 RUN mvn -B -q -pl iot-api -am package -DskipTests
 
 # ---- 阶段 2: 运行 ----
-FROM eclipse-temurin:17-jre-jammy
+FROM eclipse-temurin:25-jre-jammy
 WORKDIR /app
 
 # 时区 + curl(健康检查用)
