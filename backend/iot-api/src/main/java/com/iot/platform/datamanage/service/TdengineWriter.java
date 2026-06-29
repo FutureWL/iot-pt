@@ -109,7 +109,12 @@ public class TdengineWriter {
         return s.replaceAll("[^a-zA-Z0-9_]", "_");
     }
 
-    private void ensureSuperTable(String superTable) {
+    /**
+     * 确保超级表存在(创建如果不存在)
+     * public 让 TdengineSchemaInitializer 在启动时调用,
+     * 避免第一次查询时表不存在的 500
+     */
+    public void ensureSuperTable(String superTable) {
         try (Connection conn = tsDataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(
                      "CREATE TABLE IF NOT EXISTS " + superTable + " " +

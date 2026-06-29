@@ -44,9 +44,15 @@ public class DataController {
             @RequestParam(required = false, defaultValue = "double") String type,
             @RequestParam Long startMs,
             @RequestParam Long endMs) throws Exception {
-        // 取 tenantId 跟 deviceId 的关系
+        // 验证设备存在并获取 tenantId
+        // 注: JacksonConfig 把 Long 序列化为 String 防 JS 精度丢失,这里 deviceId 是 String
         Long tenantId = realtimeService.listLive().stream()
-                .filter(m -> ((Number) m.get("deviceId")).longValue() == deviceId)
+                .filter(m -> {
+                    Object did = m.get("deviceId");
+                    if (did == null) return false;
+                    try { return Long.parseLong(did.toString()) == deviceId; }
+                    catch (NumberFormatException e) { return false; }
+                })
                 .findFirst()
                 .map(m -> 1L)  // 简化，默认租户 1 (RealtimeDataService 内部已过滤)
                 .orElse(1L);
