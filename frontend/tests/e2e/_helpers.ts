@@ -1,17 +1,18 @@
 /**
  * E2E 公共 helper — 登录与 API 调用
  *
- * 设计目标:
- *   - 暴露 loginAsAdmin(): 通过真实 /api/auth/login 获取 token,
- *     写入浏览器 cookie,后续测试用此 cookie 跳过登录页
- *   - 暴露 api(): 带 token 的 fetch 封装,业务侧可写"打开页面 →
- *     调 API 创建数据 → 刷新页面验证"这种真集成测试
+ * 统一风格 (2026-06-29):
+ *   所有 E2E 都走真后端(/api/auth/login 拿真 token, 后续页面请求带真 token)。
+ *   原因:
+ *     - mock 模式:快但不能发现后端 bug(如本项目的 Snowflake id / alert/center handle)
+ *     - 真后端:能发现 production bug,代价是要求后端运行
+ *   通过 E2E_REAL_BACKEND=false 可退回纯 mock(只用于本地无后端调试)
  *
- * 与现有 mock 模式的关系:
- *   - 现有 specs(auth-persistence / router-navigation / sse-* 等)用
- *     假 cookie + page.route mock,适合"前端行为"测试
- *   - 新的 specs(knowledge-crud / real-*)用真后端,适合"业务集成"测试
- *   - 互不冲突,各取所长
+ * 主要 API:
+ *   - loginAsAdmin(context): 通过真后端登录,返回 token,写入 cookie
+ *   - api(method, url, body, token): 带 token 的 fetch,用于"先 API 造数据再 UI 验证"
+ *   - waitForBackend(): 启动时确认后端就绪
+ *   - REAL_BACKEND: 布尔开关,默认开
  */
 import { request, type APIRequestContext, type BrowserContext, type Page } from '@playwright/test'
 
