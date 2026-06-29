@@ -17,6 +17,24 @@ const MOCK_TOKEN = 'mock-jwt-token-for-e2e'
 const MOCK_TENANT_ID = '100'
 
 test.describe('登录状态持久化 (bug 回归测试)', () => {
+  test.beforeEach(async ({ page }) => {
+    // Mock /api/auth/info — 因为 mock token 不能过 JwtAuthenticationFilter,
+    // 需 mock 返回合法 userInfo 避免路由守卫踢回 /login
+    await page.route('**/api/auth/info', async (route) => {
+      await route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify({
+          code: 200,
+          data: {
+            id: 1, username: 'admin', nickname: '管理员',
+            roles: ['SUPER_ADMIN'], permissions: ['*'],
+            tenantId: 1, tenantCode: 'default'
+          }
+        })
+      })
+    })
+  })
+
   test('刷新浏览器后应保持登录态,不被踢回 /login', async ({ page, context }) => {
     // 1. 模拟已登录: 写入 token 到 cookie
     await context.addCookies([

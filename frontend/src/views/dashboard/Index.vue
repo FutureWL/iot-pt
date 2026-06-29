@@ -280,6 +280,7 @@ onBeforeUnmount(() => {
     v-loading="loading"
     class="page-container dashboard"
   >
+    <h2 class="page-title">工作台</h2>
     <!-- 顶部 KPI 条 -->
     <div class="kpi-bar">
       <div
