@@ -4,7 +4,7 @@
 # ============================================================
 
 # ---- 阶段 1: 构建 ----
-FROM maven:3.9-eclipse-temurin-17 AS builder
+FROM maven:3-eclipse-temurin-26 AS builder
 WORKDIR /build
 
 # 缓存依赖(整个父 pom 的依赖)
