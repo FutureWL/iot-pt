@@ -170,6 +170,46 @@ services:
     networks:
       - iot-net
 
+  # ---------- Prometheus: 抓取后端 /actuator/prometheus ----------
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: iot-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - "${PROMETHEUS_PORT:-33420}:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    depends_on:
+      - backend
+    networks:
+      - iot-net
+    # 默认不重启 — 需要时手动 up
+    restart: unless-stopped
+
+  # ---------- Grafana: 可视化 Prometheus 数据 ----------
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: iot-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+    ports:
+      - "${GRAFANA_PORT:-33421}:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    networks:
+      - iot-net
+    restart: unless-stopped
+
 volumes:
   mysql_data:
   tdengine_data:
@@ -178,6 +218,8 @@ volumes:
   redis_data:
   backend_logs:
   backend_upload:
+  prometheus_data:
+  grafana_data:
 
 networks:
   iot-net:
