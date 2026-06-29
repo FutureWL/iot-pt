@@ -1,0 +1,192 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  # 后端测试依赖 MySQL/Redis/TDengine,用 service container 启动
+  MYSQL_HOST: 127.0.0.1
+  MYSQL_PORT: 3306
+  MYSQL_DB: iot_platform
+  MYSQL_USER: iot
+  MYSQL_PASSWORD: iot123456
+  TDENGINE_HOST: 127.0.0.1
+  TDENGINE_PORT: 6041
+  TDENGINE_USER: root
+  TDENGINE_PASSWORD: taosdata
+  REDIS_HOST: 127.0.0.1
+  REDIS_PORT: 6379
+  MQTT_BROKER: tcp://127.0.0.1:1883
+
+jobs:
+  # ============================================================
+  # 1. 后端: 编译 + 单元测试
+  # ============================================================
+  backend:
+    name: Backend (compile + test)
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root123456
+          MYSQL_DATABASE: iot_platform
+          MYSQL_USER: iot
+          MYSQL_PASSWORD: iot123456
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot123456"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=3s
+          --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run migrations
+        run: |
+          mysql -h 127.0.0.1 -u iot -piot123456 iot_platform < deploy/mysql/migration/V1__workorder_topology.sql
+          mysql -h 127.0.0.1 -u iot -piot123456 iot_platform < deploy/mysql/migration/V2__knowledge_base.sql
+          mysql -h 127.0.0.1 -u iot -piot123456 iot_platform < deploy/mysql/migration/V3__system_dict_organization.sql
+        env:
+          MYSQL_PWD: iot123456
+
+      - name: Compile + Test
+        run: mvn -pl iot-api -am test -B
+        working-directory: backend
+
+  # ============================================================
+  # 2. 前端: 单测 + lint + type-check
+  # ============================================================
+  frontend:
+    name: Frontend (lint + type + unit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        run: npm ci --no-audit --no-fund
+        working-directory: frontend
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check
+        run: npm run type-check
+
+      - name: Unit test
+        run: npm run test:run
+
+  # ============================================================
+  # 3. 前端 E2E smoke(选 chromium,跑 ~5 分钟)
+  #    完整 E2E 矩阵在 PR 阶段跑
+  # ============================================================
+  e2e-smoke:
+    name: E2E smoke (chromium)
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Start middleware (MySQL + Redis)
+        run: |
+          sudo systemctl start mysql || true
+          docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=root123456 -e MYSQL_DATABASE=iot_platform -e MYSQL_USER=iot -e MYSQL_PASSWORD=iot123456 -p 3306:3306 mysql:8.0
+          docker run -d --name redis -p 6379:6379 redis:7-alpine
+          sleep 20
+          for f in deploy/mysql/migration/V*.sql; do
+            docker exec -i mysql mysql -uiot -piot123456 iot_platform < "$f"
+          done
+
+      - name: Start backend (jar 模式)
+        run: |
+          cd backend
+          mvn -pl iot-api -am package -DskipTests -q
+          nohup java -jar -Dserver.port=33412 \
+            iot-api/target/iot-api.jar > /tmp/backend.log 2>&1 &
+          echo "Waiting for backend..."
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:33412/api/actuator/health > /dev/null 2>&1; then
+              echo "Backend up"; break
+            fi
+            sleep 2
+          done
+
+      - name: Install frontend deps
+        run: npm ci --no-audit --no-fund
+        working-directory: frontend
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: frontend
+
+      - name: Run E2E smoke (knowledge CRUD only, ~1 min)
+        run: npx playwright test tests/e2e/knowledge-crud.spec.ts --project=chromium
+        working-directory: frontend
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            frontend/test-results/
+            frontend/playwright-report/
+          retention-days: 7
+
+  # ============================================================
+  # 4. 镜像构建(可选,不阻塞)
+  # ============================================================
+  docker-build:
+    name: Docker build (backend + frontend)
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build backend image
+        run: docker build -t iot-platform/backend:ci -f backend/Dockerfile backend
+      - name: Build frontend image
+        run: docker build -t iot-platform/frontend:ci -f frontend/Dockerfile frontend
+        env:
+          VITE_API_BASE_URL: /api

@@ -32,6 +32,9 @@ public class SecurityConfig {
             "/auth/captcha",
             "/auth/refresh",
             "/actuator/health",
+            "/actuator/health/**",
+            "/actuator/info",
+            "/actuator/prometheus",  // Prometheus 抓取端点(内部网络,不放行会 403)
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html",

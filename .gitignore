@@ -123,3 +123,20 @@ customer-requirements/
 # IoT 多模块临时文件
 /tmp/iot-api*.log
 /tmp/iot-broker*.log
+
+# ===== Playwright 产物 (不入库) =====
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/
+frontend/playwright/.cache/
+
+# ===== Prometheus / Grafana 临时数据 =====
+deploy/prometheus_data/
+deploy/grafana_data/
+
+# ===== IDE / OS =====
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo

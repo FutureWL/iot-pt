@@ -17,9 +17,10 @@ const BASE_URL = `http://localhost:${PORT}`
 export default defineConfig({
   testDir: './tests/e2e',
   // 全局超时: 单个 test 最长允许时间
-  timeout: 30_000,
+  // 30s 是 mock 模式,真后端(需多次调 /api/...)一般 10-20s,最复杂的 test 20s
+  timeout: 60_000,
   // 期望超时: expect 等待时长
-  expect: { timeout: 5_000 },
+  expect: { timeout: 10_000 },
   // 串行/并行
   fullyParallel: true,
   // 失败重试

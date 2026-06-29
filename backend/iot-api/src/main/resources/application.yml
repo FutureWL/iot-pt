@@ -97,14 +97,17 @@ knife4j:
   setting:
     language: zh_cn
 
-# Actuator 可观测性(K8s 探针 / 监控系统接入)
-# 仅暴露 health/info/metrics,其他端点按需开启
+# Actuator 可观测性(K8s 探针 / 监控系统接入 / Prometheus 抓取)
+# 暴露 health/info/metrics/prometheus
+#   - health: K8s liveness/readiness 探针
+#   - prometheus: /actuator/prometheus 供 Prometheus 抓取
+#   - metrics: Micrometer 指标(JSON 格式)
 management:
   endpoints:
     web:
       base-path: /actuator
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       # 开发环境显示详情,生产环境走 when-authorized(详见 prod profile)
@@ -124,9 +127,20 @@ management:
         http.server.requests: true
       percentiles:
         http.server.requests: 0.5, 0.95, 0.99
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+        # 同一进程多实例时,加 instance label 区分(避免 prometheus 拼接)
+        step: 60s
 
 # JWT 配置
 iot:
+  # 慢 SQL 阈值(超过则写到独立 logger)
+  sql:
+    slow-threshold-ms: 500
   # role: all(单进程,默认) | api(独立 API 进程) | iot(独立 IoT 进程)
   role: ${IOT_ROLE:all}
   # 是否启用协议层(MQTT/TCP 适配器): 独立 API 进程设为 false

@@ -1,0 +1,29 @@
+# ============================================================
+# Prometheus 抓取配置
+# 抓取目标:
+#   - iot-backend 的 /actuator/prometheus
+#   - Prometheus 自身指标
+# ============================================================
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: iot-platform-dev
+    env: dev
+
+scrape_configs:
+  # 后端 Spring Boot Actuator
+  - job_name: iot-backend
+    metrics_path: /api/actuator/prometheus
+    static_configs:
+      - targets: ['backend:9000']
+        labels:
+          service: iot-backend
+          tier: api
+
+  # Prometheus 自身
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: prometheus

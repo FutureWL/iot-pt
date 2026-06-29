@@ -61,6 +61,13 @@ public class TdengineQueryService {
                     result.add(point);
                 }
             }
+        } catch (Exception e) {
+            // 子表不存在(设备从未上报过数据) → 返回空,不报 500
+            if (e.getMessage() != null && e.getMessage().toLowerCase().contains("does not exist")) {
+                log.info("[TDengine] 子表 {} 不存在,返回空(设备可能未上报过数据)", childTable);
+                return List.of();
+            }
+            throw e;
         }
         return result;
     }
@@ -88,6 +95,17 @@ public class TdengineQueryService {
                     result.put("avg", rs.getString(4));
                 }
             }
+        } catch (Exception e) {
+            // 子表不存在(设备从未上报过数据) → 返回空统计
+            if (e.getMessage() != null && e.getMessage().toLowerCase().contains("does not exist")) {
+                log.info("[TDengine] 子表 {} 不存在,返回空统计", childTable);
+                result.put("count", 0L);
+                result.put("min", null);
+                result.put("max", null);
+                result.put("avg", null);
+                return result;
+            }
+            throw e;
         }
         return result;
     }
